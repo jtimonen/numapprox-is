@@ -2,7 +2,7 @@
 // https://mc-stan.org/docs/2_23/stan-users-guide/coding-an-ode-system.html
 
 functions {
-  #include stan_functions/sho.stan
+#include stan_functions/sho.stan
 }
 
 data {

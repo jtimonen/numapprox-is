@@ -1,28 +1,24 @@
-# Compile model
-model <- stan_model(file = 'sho_rk4.stan')
 
 # Setup
+library(rstan)
 source("functions.R")
+model <- stan_model(file = 'sho_rk4.stan')
+stan_data <- readRDS(file = 'simdat.rds')
 
-# Get data
-stan_data <- list()
-
-# Additional data for reference method ode_integrate_bdf
+# Additional data for reference method ode_integrate_rk45
 stan_data$abs_tol_REF_  <- 1.0E-10
 stan_data$rel_tol_REF_  <- 1.0E-10
 stan_data$max_iter_REF_ <- 1.0E6
 
-# Additional data needed if using a fixed-step solver
-step_size <- 0.7
-data_list_model13 <- add_interpolation_data(stan_data, step_size)
+# Additional data for the fixed-step solver
+step_size <- 1.0
+stan_data <- add_interpolation_data(stan_data, step_size)
 
 # Run sampling
 fit <- sampling(object  = model,
-                data    = data_list_model13,
-                iter    = 10,
-                chains  = 4,
-                cores   = 4,
-                refresh = 10)
+                data    = stan_data,
+                iter    = 1000,
+                chains  = 1)
 
 # Extract log posterior values (not Jacobian adjusted)
 lh1 <- get_samples(fit, 'log_lik_na')
