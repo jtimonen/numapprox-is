@@ -33,7 +33,7 @@ for(i in 1:length(SIGMA)){
   # Save data
   for(data_idx in 1:N_sets){
     dat <- list(y=y[data_idx,,], ts=ts, t0=0, T=length(ts))
-    fn <- paste0('data/dat_sigma_', sigma, '_set_', i, '.rds')
+    fn <- paste0('data/dat_sigma_', sigma, '_set_', data_idx, '.rds')
     saveRDS(dat, file=fn)
   }
 }
