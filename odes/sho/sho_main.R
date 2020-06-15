@@ -1,12 +1,19 @@
+#!/usr/bin/env Rscript
 
 # Setup
 library(rstan)
 library(loo)
 source("functions.R")
-#model <- stan_model(file = 'sho_rk4.stan')
+model <- stan_model(file = 'sho_rk4.stan')
 model <- stan_model(file = 'sho_rk45.stan')
 
-n_chains <- 4
+# MCMC setup
+ADAPT_DELTA <- 0.8
+CHAINS      <- 4
+ITER        <- 2000
+
+# Options
+DATA_IDX <- 1
 SIGMA    <- c(0.1, 0.2, 0.4, 0.6, 0.8, 1.0)
 S        <- length(SIGMA)
 PARETO_K <- rep(0, S)
@@ -16,7 +23,8 @@ for(i in 1:S){
   
   # Load data
   sigma <- SIGMA[i]
-  fn <- paste0('data/simdata_sigma_', sigma, '.rds')
+  fn <- paste0('data/dat_sigma_', sigma, '_set_', DATA_IDX, '.rds')
+  cat(paste0('Reading file ', fn, '\n'))
   stan_data <- readRDS(file = fn)
   
   # Additional data for reference method ode_integrate_rk45
@@ -31,9 +39,9 @@ for(i in 1:S){
   # Run sampling
   fit <- sampling(object  = model,
                   data    = stan_data,
-                  iter    = 4000,
-                  chains  = n_chains,
-                  control = list(adapt_delta = 0.8))
+                  iter    = ITER,
+                  chains  = CHAINS,
+                  control = list(adapt_delta = ADAPT_DELTA))
   
   # Extract log posterior values (not Jacobian adjusted)
   lh1 <- get_samples(fit, 'log_lik_na')
@@ -55,4 +63,6 @@ for(i in 1:S){
   
 }
 
+print(RUNTIMES)
 print(PARETO_K)
+
