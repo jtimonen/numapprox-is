@@ -4,6 +4,6 @@
 #SBATCH --constraint=[ivb|hsw]
 #SBATCH -n 1
 #SBATCH --mem=3000
-#SBATCH -o inference.out
+#SBATCH -o run.out
 module load r/3.6.1-python3
-srun Rscript --vanilla sho_main.R
+srun Rscript --vanilla run.R 3

@@ -12,7 +12,7 @@ T_max    <- 10
 N_sets   <- 30
 
 # Compile simulation model
-sm <- stan_model(file='sho_simulate.stan')
+sm <- stan_model(file='stan/sho_simulate.stan')
 
 # Seed
 set.seed(123)
