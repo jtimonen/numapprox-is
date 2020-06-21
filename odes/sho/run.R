@@ -15,7 +15,8 @@ run_inference <- function(model, data, ITER, CHAINS, ADAPT_DELTA){
                   data    = data,
                   iter    = ITER,
                   chains  = CHAINS,
-                  control = list(adapt_delta = ADAPT_DELTA))
+                  control = list(adapt_delta = ADAPT_DELTA),
+                  refresh = ITER)
   
   # Extract log posterior values (not Jacobian adjusted)
   lh1 <- get_samples(fit, 'log_lik_na')
@@ -41,9 +42,9 @@ model_1 <- stan_model(file = 'stan/sho_rk45.stan')
 model_2 <- stan_model(file = 'stan/sho_rk4.stan')
 
 # Options
-ADAPT_DELTA <- 0.8
+ADAPT_DELTA <- 0.95
 CHAINS      <- 4
-ITER        <- 2000
+ITER        <- 4000
 SIGMA       <- c(0.1, 0.2, 0.4, 0.6, 0.8, 1.0)
 STEP_SIZE   <- c(0.05, 0.1, 0.2, 0.5, 1.0)
 S           <- length(SIGMA)
@@ -69,7 +70,8 @@ for(i in 1:S){
   new_data <- data
   new_data <- add_interpolation_data(new_data, 1.0) # step size has no effect here
   res <- run_inference(model_1, new_data, ITER, CHAINS, ADAPT_DELTA)
-  print(res)
+  PARETO_K[i, 1] <- res$pareto_k
+  RUNTIMES[i, 1, ] <- res$runtimes
 
   # Run inference with different step sizes of the approximate model
   for(j in 1:J){
@@ -77,12 +79,14 @@ for(i in 1:S){
       step_size <- STEP_SIZE[j]
       new_data  <- add_interpolation_data(new_data, step_size)
       res       <- run_inference(model_2, new_data, ITER, CHAINS, ADAPT_DELTA)
-      print(j)
-      print(res)
+      PARETO_K[i, 1+j]   <- res$pareto_k
+      RUNTIMES[i, 1+j, ] <- res$runtimes
   }
 
 }
 
 print(RUNTIMES)
 print(PARETO_K)
+result <- list(t=RUNTIMES, k=PARETO_K, s=SIGMA, h=STEP_SIZE, idx=DATA_IDX)
+saveRDS(result, file=paste0('res/res_', DATA_IDX, '.rds'))
 
