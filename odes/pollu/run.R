@@ -1,6 +1,7 @@
 #!/usr/bin/env Rscript
 args     <- commandArgs(trailingOnly = TRUE)
-DATA_IDX <- as.numeric(args[1])
+#DATA_IDX <- as.numeric(args[1])
+DATA_IDX <- 1
 
 # Setup
 library(rstan)
@@ -16,7 +17,7 @@ run_inference <- function(model, data, ITER, CHAINS, ADAPT_DELTA){
                   iter    = ITER,
                   chains  = CHAINS,
                   control = list(adapt_delta = ADAPT_DELTA),
-                  refresh = ITER)
+                  refresh = 1)
   
   # Extract log posterior values (not Jacobian adjusted)
   lh1 <- get_samples(fit, 'log_lik_na')
@@ -38,15 +39,15 @@ run_inference <- function(model, data, ITER, CHAINS, ADAPT_DELTA){
 }
 
 # Compile models
-model_1 <- stan_model(file = 'stan/sho_rk45.stan')
-model_2 <- stan_model(file = 'stan/sho_rk4.stan')
+model_1 <- stan_model(file = 'stan/pollu_bdf.stan')
+#model_2 <- stan_model(file = 'stan/sho_rk4.stan')
 
 # Options
 ADAPT_DELTA <- 0.95
 CHAINS      <- 4
-ITER        <- 4000
-SIGMA       <- c(0.1, 0.2, 0.4, 0.6, 0.8, 1.0)
-STEP_SIZE   <- c(0.05, 0.1, 0.2, 0.5, 1.0)
+ITER        <- 2000
+SIGMA       <- c(0.01)
+STEP_SIZE   <- c(0.1, 0.2, 0.5)
 S           <- length(SIGMA)
 J           <- length(STEP_SIZE)
 PARETO_K    <- matrix(0, S, J+1)
@@ -74,19 +75,19 @@ for(i in 1:S){
   RUNTIMES[i, 1, ] <- res$runtimes
 
   # Run inference with different step sizes of the approximate model
-  for(j in 1:J){
-      new_data  <- data
-      step_size <- STEP_SIZE[j]
-      new_data  <- add_interpolation_data(new_data, step_size)
-      res       <- run_inference(model_2, new_data, ITER, CHAINS, ADAPT_DELTA)
-      PARETO_K[i, 1+j]   <- res$pareto_k
-      RUNTIMES[i, 1+j, ] <- res$runtimes
-  }
+  #for(j in 1:J){
+  #    new_data  <- data
+  #    step_size <- STEP_SIZE[j]
+  #    new_data  <- add_interpolation_data(new_data, step_size)
+  #    res       <- run_inference(model_2, new_data, ITER, CHAINS, ADAPT_DELTA)
+  #    PARETO_K[i, 1+j]   <- res$pareto_k
+  #    RUNTIMES[i, 1+j, ] <- res$runtimes
+  #}
 
 }
 
 print(RUNTIMES)
 print(PARETO_K)
 result <- list(t=RUNTIMES, k=PARETO_K, s=SIGMA, h=STEP_SIZE, idx=DATA_IDX)
-saveRDS(result, file=paste0('res/res_', DATA_IDX, '.rds'))
+#saveRDS(result, file=paste0('res/res_', DATA_IDX, '.rds'))
 

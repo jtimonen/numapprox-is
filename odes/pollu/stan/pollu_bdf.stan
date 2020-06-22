@@ -1,6 +1,5 @@
-
 functions {
-#include stan_functions/sho.stan
+#include stan_functions/pollu.stan
 #include stan_functions/likelihood.stan
 #include stan_functions/prior.stan
 }
@@ -20,7 +19,7 @@ parameters{
 
 transformed parameters {
 #include stan_chunks/transformed_parameters.stan
-  y_hat = integrate_ode_rk45(sho, y0, t0, ts, theta, x_r, x_i);
+  y_hat = integrate_ode_bdf(POLLU, y0, t0, ts, theta, x_r, x_i);
 #include stan_chunks/likelihood_and_prior.stan
 }
 

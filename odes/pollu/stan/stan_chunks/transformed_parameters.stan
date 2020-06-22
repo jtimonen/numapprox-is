@@ -3,4 +3,4 @@
   real log_lik_na = 0.0;
   
   // This stores the ODE solution
-  real y_hat[T,2];
+  real y_hat[T,D];
