@@ -17,7 +17,7 @@ run_inference <- function(model, data, ITER, CHAINS, ADAPT_DELTA){
                   iter    = ITER,
                   chains  = CHAINS,
                   control = list(adapt_delta = ADAPT_DELTA),
-                  refresh = 100)
+                  refresh = 1)
   
   # Extract log posterior values (not Jacobian adjusted)
   lh1 <- get_samples(fit, 'log_lik_na')
@@ -34,7 +34,7 @@ run_inference <- function(model, data, ITER, CHAINS, ADAPT_DELTA){
   runtimes <- rowSums(get_elapsed_time(fit))
   
   # Return list
-  return(list(pareto_k=pareto_k, runtimes=runtimes, fit=fit))
+  return(list(pareto_k=pareto_k, runtimes=runtimes))
   
 }
 
@@ -43,11 +43,11 @@ model_1 <- stan_model(file = 'stan/pollu_bdf.stan')
 #model_2 <- stan_model(file = 'stan/sho_rk4.stan')
 
 # Options
-ADAPT_DELTA <- 0.8
+ADAPT_DELTA <- 0.95
 CHAINS      <- 4
 ITER        <- 2000
-SIGMA       <- c(0.1)
-STEP_SIZE   <- c(0.1)
+SIGMA       <- c(0.01)
+STEP_SIZE   <- c(0.1, 0.2, 0.5)
 S           <- length(SIGMA)
 J           <- length(STEP_SIZE)
 PARETO_K    <- matrix(0, S, J+1)
@@ -62,17 +62,14 @@ for(i in 1:S){
   data  <- readRDS(file = fn)
   cat(paste0('Read file ', fn, '\n'))
   
-  # Additional data for reference method 
-  data$abs_tol_REF_  <- 1.0E-10
-  data$rel_tol_REF_  <- 1.0E-10
-  data$max_iter_REF_ <- 1.0E6
+  # Additional data for reference method ode_integrate_rk45
+  data$abs_tol_REF_  <- 1.0E-6
+  data$rel_tol_REF_  <- 1.0E-6
+  data$max_iter_REF_ <- 1.0E3
   
   # Run inference with the reference model
   new_data <- data
   new_data <- add_interpolation_data(new_data, 1.0) # step size has no effect here
-  new_data$abs_tol_INF_  <- 1.0E-6
-  new_data$rel_tol_INF_  <- 1.0E-6
-  new_data$max_iter_INF_ <- 1.0E3
   res <- run_inference(model_1, new_data, ITER, CHAINS, ADAPT_DELTA)
   PARETO_K[i, 1] <- res$pareto_k
   RUNTIMES[i, 1, ] <- res$runtimes
@@ -93,11 +90,3 @@ print(RUNTIMES)
 print(PARETO_K)
 result <- list(t=RUNTIMES, k=PARETO_K, s=SIGMA, h=STEP_SIZE, idx=DATA_IDX)
 #saveRDS(result, file=paste0('res/res_', DATA_IDX, '.rds'))
-
-par <- rstan::extract(res$fit, pars=c("sigma", "k_1", "log"))
-
-
-lh1 <- get_samples(res$fit, 'log_lik_na')
-lh2 <- get_samples(res$fit, 'log_lik_na_REF_')
-pr1 <- get_samples(res$fit, 'log_prior_na')
-pr2 <- get_samples(res$fit, 'log_prior_na_REF_')
