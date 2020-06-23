@@ -1,9 +1,4 @@
-// Air pollution model from [1].
-//  
-// [1] Ernst Hairer and Gerhard Wanner.
-//     Solving Ordinary Differential Equations II - 
-//     Stiff and Differential-Algebraic Problems. Springer, 1991.
-//
+// Air pollution model from: https://archimede.dm.uniba.it/~testset/problems/pollu.php
 
   real[] POLLU(real t, real[] y, real[] theta, real[] x_r, int[] x_i) {
     real dy[20];
