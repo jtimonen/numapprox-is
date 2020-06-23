@@ -1,5 +1,5 @@
 # Plot data
-dat <- readRDS(file='data/dat_sigma_0.01_set_1.rds')
+dat <- readRDS(file='data/dat_sigma_0.1_set_1.rds')
 y_hat <- dat$y_hat
 y <- dat$y
 D <- 20
