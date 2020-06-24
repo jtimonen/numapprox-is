@@ -1,17 +1,14 @@
-// Source: https://mc-stan.org/users/documentation/case-studies/boarding_school_case_study.html
+// Adapted from: https://mc-stan.org/users/documentation/case-studies/boarding_school_case_study.html
 
 functions {
-  real[] sir(real t, real[] y, real[] theta, 
-             real[] x_r, int[] x_i) {
+  real[] sir(real t, real[] y, real[] theta, real[] x_r, int[] x_i) {
 
       real S = y[1];
       real I = y[2];
       real R = y[3];
       real N = x_i[1];
-      
       real beta = theta[1];
       real gamma = theta[2];
-      
       real dS_dt = -beta * I * S / N;
       real dI_dt =  beta * I * S / N - gamma * I;
       real dR_dt =  gamma * I;
@@ -27,6 +24,11 @@ data {
   real ts[n_days];
   int N;
   int cases[n_days];
+  
+  // ODE opt
+  real<lower=0> abs_tol;
+  real<lower=0> rel_tol;
+  int<lower=100> max_iter;
 }
 
 transformed data {
@@ -48,7 +50,8 @@ transformed parameters{
     theta[1] = beta;
     theta[2] = gamma;
 
-    y = integrate_ode_rk45(sir, y0, t0, ts, theta, x_r, x_i);
+    y = integrate_ode_rk45(sir, y0, t0, ts, theta, x_r, x_i,
+        abs_tol, rel_tol, max_iter);
   }
 }
 

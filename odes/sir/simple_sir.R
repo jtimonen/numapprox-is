@@ -7,6 +7,12 @@ rstan_options (auto_write = TRUE)
 #options (mc.cores = parallel::detectCores ())
 set.seed(3) # for reproductibility
 
+
+# ODE options
+abs_tol <- 1e-10
+rel_tol <- 1e-10
+max_iter <- 1e6
+
 p <- ggplot(data = influenza_england_1978_school) + 
   geom_point(mapping = aes(x = date, y = in_bed)) + 
   labs(y = "Number of students in bed")
@@ -30,7 +36,8 @@ r0 <- 0
 y0 = c(S = s0, I = i0, R = r0)
 
 # data for Stan
-data_sir <- list(n_days = n_days, y0 = y0, t0 = t0, ts = t, N = N, cases = cases)
+data_sir <- list(n_days = n_days, y0 = y0, t0 = t0, ts = t, N = N, cases = cases,
+                 abs_tol = abs_tol, rel_tol = rel_tol, max_iter = max_iter)
 
 # number of MCMC steps
 niter <- 2000
