@@ -1,8 +1,8 @@
   // Lotka-Volterra system
   real[] LV(real t, real[] y, real[] theta, real[] x_r, int[] x_i) {
     real dydt[2];
-    dydt[1] = theta[1]*y[1] - theta[2]*y[1]*y[2];
-    dydt[2] = - theta[3]*y[2] + y[1]*y[2];
+    dydt[1] = theta[1]*y[1] - y[1]*y[2];
+    dydt[2] = y[1]*y[2] - theta[2]*y[2];
     return dydt;
   }
   

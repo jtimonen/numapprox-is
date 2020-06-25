@@ -1,7 +1,7 @@
-// LV
+// Lotka-Volterra system
 
 functions {
-#include stan_functions/lv.stan
+#include functions/LV.stan
 }
 
 data {
@@ -9,7 +9,7 @@ data {
   real y0[2];
   real t0;
   real ts[T];
-  real theta[3];
+  real theta[2];
   real<lower=0> sigma;
 }
 
