@@ -1,7 +1,9 @@
+library(pracma) # for errorbar plot
+
 K <- 8
 TOL <- rep(0, K)
 PK  <- rep(0, K)
-TIM <- array(0, c(K, 10))
+TIM <- array(0, c(K, 100))
 for(i in 1:K){
     fn <- paste0('res/res_rk45_', i ,'.rds')
     cat(paste0('Reading file  ', fn, '\n'))
@@ -26,6 +28,6 @@ plot(x, m, ylab='Runtime (s)', xlab='log10(tol)',
      ylim=c(0, 30), pch=16, bty="n")
 grid()
 lines(x, m)
-errorbar(x, m, yerr=s, add=TRUE, bar.col='firebrick',
+pracma::errorbar(x, m, yerr=s, add=TRUE, bar.col='firebrick',
          bar.len = 0.03)
 points(x, m, pch=16)
