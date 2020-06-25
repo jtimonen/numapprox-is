@@ -28,5 +28,5 @@ for(data_idx in 1:N_sets){
             ts=ts, t0=0, T=length(ts), sigma=sigma, idx=data_idx)
     fn <- paste0('data/dat_set_', data_idx, '.rds')
     saveRDS(dat, file=fn)
-    cat(paste0('Saved data to ', fn))
+    cat(paste0('Saved data to ', fn, '\n'))
 }
