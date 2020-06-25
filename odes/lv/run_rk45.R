@@ -25,10 +25,13 @@ data$max_iter_REF_ <- 1.0E6
 
 # Run with different tolerances
 TOL <- 10^(-10:-3)
-TOL <- c(TOL, 0.005)
 
 L <- length(TOL)
 for(i in 1:L){
+  
+  # Create filename
+  fn <- paste0('res/rk45_dat_', DATA_idx , '_tol_', i , '.rds')
+  cat(paste0('Next save will write to ', fn, '\n'))
   tol <- TOL[i]
   
   # Additional data
@@ -42,7 +45,6 @@ for(i in 1:L){
   print(res$pareto_k)
   print(res$runtimes)
   res$tol <- tol
-  fn <- paste0('res/res_rk45_', i ,'.rds')
   cat(paste0('Saving to file  ', fn, '\n'))
   saveRDS(res, fn)
 }
