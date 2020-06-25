@@ -7,8 +7,8 @@ run_inference <- function(model, data, ITER, CHAINS, ADAPT_DELTA){
                   iter    = ITER,
                   chains  = CHAINS,
                   control = list(adapt_delta = ADAPT_DELTA),
-                  refresh = ITER/10,
-                  init    = "0")
+                  init    = "0",
+                  save_warmup=FALSE)
   
   # Extract log posterior values (not Jacobian adjusted)
   lh1 <- get_samples(fit, 'log_lik_na')
@@ -21,7 +21,6 @@ run_inference <- function(model, data, ITER, CHAINS, ADAPT_DELTA){
   # PSIS
   out <- psis(post1 - post2)
   pareto_k <- out$diagnostics$pareto_k
-  cat(paste0('>>>>> model=', model@model_name, ', step_size=', data$STEP_SIZE ,', sigma=', sigma, ', pareto_k=', pareto_k, ' <<<<<\n'))
   runtimes <- rowSums(get_elapsed_time(fit))
   
   # Return list
