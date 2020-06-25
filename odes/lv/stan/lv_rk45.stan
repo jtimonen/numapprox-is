@@ -9,12 +9,13 @@ data {
   real y[T,2];
   real t0;
   real ts[T];
-  real<lower=0> abs_tol_INF_;
-  real<lower=0> rel_tol_INF_;
-  int<lower=1> max_iter_INF_; 
   real<lower=0> abs_tol_REF_;
   real<lower=0> rel_tol_REF_;
   int<lower=1> max_iter_REF_;
+  
+  real<lower=0> abs_tol_INF_;
+  real<lower=0> rel_tol_INF_;
+  int<lower=1> max_iter_INF_; 
 }
 
 transformed data {

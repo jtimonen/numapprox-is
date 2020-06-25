@@ -1,9 +1,9 @@
 // Prior without Jacobian adjustment
 real log_prior_noadjustment(real sigma, real[] theta) {
   real log_prior = 0.0;
-  log_prior += normal_lpdf(sigma | 1, 1);
-  log_prior += gamma_lpdf(theta[1] | 4, 1);
-  log_prior += gamma_lpdf(theta[2] | 4, 1);
+  log_prior += lognormal_lpdf(sigma | 1, 1);
+  log_prior += lognormal_lpdf(theta[1] | 1, 1);
+  log_prior += lognormal_lpdf(theta[2] | 1, 1);
   return(log_prior);
 }
 

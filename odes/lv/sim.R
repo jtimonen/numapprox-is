@@ -3,7 +3,7 @@ library(rstan)
 
 # Settings
 theta    <- c(1.0, 2.0)
-by       <- 0.25
+by       <- 0.1
 T_max    <- 8
 N_sets   <- 1
 y0       <- c(1, 1)

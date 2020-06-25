@@ -7,7 +7,8 @@ run_inference <- function(model, data, ITER, CHAINS, ADAPT_DELTA){
                   iter    = ITER,
                   chains  = CHAINS,
                   control = list(adapt_delta = ADAPT_DELTA),
-                  refresh = ITER/10)
+                  refresh = ITER/10,
+                  init    = "0")
   
   # Extract log posterior values (not Jacobian adjusted)
   lh1 <- get_samples(fit, 'log_lik_na')
