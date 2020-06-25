@@ -2,6 +2,7 @@
 functions {
 #include functions/LV.stan
 #include functions/posterior.stan
+#include functions/interpolate.stan
 #include functions/RK4.stan
 }
 

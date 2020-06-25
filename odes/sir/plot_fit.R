@@ -6,7 +6,7 @@ col4     <- 'orange'
 col5     <- 'steelblue'
 lwd      <- 2
 
-dat <- readRDS(file='data/dat_sigma_0.5_set_1.rds')
+dat <- readRDS(file='data/dat_sigma_1_set_1.rds')
 fit <- readRDS(file = 'data/yhat.rds')
 
 y_hat <- dat$y_hat
@@ -20,7 +20,7 @@ xlim <- c(min(ts), max(ts))
 
 ylim <- c(min(y), max(y))
 
-i_smp <- 230
+i_smp <- 23
 for(d in 1:2){
   
   # Plot data
@@ -34,7 +34,7 @@ for(d in 1:2){
     yr <- fit$ref[j,,d]
     lines(ts, yr, col=col3, lwd=2)
     lines(ts, yi, col=col4, lwd=2)
-    #points(ts, yr, col=col3, pch=4)
+    points(ts, yi, col=col4, pch=4)
   }
   points(ts, y[, d], col=col2, pch=20)
 }

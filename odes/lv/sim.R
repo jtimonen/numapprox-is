@@ -3,8 +3,8 @@ library(rstan)
 
 # Settings
 theta    <- c(1.0, 2.0)
-by       <- 0.1
-T_max    <- 8
+by       <- 0.01
+T_max    <- 6
 N_sets   <- 1
 y0       <- c(1, 1)
 
@@ -12,8 +12,8 @@ y0       <- c(1, 1)
 sm <- stan_model(file='stan/lv_simulate.stan')
 
 # Seed
-set.seed(123)
-stan_seed <- 123
+set.seed(55)
+stan_seed <- 55
 sigma <- 0.5
 
 # Simulate data
@@ -25,8 +25,8 @@ y_hat <- rstan::extract(f1)$y_hat
 y  <- rstan::extract(f1)$y
 
 # Save data
-data_idx <- 1
-dat <- list(y_hat=y_hat[data_idx,,], y=y[data_idx,,], 
+data_idx <- 3
+dat <- list(y_hat=y_hat[1,,], y=y[1,,], 
             ts=ts, t0=0, T=length(ts))
 fn <- paste0('data/dat_sigma_', sigma, '_set_', data_idx, '.rds')
 saveRDS(dat, file=fn)
