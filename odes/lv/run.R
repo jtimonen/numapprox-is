@@ -32,7 +32,6 @@ new_data$rel_tol_INF_  <- 1.0E-6
 new_data$max_iter_INF_ <- 1.0E6
 
 # Run inference 
-new_data <- data
 res_1 <- run_inference(model_1, new_data, ITER, CHAINS, ADAPT_DELTA)
 print(res_1$pareto_k)
 print(res_1$runtimes)
@@ -42,9 +41,16 @@ model_2 <- stan_model(file = 'stan/lv_rk4.stan')
 
 # Additional data
 new_data <- data
-new_data <- add_interpolation_data(new_data, h = 0.2)
+new_data <- add_interpolation_data(new_data, h = 1.0)
 
 # Run inference 
 res_2 <- run_inference(model_2, new_data, ITER, CHAINS, ADAPT_DELTA)
 print(res_2$pareto_k)
 print(res_2$runtimes)
+
+
+# Save solutions
+YHAT <- get_samples(res_2$fit, 'y_hat')
+YHAT_REF_ <- get_samples(res_2$fit, 'y_hat_REF_')
+saveRDS(list(inf=YHAT, ref=YHAT_REF_), 'data/yhat.rds')
+

@@ -15,8 +15,8 @@ run_inference <- function(model, data, ITER, CHAINS, ADAPT_DELTA){
   lh2 <- get_samples(fit, 'log_lik_na_REF_')
   pr1 <- get_samples(fit, 'log_prior_na')
   pr2 <- get_samples(fit, 'log_prior_na_REF_')
-  post1 <- lh1 + pr1
-  post2 <- lh2 + pr2
+  post1 <- as.vector(lh1) + as.vector(pr1)
+  post2 <- as.vector(lh2) + as.vector(pr2)
   
   # PSIS
   out <- psis(post1 - post2)
@@ -69,6 +69,6 @@ compute_A <- function(t0, ts, h, R){
 
 # Helper function
 get_samples <- function(stan_fit, param){
-  samples <- as.vector(rstan::extract(stan_fit, pars=param)[[param]])
+  samples <- rstan::extract(stan_fit, pars=param)[[param]]
   return(samples)
 }

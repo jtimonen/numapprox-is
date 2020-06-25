@@ -6,30 +6,40 @@ col4     <- 'orange'
 col5     <- 'steelblue'
 lwd      <- 2
 
-# Plot data
-dat <- readRDS(file='data/dat_set_1.rds')
+dat <- readRDS(file='data/dat_sigma_0.5_set_1.rds')
+fit <- readRDS(file = 'data/yhat.rds')
+
 y_hat <- dat$y_hat
 y <- dat$y
 D <- 20
 data_idx <- 1
-par(mfrow=c(1,1))
+par(mfrow=c(1,2))
 par(mar = c(2,2,2,2) + 0.1)
 ts <- dat$ts
 xlim <- c(min(ts), max(ts))
 
 ylim <- c(min(y), max(y))
-plot(0, 0, ylim=ylim, xlim=xlim, pch=NA, xlab='t', ylab=expression(y[2]))
-lines(ts, y_hat[,2], col=col1, lwd=lwd)
-points(ts, y, col=col2, pch=20)
 
-fit <- readRDS(file = 'data/yhat.rds')
-
-# Plot fit
-for(j in 1:200){
-  yf <- fit$ref[j,,2]
-  lines(ts, yf, col=col3)
+i_smp <- 1
+for(d in 1:2){
+  
+  # Plot data
+  plot(0, 0, ylim=ylim, xlim=xlim, pch=NA, xlab='t', ylab=expression(y[,d]))
+  lines(ts, y_hat[, d], col=col1, lwd=lwd)
+  points(ts, y[, d], col=col2, pch=20)
+  
+  # Plot fit
+  for(j in i_smp){
+    yi <- fit$inf[j,,d]
+    yr <- fit$ref[j,,d]
+    lines(ts, yr, col=col3, lwd=2)
+    lines(ts, yi, col=col4, lwd=2)
+    #points(ts, yr, col=col3, pch=4)
+  }
+  points(ts, y[, d], col=col2, pch=20)
 }
-points(ts, y, col=col2, pch=20)
+
+
 
 # Another plot
 #plot(0, 0, xlim=xlim, ylim = c(0, 1000))
