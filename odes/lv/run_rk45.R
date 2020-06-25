@@ -16,7 +16,7 @@ CHAINS      <- 100
 ITER        <- 4000
 
 # Load data
-fn    <- paste0('data/dat_sigma_set_', DATA_IDX, '.rds')
+fn    <- paste0('data/dat_set_', DATA_IDX, '.rds')
 data  <- readRDS(file = fn)
 cat(paste0('Read data from file ', fn, '\n'))
 data$abs_tol_REF_  <- 1.0E-10
