@@ -20,7 +20,7 @@ xlim <- c(min(ts), max(ts))
 
 ylim <- c(min(y), max(y))
 
-i_smp <- 1
+i_smp <- 230
 for(d in 1:2){
   
   # Plot data
