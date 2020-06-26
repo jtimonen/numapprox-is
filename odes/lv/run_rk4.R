@@ -1,6 +1,6 @@
 #!/usr/bin/env Rscript
 args     <- commandArgs(trailingOnly = TRUE)
-DATA_IDX <- 2 #as.numeric(args[1])
+DATA_IDX <- as.numeric(args[1])
 
 # Setup
 library(rstan)
@@ -38,7 +38,7 @@ for(i in 1:L){
   print(res$pareto_k)
   print(res$runtimes)
   res$step_size <- step_size
-  fn <- paste0('res/rk4_dat', data_idx , '_step_', i ,'.rds')
+  fn <- paste0('res/rk4/rk4_dat', data_idx , '_step_', i ,'.rds')
   cat(paste0('Saving to file  ', fn, '\n'))
   saveRDS(res, fn)
 }
