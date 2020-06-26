@@ -1,6 +1,12 @@
 #!/usr/bin/env Rscript
 library(pracma) # for errorbar plot
 
+
+# Create figure
+fig_name <- paste0('rk45.pdf')
+pdf(fig_name, width = 12, height = 14)
+par(mfrow=c(5,4))
+
 for(data_idx in 1:10){
 
   # Read results for this dataset
@@ -25,14 +31,10 @@ for(data_idx in 1:10){
     })
   }
 
-  # Create figure
-  fig_name <- paste0('figs/rk45_dat', data_idx, '.pdf')
-  pdf(fig_name, width = 10, height = 4.6)
-  par(mfrow=c(1,2))
-
   # Pareto K plot
   x <- log10(TOL)
-  plot(x, PK, ylab='Pareto k', xlab='log10(tol)', pch=16, bty="n")
+  plot(x, PK, ylab='Pareto k', xlab=expression(log[10](tol)), pch=16, bty="n",
+       xlim=c(-10, -3),  ylim=c(-0.2, 0.4))
   grid()
   lines(x, PK)
   points(x, PK, pch=16)
@@ -40,16 +42,15 @@ for(data_idx in 1:10){
   # Runtime plot
   m <- rowMeans(TIM)
   s <- apply(TIM, 1, stats::sd)
-  plot(x, m, ylab='Runtime per chain (s)', xlab='log10(tol)', 
-     ylim=c(0, 30), pch=16, bty="n")
+  plot(x, m, ylab='Runtime per chain (s)', xlab=expression(log[10](tol)), 
+     xlim=c(-10, -3), ylim=c(0, 30), pch=16, bty="n")
   grid()
   lines(x, m)
   pracma::errorbar(x, m, yerr=s, add=TRUE, bar.col='firebrick',
          bar.len = 0.03)
   points(x, m, pch=16)
 
-  # Close graphics device
-  dev.off()
 }
 
-
+# Close graphics device
+dev.off()
