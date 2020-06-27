@@ -38,7 +38,7 @@ for(i in 1:L){
   print(res$pareto_k)
   print(res$runtimes)
   res$step_size <- step_size
-  fn <- paste0('res/rk4/rk4_dat', data_idx , '_step_', i ,'.rds')
+  fn <- paste0('res/rk4/rk4_dat_', DATA_IDX , '_step_', i ,'.rds')
   cat(paste0('Saving to file  ', fn, '\n'))
   saveRDS(res, fn)
 }
