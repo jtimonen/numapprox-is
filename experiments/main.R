@@ -1,4 +1,3 @@
-
 # Requirements
 library(cmdstanr)
 library(posterior)
@@ -12,7 +11,7 @@ library(ggplot2)
 
 # Options
 stan_opts <- list(
-  seed = 233, # random seed for Stan
+  seed = 2353, # random seed for Stan
   sig_figs = 18 # number of significant figures to store in floats
 )
 
@@ -23,8 +22,6 @@ source("setup_sir.R")
 data_list <- setup_standata_sir()
 code_parts <- setup_stancode_sir(solver = "rk45")
 stanmodels <- create_cmdstan_models(code_parts)
-
-
 
 prior_fit <- stanmodels$prior$sample(
   sig_figs = stan_opts$sig_figs,
@@ -82,16 +79,13 @@ max_abs_sol_error <- compute_sol_errors(sims$sims, "max")
 plot_sim_errors(atols, rtols, mean_abs_sol_error)
 plot_sim_errors(atols, rtols, max_abs_sol_error)
 
-
 mean_abs_loglik_error <- compute_loglik_errors(sims$log_liks, "mean")
 max_abs_loglik_error <- compute_loglik_errors(sims$log_liks, "max")
 plot_sim_errors(atols, rtols, mean_abs_loglik_error, log = FALSE)
 plot_sim_errors(atols, rtols, max_abs_loglik_error, log = FALSE)
 
-
 ## Computational challenges
 plot_sim_times(atols, rtols, sims$times)
-
 
 solver_args_sample <- list(
   abs_tol = 1e-4,
@@ -107,7 +101,6 @@ fit <- sample_posterior(stanmodels$posterior, data_list,
 print(fit$time())
 print(fit)
 post_draws <- fit$draws(c("beta", "gamma", "phi_inv"))
-
 
 # Simulate and plot generated solutions
 post_sim <- simulate(stanmodels$sim, post_draws, data_list, solver_args_sample, stan_opts)
@@ -131,16 +124,12 @@ is <- use_psis(post_sim, tuning$last_sim)
 print(is)
 print(is$diagnostics$pareto_k)
 
-
 # Importance resampling
 post_draws_resampled <- posterior::resample_draws(post_draws, weights = is$log_weights)
-
 
 # Comparing runtimes
 workflow_time <- fit$time()$total + sum(tuning$times)
 cat("Total workflow time was", workflow_time, "seconds.\n", sep = " ")
-
-
 solver_args_refsample <- list(
   abs_tol = tuning$last_tol,
   rel_tol = tuning$last_tol,
