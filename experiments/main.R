@@ -65,7 +65,7 @@ title <- "Solutions using prior param draws"
 plot_sir_example_solutions(prior_sim, data_list, thin = 10, main = title)
 
 ## Analyzing the numerical method
-TOLS <- 10^seq(-12, -4) # put less values here to knit the case study faster
+TOLS <- 10^seq(-9, -4)
 atols <- TOLS
 rtols <- TOLS
 sims <- simulate_many(
