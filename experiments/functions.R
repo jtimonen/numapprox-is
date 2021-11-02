@@ -35,13 +35,18 @@ OdeExperimentSetup <- R6Class("OdeExperimentSetup", list(
     stan_opts <- self$stan_opts
     data <- self$data
     init <- self$init
-    sample_posterior(self$stanmodels$posterior, data, solver_args, stan_opts, init = init, ...)
+    sample_posterior(self$stanmodels$posterior, data, solver_args, stan_opts,
+      init = init, ...
+    )
   },
   plot = function(fit) {
     eval(call(paste0("plot_", self$name), fit, self$data))
   },
   add_simulated_data = function(sim) {
-    self$data <- eval(call(paste0("add_simulated_data_", self$name), sim, self$data))
+    self$data <- eval(call(
+      paste0("add_simulated_data_", self$name), sim,
+      self$data
+    ))
   },
   set_init = function(param_draws) {
     S <- dim(param_draws)[1]
@@ -354,6 +359,22 @@ tune_solver <- function(tols, model, params, data, stan_opts,
 
 
 # PLOTTING ----------------------------------------------------------------
+
+# Plotting helper
+create_ribbon_plot_df <- function(rvar) {
+  alpha1 <- 0.1
+  alpha2 <- 0.25
+  c1 <- 100 * (1 - 2 * alpha1)
+  c2 <- 100 * (1 - 2 * alpha2)
+  cat("Plotting median and central ", c1, "% and ", c2, "% intervals.\n", sep = "")
+  lower1 <- as.vector(quantile(rvar, probs = alpha1))
+  upper1 <- as.vector(quantile(rvar, probs = 1 - alpha1))
+  lower2 <- as.vector(quantile(rvar, probs = alpha2))
+  upper2 <- as.vector(quantile(rvar, probs = 1 - alpha2))
+  median <- as.vector(quantile(rvar, probs = 0.5))
+  df <- data.frame(median, lower1, upper1, lower2, upper2)
+  return(df)
+}
 
 # Runtimes plot
 plot_sim_times <- function(abs_tol, rel_tol, TIME) {

@@ -88,25 +88,25 @@ setup_stancode_sir <- function(solver = "rk45") {
 # Plotting
 plot_sir <- function(fit, data) {
   I_gen_rvar <- posterior::as_draws_rvars(fit$draws("I_gen"))$I_gen
-  alpha1 <- 0.1
-  alpha2 <- 0.25
-  lower1 <- as.vector(quantile(I_gen_rvar, probs = alpha1))
-  upper1 <- as.vector(quantile(I_gen_rvar, probs = 1 - alpha1))
-  lower2 <- as.vector(quantile(I_gen_rvar, probs = alpha2))
-  upper2 <- as.vector(quantile(I_gen_rvar, probs = 1 - alpha2))
-  median <- as.vector(quantile(I_gen_rvar, probs = 0.5))
-  df <- data.frame(data$t, median, lower1, upper1, lower2, upper2)
-  colnames(df) <- c("Day", "median", "lower1", "upper1", "lower2", "upper2")
-  plt_I <- ggplot(df, aes(x = Day, y = median, ymin = lower1, ymax = upper1)) +
-    geom_ribbon(alpha = 0.75, fill = "firebrick") +
-    geom_ribbon(alpha = 0.75, fill = "firebrick", aes(ymin = lower2, ymax = upper2)) +
-    geom_line() +
+  df <- create_ribbon_plot_df(I_gen_rvar)
+  df$t <- data$t
+  cs <- bayesplot::color_scheme_get()
+  fill_alpha <- 1.0
+  plt_I <- ggplot(df, aes(x = t, y = median, ymin = lower1, ymax = upper1)) +
+    geom_ribbon(alpha = fill_alpha, fill = cs$light_highlight) +
+    geom_ribbon(
+      alpha = fill_alpha, fill = cs$mid,
+      aes(ymin = lower2, ymax = upper2)
+    ) +
+    geom_line(col = cs$mid_highlight, lwd = 1) +
     ylab("I")
-  ggtitle("Number of infected (I), population size = 763")
   if (!is.null(data$I_data)) {
     df <- data.frame(data$t, data$I_data)
-    colnames(df) <- c("Day", "I_data")
-    plt_I <- plt_I + geom_point(data = df, aes(x = Day, y = I_data), inherit.aes = FALSE)
+    colnames(df) <- c("t", "I_data")
+    plt_I <- plt_I + geom_point(
+      data = df, aes(x = t, y = I_data),
+      inherit.aes = FALSE, pch = 16
+    )
   }
   return(plt_I)
 }

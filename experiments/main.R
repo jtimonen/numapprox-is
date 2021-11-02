@@ -28,7 +28,10 @@ solver_args_gen <- list(
 )
 solver <- "rk45"
 param_names <- c("beta", "gamma", "phi_inv")
-setup <- OdeExperimentSetup$new("sir", solver, solver_args_gen, stan_opts, param_names)
+setup <- OdeExperimentSetup$new(
+  "sir", solver, solver_args_gen,
+  stan_opts, param_names
+)
 
 # Fit prior model
 prior_fit <- setup$sample_prior(refresh = 1000)
