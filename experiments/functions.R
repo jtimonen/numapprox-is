@@ -53,14 +53,12 @@ prior_model_code <- function(pars, tpars, prior) {
 }
 
 # Create full Stan code for simulator model
-simulator_model_code <- function(funs, data, tdata, obsdata,
-                                 pars, tpars, ode, gq) {
+simulator_model_code <- function(funs, data, tdata, pars, tpars, ode, gq) {
   cat("* Creating CmdStanModel for simulating...\n")
   blocks <- c(
     "functions", "data", "transformed data",
     "parameters", "transformed parameters", "generated quantities"
   )
-  data <- paste(data, obsdata, sep = "\n")
   gq <- paste(ode, gq, sep = "\n")
   codes <- c(funs, data, tdata, pars, tpars, gq)
   stan_code(blocks, codes)
@@ -95,8 +93,7 @@ create_cmdstan_models <- function(code) {
   codes <- list(
     prior = prior_model_code(pars, tpars, prior),
     simulator = simulator_model_code(
-      funs, data, tdata, obsdata,
-      pars, tpars, ode, gq
+      funs, data, tdata, pars, tpars, ode, gq
     ),
     posterior = posterior_model_code(
       funs, data, tdata, obsdata,

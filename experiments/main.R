@@ -8,10 +8,10 @@ library(stats)
 library(outbreaks)
 library(scales)
 library(ggplot2)
+library(ggdist)
 
 # Options
 stan_opts <- list(
-  seed = 2353, # random seed for Stan
   sig_figs = 18 # number of significant figures to store in floats
 )
 
@@ -19,57 +19,65 @@ stan_opts <- list(
 source("functions.R")
 source("setup_sir.R")
 
-data_list <- setup_standata_sir()
+# Create Stan models
+dat <- setup_standata_sir()
 code_parts <- setup_stancode_sir(solver = "rk45")
 stanmodels <- create_cmdstan_models(code_parts)
 
+# Fit prior model
 prior_fit <- stanmodels$prior$sample(
   sig_figs = stan_opts$sig_figs,
   seed = stan_opts$seed,
   refresh = 1000
 )
-print(prior_fit)
 prior_draws <- prior_fit$draws(c("beta", "gamma", "phi_inv"))
 
-solver_args_default <- list(
-  rel_tol = 1e-6,
-  abs_tol = 1e-6,
-  max_num_steps = 1e6
-)
 # Simulate solutions using prior draws
-prior_sim <- simulate(
-  stanmodels$sim, prior_draws, data_list,
-  solver_args_default, stan_opts
+solver_args_gen <- list(
+  rel_tol = 1e-12,
+  abs_tol = 1e-12,
+  max_num_steps = 1e9
 )
+prior_sim <- simulate(
+  stanmodels$simulator, prior_draws, dat,
+  solver_args_gen, stan_opts
+)
+y_gen_rvar <- posterior::as_draws_rvars(prior_sim$draws("y_gen"))$y_gen
+y_gen_arr <- posterior::as_draws_array(y_gen_rvar)
+
+df <- data.frame(dat$t, t(y_gen_rvar))
+colnames(df) <- c("Day", "S", "I")
+
+plt_S <- ggplot(df, aes(x = Day, y = S)) +
+  stat_lineribbon(alpha = 0.6) +
+  scale_fill_brewer() +
+  ggtitle("Number of susceptible (S), population size = 763")
+plt_I <- ggplot(df, aes(x = Day, y = I)) +
+  stat_lineribbon(alpha = 0.6) +
+  scale_fill_brewer() +
+  ggtitle("Number of infected (I), population size = 763")
+
+# Plot generated data
+i_draws <- as_draws_array(y_gen_rvar[2, ])
+NS <- dim(i_draws)[1]
+plot(dat$t, i_draws[1, 1, ], ylim = c(0, 2000), ylab = "Infected", xlab = "Day",
+     pch=".")
+for (s in 1:NS) {
+  points(dat$t, i_draws[s, 1, ], pch = "x", col = scales::alpha("black", 0.1))
+}
+lines(c(0, 14), c(dat$pop_size, dat$pop_size), col = "firebrick", lty = 2)
+
 
 # Plot solutions
-
-# Function that plots SIR solutions against data (of infected)
-plot_sir_example_solutions <- function(sim, data, thin = 1, main = "") {
-  N <- data$N
-  x_sim <- posterior::thin_draws(posterior::merge_chains(sim$draws("x")), thin)
-  I_sim <- x_sim[, 1, (N + 1):(2 * N), drop = TRUE]
-  plot(data$t, rep(data$pop_size, data$N),
-    type = "l", lty = 2,
-    col = "gray70", ylim = c(0, 800), ylab = "Infected", xlab = "Day",
-    main = main
-  )
-  for (i_draw in 1:nrow(I_sim)) {
-    I <- as.vector(I_sim[i_draw, ])
-    lines(data$t, I, col = scales::alpha("firebrick", 0.1))
-  }
-  points(data$t, data$I_data, ylim = c(0, 1000), pch = 20)
-}
-
 title <- "Solutions using prior param draws"
-plot_sir_example_solutions(prior_sim, data_list, thin = 10, main = title)
+plot_sir_example_solutions(prior_sim, dat, thin = 10, main = title)
 
 ## Analyzing the numerical method
 TOLS <- 10^seq(-9, -4)
 atols <- TOLS
 rtols <- TOLS
 sims <- simulate_many(
-  stanmodels$sim, prior_draws, data_list, stan_opts,
+  stanmodels$sim, prior_draws, dat, stan_opts,
   atols, rtols, solver_args_default$max_num_steps
 )
 
@@ -92,7 +100,7 @@ solver_args_sample <- list(
   rel_tol = 1e-4,
   max_num_steps = 1e6
 )
-fit <- sample_posterior(stanmodels$posterior, data_list,
+fit <- sample_posterior(stanmodels$posterior, dat,
   solver_args_sample, stan_opts,
   refresh = 1000,
   init = 0
@@ -103,16 +111,16 @@ print(fit)
 post_draws <- fit$draws(c("beta", "gamma", "phi_inv"))
 
 # Simulate and plot generated solutions
-post_sim <- simulate(stanmodels$sim, post_draws, data_list, solver_args_sample, stan_opts)
+post_sim <- simulate(stanmodels$sim, post_draws, dat, solver_args_sample, stan_opts)
 
 title <- "Solutions using posterior param draws"
-plot_sir_example_solutions(post_sim, data_list, thin = 10, main = title)
+plot_sir_example_solutions(post_sim, dat, thin = 10, main = title)
 
 # Tune the numerical method in $M_{high}$ so that it is reliable at these draws.
 TOLS <- 10^seq(-4, -12) # could be just halving for example
 tuning_tol <- 0.0001
 tuning <- tune_solver(
-  TOLS, stanmodels$sim, post_draws, data_list, stan_opts,
+  TOLS, stanmodels$sim, post_draws, dat, stan_opts,
   solver_args_sample$max_num_steps, tuning_tol
 )
 
@@ -135,7 +143,7 @@ solver_args_refsample <- list(
   rel_tol = tuning$last_tol,
   max_num_steps = solver_args_sample$max_num_steps
 )
-fit_ref <- sample_posterior(stanmodels$posterior, data_list,
+fit_ref <- sample_posterior(stanmodels$posterior, dat,
   solver_args_refsample, stan_opts,
   refresh = 1000,
   init = 0
