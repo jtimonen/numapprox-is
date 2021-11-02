@@ -9,6 +9,7 @@ library(outbreaks)
 library(scales)
 library(ggplot2)
 library(ggdist)
+library(R6)
 
 # Options
 stan_opts <- list(
@@ -19,60 +20,43 @@ stan_opts <- list(
 source("functions.R")
 source("setup_sir.R")
 
-# Create Stan models
-dat <- setup_standata_sir()
-code_parts <- setup_stancode_sir(solver = "rk45")
-stanmodels <- create_cmdstan_models(code_parts)
-
-# Fit prior model
-prior_fit <- stanmodels$prior$sample(
-  sig_figs = stan_opts$sig_figs,
-  seed = stan_opts$seed,
-  refresh = 1000
-)
-prior_draws <- prior_fit$draws(c("beta", "gamma", "phi_inv"))
-
-# Simulate solutions using prior draws
+# Create experiment setup
 solver_args_gen <- list(
   rel_tol = 1e-12,
   abs_tol = 1e-12,
   max_num_steps = 1e9
 )
-prior_sim <- simulate(
-  stanmodels$simulator, prior_draws, dat,
-  solver_args_gen, stan_opts
-)
-y_gen_rvar <- posterior::as_draws_rvars(prior_sim$draws("y_gen"))$y_gen
-y_gen_arr <- posterior::as_draws_array(y_gen_rvar)
+solver <- "rk45"
+param_names <- c("beta", "gamma", "phi_inv")
+setup <- OdeExperimentSetup$new("sir", solver, solver_args_gen, stan_opts, param_names)
 
-df <- data.frame(dat$t, t(y_gen_rvar))
-colnames(df) <- c("Day", "S", "I")
+# Fit prior model
+prior_fit <- setup$sample_prior(refresh = 1000)
+prior_draws <- prior_fit$draws(setup$param_names)
 
-plt_S <- ggplot(df, aes(x = Day, y = S)) +
-  stat_lineribbon(alpha = 0.6) +
-  scale_fill_brewer() +
-  ggtitle("Number of susceptible (S), population size = 763")
-plt_I <- ggplot(df, aes(x = Day, y = I)) +
-  stat_lineribbon(alpha = 0.6) +
-  scale_fill_brewer() +
-  ggtitle("Number of infected (I), population size = 763")
+# Simulate solutions and data using prior draws
+prior_sim <- simulate(setup, prior_draws, setup$solver_args_gen)
 
 # Plot generated data
-i_draws <- as_draws_array(y_gen_rvar[2, ])
-NS <- dim(i_draws)[1]
-plot(dat$t, i_draws[1, 1, ], ylim = c(0, 2000), ylab = "Infected", xlab = "Day",
-     pch=".")
-for (s in 1:NS) {
-  points(dat$t, i_draws[s, 1, ], pch = "x", col = scales::alpha("black", 0.1))
-}
-lines(c(0, 14), c(dat$pop_size, dat$pop_size), col = "firebrick", lty = 2)
+setup$plot(prior_sim)
+setup$add_simulated_data(prior_sim)
+setup$set_init(prior_draws)
+setup$plot(prior_sim)
 
+# Sample posterior
+solver_args_sample <- list(
+  abs_tol = 1e-4,
+  rel_tol = 1e-4,
+  max_num_steps = 1e6
+)
+post_fit <- setup$sample_posterior(solver_args_sample, refresh = 1000)
+post_draws <- post_fit$draws(setup$param_names)
 
-# Plot solutions
-title <- "Solutions using prior param draws"
-plot_sir_example_solutions(prior_sim, dat, thin = 10, main = title)
+# Simulate using posterior draws
+post_sim <- simulate(setup, post_draws, setup$solver_args_gen)
+setup$plot(post_sim)
 
-## Analyzing the numerical method
+# Analyzing the numerical method
 TOLS <- 10^seq(-9, -4)
 atols <- TOLS
 rtols <- TOLS
@@ -94,17 +78,6 @@ plot_sim_errors(atols, rtols, max_abs_loglik_error, log = FALSE)
 
 ## Computational challenges
 plot_sim_times(atols, rtols, sims$times)
-
-solver_args_sample <- list(
-  abs_tol = 1e-4,
-  rel_tol = 1e-4,
-  max_num_steps = 1e6
-)
-fit <- sample_posterior(stanmodels$posterior, dat,
-  solver_args_sample, stan_opts,
-  refresh = 1000,
-  init = 0
-)
 
 print(fit$time())
 print(fit)

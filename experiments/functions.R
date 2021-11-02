@@ -1,3 +1,63 @@
+# CLASSES -----------------------------------------------------------------
+OdeExperimentSetup <- R6Class("OdeExperimentSetup", list(
+  name = NULL,
+  stanmodels = NULL,
+  solver_args_gen = NULL,
+  solver = NULL,
+  data = NULL,
+  stan_opts = NULL,
+  param_names = NULL,
+  init = NULL,
+  initialize = function(name, solver, solver_args_gen, stan_opts, param_names) {
+    self$data <- eval(call(paste0("setup_standata_", name)))
+    self$name <- name
+    code_parts <- eval(call(paste0("setup_stancode_", name), solver))
+    self$stanmodels <- create_cmdstan_models(code_parts)
+    self$solver_args_gen <- solver_args_gen
+    self$solver <- solver
+    self$stan_opts <- stan_opts
+    self$param_names <- param_names
+  },
+  print = function(...) {
+    cat("OdeExperimentSetup: \n")
+    cat("  Name: ", self$name, "\n", sep = "")
+    invisible(self)
+  },
+  sample_prior = function(...) {
+    stan_opts <- self$stan_opts
+    self$stanmodels$prior$sample(
+      sig_figs = stan_opts$sig_figs,
+      seed = stan_opts$seed,
+      ...
+    )
+  },
+  sample_posterior = function(solver_args, ...) {
+    stan_opts <- self$stan_opts
+    data <- self$data
+    init <- self$init
+    sample_posterior(self$stanmodels$posterior, data, solver_args, stan_opts, init = init, ...)
+  },
+  plot = function(fit) {
+    eval(call(paste0("plot_", self$name), fit, self$data))
+  },
+  add_simulated_data = function(sim) {
+    self$data <- eval(call(paste0("add_simulated_data_", self$name), sim, self$data))
+  },
+  set_init = function(param_draws) {
+    S <- dim(param_draws)[1]
+    idx <- sample.int(n = S, size = 1)
+    par_init <- param_draws[idx, , ]
+    nc <- posterior::nchains(param_draws)
+    pin <- list()
+    for (idx_c in 1:nc) {
+      a <- as.list(par_init[, idx_c, ])
+      names(a) <- self$param_names
+      pin[[idx_c]] <- a
+    }
+    self$init <- pin
+  }
+))
+
 # UTILS -------------------------------------------------------------------
 
 # Validate solver arguments
@@ -113,13 +173,15 @@ create_cmdstan_models <- function(code) {
 
 # RUNNING CMDSTAN -----------------------------------------------------
 
-# Function for simulating ODE solutions and data given parameter( draws)s
-simulate <- function(model, params, data, solver_args, stan_opts) {
-  stopifnot(is(model, "CmdStanModel"))
+# Function for simulating ODE solutions and data given parameter(draws)s
+simulate <- function(setup, params, solver_args) {
+  stopifnot(is(setup, "OdeExperimentSetup"))
   stopifnot(is(params, "draws"))
-  stopifnot(is(data, "list"))
   stopifnot(is(solver_args, "list"))
   check_sa(solver_args)
+  data <- setup$data
+  stan_opts <- setup$stan_opts
+  model <- setup$stanmodels$simulator
   out <- model$generate_quantities(
     data = c(data, solver_args),
     fitted_params = params,

@@ -3,8 +3,8 @@ setup_standata_sir <- function(N = 14) {
   data_list <- list(
     N = N,
     t = as.numeric(seq(1, N)),
-    I0 = 1,
-    pop_size = 763,
+    I0 = 5,
+    pop_size = 1000,
     D = 2
   )
   return(data_list)
@@ -64,10 +64,9 @@ setup_stancode_sir <- function(solver = "rk45") {
     }
   "
   genquant <- "
-    int y_gen[2, N];
+    int I_gen[N];
     for(n in 1:N) {
-      y_gen[1][n] = neg_binomial_2_rng(x[n][1] + 10*abs_tol, phi);
-      y_gen[2][n] = neg_binomial_2_rng(x[n][2] + 10*abs_tol, phi);
+      I_gen[n] = neg_binomial_2_rng(x[n][2] + 10*abs_tol, phi);
     }
   "
 
@@ -86,18 +85,37 @@ setup_stancode_sir <- function(solver = "rk45") {
   )
 }
 
-# Function that plots SIR solutions against data (of infected)
-plot_sir_example_solutions <- function(sim, data, thin = 1, main = "") {
-  N <- data$N
-  x_sim <- posterior::thin_draws(posterior::merge_chains(sim$draws("x")), thin)
-  I_sim <- x_sim[, 1, (N + 1):(2 * N), drop = TRUE]
-  plot(data$t, rep(data$pop_size, data$N),
-    type = "l", lty = 2,
-    col = "gray70", ylim = c(0, 800), ylab = "Infected", xlab = "Day",
-    main = main
-  )
-  for (i_draw in 1:nrow(I_sim)) {
-    I <- as.vector(I_sim[i_draw, ])
-    lines(data$t, I, col = scales::alpha("firebrick", 0.1))
+# Plotting
+plot_sir <- function(fit, data) {
+  I_gen_rvar <- posterior::as_draws_rvars(fit$draws("I_gen"))$I_gen
+  alpha1 <- 0.1
+  alpha2 <- 0.25
+  lower1 <- as.vector(quantile(I_gen_rvar, probs = alpha1))
+  upper1 <- as.vector(quantile(I_gen_rvar, probs = 1 - alpha1))
+  lower2 <- as.vector(quantile(I_gen_rvar, probs = alpha2))
+  upper2 <- as.vector(quantile(I_gen_rvar, probs = 1 - alpha2))
+  median <- as.vector(quantile(I_gen_rvar, probs = 0.5))
+  df <- data.frame(data$t, median, lower1, upper1, lower2, upper2)
+  colnames(df) <- c("Day", "median", "lower1", "upper1", "lower2", "upper2")
+  plt_I <- ggplot(df, aes(x = Day, y = median, ymin = lower1, ymax = upper1)) +
+    geom_ribbon(alpha = 0.75, fill = "firebrick") +
+    geom_ribbon(alpha = 0.75, fill = "firebrick", aes(ymin = lower2, ymax = upper2)) +
+    geom_line() +
+    ylab("I")
+  ggtitle("Number of infected (I), population size = 763")
+  if (!is.null(data$I_data)) {
+    df <- data.frame(data$t, data$I_data)
+    colnames(df) <- c("Day", "I_data")
+    plt_I <- plt_I + geom_point(data = df, aes(x = Day, y = I_data), inherit.aes = FALSE)
   }
+  return(plt_I)
+}
+
+# Adding simulated data
+add_simulated_data_sir <- function(fit, data) {
+  I_gen_arr <- posterior::merge_chains(fit$draws("I_gen"))
+  S <- dim(I_gen_arr)[1]
+  idx <- sample.int(n = S, size = 1)
+  data$I_data <- as.vector(I_gen_arr[idx, 1, ])
+  return(data)
 }
