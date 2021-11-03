@@ -65,31 +65,25 @@ atols <- TOLS
 rtols <- TOLS
 sims <- simulate_many(setup, prior_draws, atols, rtols)
 
-
 # Plot
-mean_abs_sol_error <- compute_sol_errors(sims$sims, "mean")
-max_abs_sol_error <- compute_sol_errors(sims$sims, "max")
-plot_sim_errors(atols, rtols, mean_abs_sol_error)
-plot_sim_errors(atols, rtols, max_abs_sol_error)
+# mean_abs_sol_error <- compute_sol_errors(sims$sims, "mean")
+# max_abs_sol_error <- compute_sol_errors(sims$sims, "max")
+# plot_sim_errors(atols, rtols, mean_abs_sol_error)
+# plot_sim_errors(atols, rtols, max_abs_sol_error)
+# mean_abs_loglik_error <- compute_loglik_errors(sims$log_liks, "mean")
+# max_abs_loglik_error <- compute_loglik_errors(sims$log_liks, "max")
+# plot_sim_errors(atols, rtols, mean_abs_loglik_error, log = FALSE)
+# plot_sim_errors(atols, rtols, max_abs_loglik_error, log = FALSE)
 
-mean_abs_loglik_error <- compute_loglik_errors(sims$log_liks, "mean")
-max_abs_loglik_error <- compute_loglik_errors(sims$log_liks, "max")
-plot_sim_errors(atols, rtols, mean_abs_loglik_error, log = FALSE)
-plot_sim_errors(atols, rtols, max_abs_loglik_error, log = FALSE)
-
-## Computational challenges
-plot_sim_times(atols, rtols, sims$times)
-print(post_fit$time())
-
-title <- "Solutions using posterior param draws"
-plot_sir_example_solutions(post_sim, dat, thin = 10, main = title)
+# Computational challenges
+# plot_sim_times(atols, rtols, sims$times)
+# print(post_fit$time())
 
 # Tune the numerical method in $M_{high}$ so that it is reliable at these draws.
 TOLS <- 10^seq(-4, -12) # could be just halving for example
 tuning_tol <- 0.0001
 tuning <- tune_solver(
-  TOLS, stanmodels$sim, post_draws, dat, stan_opts,
-  solver_args_sample$max_num_steps, tuning_tol
+  TOLS, setup, post_sim, post_draws, solver_args_sample$max_num_steps, tuning_tol
 )
 
 # Print the final tolerance

@@ -321,12 +321,16 @@ use_psis <- function(fit_high, fit_low) {
 
 # TUNING THE SOLVER -------------------------------------------------------
 
-tune_solver <- function(tols, model, params, data, stan_opts,
-                        max_num_steps, err_tol) {
+tune_solver <- function(tols, setup, p_sim, p_params, max_num_steps, err_tol) {
+  data <- setup$data
+  stan_opts <- setup$stan_opts
+  model <- setup$stanmodels$simulator
   error_to_ref <- Inf
   x_ref <- NULL
   TIMES <- c()
   ERR <- c()
+  N_EFF <- c()
+  K_HAT <- c()
   idx <- 0
   for (TOL in tols) {
     idx <- idx + 1
@@ -336,7 +340,7 @@ tune_solver <- function(tols, model, params, data, stan_opts,
       rel_tol = TOL,
       max_num_steps = max_num_steps
     )
-    sim <- simulate(model, params, data, sargs, stan_opts)
+    sim <- simulate(setup, p_params, sargs)
     x <- posterior::merge_chains(sim$draws("x"))[, 1, , drop = TRUE]
     TIMES <- c(TIMES, sim$time()$total)
     if (is.null(x_ref)) {
@@ -344,19 +348,31 @@ tune_solver <- function(tols, model, params, data, stan_opts,
     }
     err <- compute_sol_error(x, x_ref, "max")
     ERR <- c(ERR, err)
+    is <- use_psis(sim, p_sim)
+    K_HAT <- c(K_HAT, is$diagnostics$pareto_k)
+    N_EFF <- c(N_EFF, is$diagnostics$n_eff)
     if (idx > 1 && err < err_tol) {
-      return(list(
-        tols = tols[1:idx], errors = ERR, times = TIMES, last_sim
-        = sim, last_tol = tols[idx]
-      ))
+      out <- list(
+        tols = tols[1:idx],
+        max_abs_errors = ERR,
+        k_hats = K_HAT,
+        n_effs = N_EFF,
+        times = TIMES,
+        last_sim = sim,
+        last_tol = tols[idx]
+      )
+      return(out)
     }
     x_ref <- x
   }
   warning("err_tol was not reached")
-  list(
-    tols = tols[1:idx], errors = ERR, times = TIMES, last_sim = sim,
+  out <- list(
+    tols = tols[1:idx], max_abs_errors = ERR, k_hats = K_HAT,
+    n_effs = N_EFF,
+    times = TIMES, last_sim = sim,
     last_tol = tols[idx]
   )
+  return(out)
 }
 
 
