@@ -188,12 +188,13 @@ simulate <- function(setup, params, solver_args) {
   data <- setup$data
   stan_opts <- setup$stan_opts
   model <- setup$stanmodels$simulator
+  capture.output({
   out <- model$generate_quantities(
     data = c(data, solver_args),
     fitted_params = params,
     seed = stan_opts$seed,
     sig_figs = stan_opts$sig_figs
-  )
+  )})
   print_output_if_failed(out)
   return(out)
 }

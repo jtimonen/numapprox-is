@@ -60,10 +60,10 @@ post_sim <- simulate(setup, post_draws, setup$solver_args_gen)
 setup$plot(post_sim)
 
 # Analyzing the numerical method
-TOLS <- 10^seq(-9, -4)
-atols <- TOLS
-rtols <- TOLS
-sims <- simulate_many(setup, prior_draws, atols, rtols)
+#TOLS <- 10^seq(-9, -4)
+#atols <- TOLS
+#rtols <- TOLS
+#sims <- simulate_many(setup, prior_draws, atols, rtols)
 
 # Plot
 # mean_abs_sol_error <- compute_sol_errors(sims$sims, "mean")
