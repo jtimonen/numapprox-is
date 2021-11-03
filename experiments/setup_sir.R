@@ -1,11 +1,14 @@
 # Data
-setup_standata_sir <- function(N = 14) {
+setup_standata_sir <- function() {
+  t <- as.numeric(seq(0.2, 15, by = 0.2))
+  N <- length(t)
   data_list <- list(
     N = N,
-    t = as.numeric(seq(1, N)),
+    t = t,
     I0 = 5,
     pop_size = 1000,
-    D = 2
+    D = 2,
+    I_data = rep(1.0, N) # dummy
   )
   return(data_list)
 }
@@ -65,8 +68,10 @@ setup_stancode_sir <- function(solver = "rk45") {
   "
   genquant <- "
     int I_gen[N];
+    real log_lik = 0.0;
     for(n in 1:N) {
       I_gen[n] = neg_binomial_2_rng(x[n][2] + 10*abs_tol, phi);
+      log_lik += neg_binomial_2_lpmf(I_data[n] | x[n][2] + 10*abs_tol, phi);
     }
   "
 

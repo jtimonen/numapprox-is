@@ -22,8 +22,8 @@ source("setup_sir.R")
 
 # Create experiment setup
 solver_args_gen <- list(
-  rel_tol = 1e-12,
-  abs_tol = 1e-12,
+  rel_tol = 1e-9,
+  abs_tol = 1e-9,
   max_num_steps = 1e9
 )
 solver <- "rk45"
@@ -63,10 +63,8 @@ setup$plot(post_sim)
 TOLS <- 10^seq(-9, -4)
 atols <- TOLS
 rtols <- TOLS
-sims <- simulate_many(
-  stanmodels$sim, prior_draws, dat, stan_opts,
-  atols, rtols, solver_args_default$max_num_steps
-)
+sims <- simulate_many(setup, prior_draws, atols, rtols)
+
 
 # Plot
 mean_abs_sol_error <- compute_sol_errors(sims$sims, "mean")
@@ -81,13 +79,7 @@ plot_sim_errors(atols, rtols, max_abs_loglik_error, log = FALSE)
 
 ## Computational challenges
 plot_sim_times(atols, rtols, sims$times)
-
-print(fit$time())
-print(fit)
-post_draws <- fit$draws(c("beta", "gamma", "phi_inv"))
-
-# Simulate and plot generated solutions
-post_sim <- simulate(stanmodels$sim, post_draws, dat, solver_args_sample, stan_opts)
+print(post_fit$time())
 
 title <- "Solutions using posterior param draws"
 plot_sir_example_solutions(post_sim, dat, thin = 10, main = title)

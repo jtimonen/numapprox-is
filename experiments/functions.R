@@ -118,13 +118,14 @@ prior_model_code <- function(pars, tpars, prior) {
 }
 
 # Create full Stan code for simulator model
-simulator_model_code <- function(funs, data, tdata, pars, tpars, ode, gq) {
+simulator_model_code <- function(funs, data, tdata, pars, tpars, ode, gq, od) {
   cat("* Creating CmdStanModel for simulating...\n")
   blocks <- c(
     "functions", "data", "transformed data",
     "parameters", "transformed parameters", "generated quantities"
   )
   gq <- paste(ode, gq, sep = "\n")
+  data <- paste(data, od, sep = "\n")
   codes <- c(funs, data, tdata, pars, tpars, gq)
   stan_code(blocks, codes)
 }
@@ -158,7 +159,7 @@ create_cmdstan_models <- function(code) {
   codes <- list(
     prior = prior_model_code(pars, tpars, prior),
     simulator = simulator_model_code(
-      funs, data, tdata, pars, tpars, ode, gq
+      funs, data, tdata, pars, tpars, ode, gq, obsdata
     ),
     posterior = posterior_model_code(
       funs, data, tdata, obsdata,
@@ -198,9 +199,10 @@ simulate <- function(setup, params, solver_args) {
 }
 
 # Using simulate with different tolerances
-simulate_many <- function(model, params, data, stan_opts,
-                          atol, rtol, max_num_steps) {
+simulate_many <- function(setup, params, atol, rtol) {
   stopifnot(is(params, "draws"))
+  data <- setup$data
+  max_num_steps <- setup$solver_args_gen$max_num_steps
   J1 <- length(atol)
   J2 <- length(rtol)
   S <- posterior::niterations(params) * posterior::nchains(params)
@@ -216,7 +218,7 @@ simulate_many <- function(model, params, data, stan_opts,
       )
       tryCatch(
         expr = {
-          sim <- simulate(model, params, data, solver_args, stan_opts)
+          sim <- simulate(setup, params, solver_args)
           XSIM[j1, j2, , ] <- posterior::merge_chains(
             sim$draws("x")
           )[, 1, , drop = TRUE]
@@ -366,7 +368,9 @@ create_ribbon_plot_df <- function(rvar) {
   alpha2 <- 0.25
   c1 <- 100 * (1 - 2 * alpha1)
   c2 <- 100 * (1 - 2 * alpha2)
-  cat("Plotting median and central ", c1, "% and ", c2, "% intervals.\n", sep = "")
+  cat("Plotting median and central ", c1, "% and ", c2, "% intervals.\n",
+    sep = ""
+  )
   lower1 <- as.vector(quantile(rvar, probs = alpha1))
   upper1 <- as.vector(quantile(rvar, probs = 1 - alpha1))
   lower2 <- as.vector(quantile(rvar, probs = alpha2))
