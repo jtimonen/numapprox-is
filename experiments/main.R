@@ -61,7 +61,7 @@ setup$plot(post_sim)
 
 # Tune the numerical method in $M_{high}$ so that it is reliable at these draws.
 tuning_factor <- 2
-tuning <- tune_solver(
+tuning <- tune_solver_tols(
   setup, post_sim, post_draws, solver_args_sample, tuning_factor
 )
 plot_tuning(tuning)
@@ -73,8 +73,10 @@ is <- use_psis(post_sim, tuning$last_sim)
 post_draws_resampled <- posterior::resample_draws(post_draws, weights = is$log_weights)
 
 # Comparing runtimes
-workflow_time <- fit$time()$total + sum(tuning$times)
+workflow_time <- post_fit$time()$total + post_sim$time()$total + tuning$total_time
 cat("Total workflow time was", workflow_time, "seconds.\n", sep = " ")
+
+
 solver_args_refsample <- list(
   abs_tol = tuning$last_tol,
   rel_tol = tuning$last_tol,

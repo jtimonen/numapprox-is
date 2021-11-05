@@ -329,7 +329,7 @@ get_x_sim <- function(sim) {
 }
 
 # Run tuning
-tune_solver <- function(setup, p_sim, p_params, p_sargs, factor) {
+tune_solver_tols <- function(setup, p_sim, p_params, p_sargs, factor) {
   S <- posterior::ndraws(posterior::merge_chains(p_sim$draws()))
   tol_j <- min(p_sargs$rel_tol, p_sargs$abs_tol)
   data <- setup$data
@@ -338,9 +338,9 @@ tune_solver <- function(setup, p_sim, p_params, p_sargs, factor) {
   error_to_ref <- Inf
   p_x <- get_x_sim(p_sim)
   p_t <- p_sim$time()$total
-  res <- c(tol_j, p_t, 0.0, NA, 0.5)
+  res <- c(1 / tol_j, p_t, 0.0, NA, 1.0)
   idx <- 0
-  cat("Tuning...\n")
+  cat("Tuning tolerances...\n")
   while (idx < 10) {
     idx <- idx + 1
     tol_j <- tol_j / factor
@@ -361,30 +361,31 @@ tune_solver <- function(setup, p_sim, p_params, p_sargs, factor) {
     k_j <- is$diagnostics$pareto_k
     n_j <- is$diagnostics$n_eff / S
     cat(", k_hat = ", k_j, ", n_eff = ", n_j, "\n", sep = "")
-    res_j <- c(tol_j, t_j, err_j, k_j, n_j)
+    res_j <- c(1 / tol_j, t_j, err_j, k_j, n_j)
     res <- rbind(res, res_j)
   }
-  colnames(res) <- c("tol", "time", "mae", "k_hat", "p_eff")
+  colnames(res) <- c("inv_tol", "time", "mae", "k_hat", "p_eff")
   res <- data.frame(res)
   rownames(res) <- NULL
-  return(res)
+  list(metrics = res, last_sim = sim, total_time = sum(res$time), max_khat = max(res$k_hat))
 }
 
 # Plot tuning results
 plot_tuning <- function(tuning) {
-  p_A <- ggplot(tuning, aes(x = tol, y = mae)) +
+  df <- tuning$metrics
+  p_A <- ggplot(df, aes(x = inv_tol, y = mae)) +
     geom_line() +
     geom_point() +
     scale_x_log10()
-  p_B <- ggplot(tuning, aes(x = tol, y = k_hat)) +
+  p_B <- ggplot(df, aes(x = inv_tol, y = k_hat)) +
     geom_line() +
     geom_point() +
     scale_x_log10()
-  p_C <- ggplot(tuning, aes(x = tol, y = p_eff)) +
+  p_C <- ggplot(df, aes(x = inv_tol, y = p_eff)) +
     geom_line() +
     geom_point() +
     scale_x_log10()
-  p_D <- ggplot(tuning, aes(x = tol, y = time)) +
+  p_D <- ggplot(df, aes(x = inv_tol, y = time)) +
     geom_line() +
     geom_point() +
     scale_x_log10()
