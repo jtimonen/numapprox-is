@@ -60,10 +60,10 @@ post_sim <- simulate(setup, post_draws, setup$solver_args_gen)
 setup$plot(post_sim)
 
 # Analyzing the numerical method
-#TOLS <- 10^seq(-9, -4)
-#atols <- TOLS
-#rtols <- TOLS
-#sims <- simulate_many(setup, prior_draws, atols, rtols)
+# TOLS <- 10^seq(-9, -4)
+# atols <- TOLS
+# rtols <- TOLS
+# sims <- simulate_many(setup, prior_draws, atols, rtols)
 
 # Plot
 # mean_abs_sol_error <- compute_sol_errors(sims$sims, "mean")
@@ -81,18 +81,17 @@ setup$plot(post_sim)
 
 # Tune the numerical method in $M_{high}$ so that it is reliable at these draws.
 TOLS <- 10^seq(-4, -12) # could be just halving for example
-tuning_tol <- 0.0001
+tuning_tol <- 0
 tuning <- tune_solver(
   TOLS, setup, post_sim, post_draws, solver_args_sample$max_num_steps, tuning_tol
 )
+plot(log10(tuning$tols), tuning$max_abs_errors, "o", pch = 16)
 
 # Print the final tolerance
 print(tuning$last_tol)
 
 # Compute importance weights and Pareto-$k$
 is <- use_psis(post_sim, tuning$last_sim)
-print(is)
-print(is$diagnostics$pareto_k)
 
 # Importance resampling
 post_draws_resampled <- posterior::resample_draws(post_draws, weights = is$log_weights)

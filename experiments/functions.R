@@ -189,12 +189,13 @@ simulate <- function(setup, params, solver_args) {
   stan_opts <- setup$stan_opts
   model <- setup$stanmodels$simulator
   capture.output({
-  out <- model$generate_quantities(
-    data = c(data, solver_args),
-    fitted_params = params,
-    seed = stan_opts$seed,
-    sig_figs = stan_opts$sig_figs
-  )})
+    out <- model$generate_quantities(
+      data = c(data, solver_args),
+      fitted_params = params,
+      seed = stan_opts$seed,
+      sig_figs = stan_opts$sig_figs
+    )
+  })
   print_output_if_failed(out)
   return(out)
 }
@@ -321,37 +322,46 @@ use_psis <- function(fit_high, fit_low) {
 
 
 # TUNING THE SOLVER -------------------------------------------------------
+get_x_sim <- function(sim) {
+  posterior::merge_chains(sim$draws("x"))[, 1, , drop = TRUE]
+}
 
 tune_solver <- function(tols, setup, p_sim, p_params, max_num_steps, err_tol) {
   data <- setup$data
   stan_opts <- setup$stan_opts
   model <- setup$stanmodels$simulator
   error_to_ref <- Inf
-  x_ref <- NULL
+  p_x <- get_x_sim(p_sim)
   TIMES <- c()
   ERR <- c()
   N_EFF <- c()
   K_HAT <- c()
   idx <- 0
+  cat("Tuning...\n")
   for (TOL in tols) {
     idx <- idx + 1
-    cat("* simulating with abs_tol = rel_tol = ", TOL, "\n", sep = "")
+    cat(" * tol = ", TOL, sep = "")
     sargs <- list(
       abs_tol = TOL,
       rel_tol = TOL,
       max_num_steps = max_num_steps
     )
     sim <- simulate(setup, p_params, sargs)
-    x <- posterior::merge_chains(sim$draws("x"))[, 1, , drop = TRUE]
-    TIMES <- c(TIMES, sim$time()$total)
-    if (is.null(x_ref)) {
-      x_ref <- x
-    }
-    err <- compute_sol_error(x, x_ref, "max")
+    t_j <- sim$time()$total
+
+    TIMES <- c(TIMES, t_j)
+    cat(", time = ", t_j, " s", sep = "")
+    x <- get_x_sim(sim)
+    err <- compute_sol_error(x, p_x, "max")
+    cat(", mae = ", err, sep = "")
     ERR <- c(ERR, err)
     is <- use_psis(sim, p_sim)
-    K_HAT <- c(K_HAT, is$diagnostics$pareto_k)
-    N_EFF <- c(N_EFF, is$diagnostics$n_eff)
+    k_j <- is$diagnostics$pareto_k
+    n_j <- is$diagnostics$n_eff
+    cat(", k_hat = ", k_j, ", n_eff = ", n_j, "\n", sep = "")
+    K_HAT <- c(K_HAT, k_j)
+    N_EFF <- c(N_EFF, n_j)
+
     if (idx > 1 && err < err_tol) {
       out <- list(
         tols = tols[1:idx],
@@ -364,7 +374,6 @@ tune_solver <- function(tols, setup, p_sim, p_params, max_num_steps, err_tol) {
       )
       return(out)
     }
-    x_ref <- x
   }
   warning("err_tol was not reached")
   out <- list(
