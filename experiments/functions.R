@@ -341,7 +341,7 @@ tune_solver_tols <- function(setup, p_sim, p_params, p_sargs, factor) {
   res <- c(1 / tol_j, p_t, 0.0, NA, 1.0)
   idx <- 0
   cat("Tuning tolerances...\n")
-  while (idx < 10) {
+  while (idx < 13) {
     idx <- idx + 1
     tol_j <- tol_j / factor
     cat(" * tol = ", tol_j, sep = "")
@@ -371,7 +371,7 @@ tune_solver_tols <- function(setup, p_sim, p_params, p_sargs, factor) {
 }
 
 # Plot tuning results
-plot_tuning <- function(tuning) {
+plot_tuning <- function(tuning, ...) {
   df <- tuning$metrics
   p_A <- ggplot(df, aes(x = inv_tol, y = mae)) +
     geom_line() +
@@ -389,7 +389,7 @@ plot_tuning <- function(tuning) {
     geom_line() +
     geom_point() +
     scale_x_log10()
-  plt <- ggpubr::ggarrange(p_A, p_B, p_C, p_D, labels = "auto", nrow = 2, ncol = 2)
+  plt <- ggpubr::ggarrange(p_A, p_B, p_C, p_D, labels = "auto", ...)
   return(plt)
 }
 

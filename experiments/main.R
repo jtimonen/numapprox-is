@@ -10,6 +10,7 @@ library(scales)
 library(ggplot2)
 library(ggdist)
 library(R6)
+library(ggpubr)
 
 # Options
 stan_opts <- list(
@@ -50,21 +51,23 @@ setup$plot(prior_sim)
 solver_args_sample <- list(
   abs_tol = 1e-4,
   rel_tol = 1e-4,
-  max_num_steps = 1e4
+  max_num_steps = 1e6
 )
 post_fit <- setup$sample_posterior(solver_args_sample, refresh = 1000)
 post_draws <- post_fit$draws(setup$param_names)
 
 # Simulate using posterior draws
 post_sim <- simulate(setup, post_draws, solver_args_sample)
-setup$plot(post_sim)
+plt_sim <- setup$plot(post_sim)
 
 # Tune the numerical method in $M_{high}$ so that it is reliable at these draws.
 tuning_factor <- 2
 tuning <- tune_solver_tols(
   setup, post_sim, post_draws, solver_args_sample, tuning_factor
 )
-plot_tuning(tuning)
+plt_tuning <- plot_tuning(tuning, nrow=1)
+
+plt <- ggarrange(plt_tuning, plt_sim, nrow=2, labels=c("", "e"))
 
 # Compute importance weights and Pareto-$k$
 is <- use_psis(post_sim, tuning$last_sim)
