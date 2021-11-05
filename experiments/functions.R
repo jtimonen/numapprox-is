@@ -322,69 +322,75 @@ use_psis <- function(fit_high, fit_low) {
 
 
 # TUNING THE SOLVER -------------------------------------------------------
+
+# Extract ODE solutions
 get_x_sim <- function(sim) {
   posterior::merge_chains(sim$draws("x"))[, 1, , drop = TRUE]
 }
 
-tune_solver <- function(tols, setup, p_sim, p_params, max_num_steps, err_tol) {
+# Run tuning
+tune_solver <- function(setup, p_sim, p_params, p_sargs, factor) {
+  S <- posterior::ndraws(posterior::merge_chains(p_sim$draws()))
+  tol_j <- min(p_sargs$rel_tol, p_sargs$abs_tol)
   data <- setup$data
   stan_opts <- setup$stan_opts
   model <- setup$stanmodels$simulator
   error_to_ref <- Inf
   p_x <- get_x_sim(p_sim)
-  TIMES <- c()
-  ERR <- c()
-  N_EFF <- c()
-  K_HAT <- c()
+  p_t <- p_sim$time()$total
+  res <- c(tol_j, p_t, 0.0, NA, 0.5)
   idx <- 0
   cat("Tuning...\n")
-  for (TOL in tols) {
+  while (idx < 10) {
     idx <- idx + 1
-    cat(" * tol = ", TOL, sep = "")
+    tol_j <- tol_j / factor
+    cat(" * tol = ", tol_j, sep = "")
     sargs <- list(
-      abs_tol = TOL,
-      rel_tol = TOL,
-      max_num_steps = max_num_steps
+      abs_tol = tol_j,
+      rel_tol = tol_j,
+      max_num_steps = 10^9
     )
     sim <- simulate(setup, p_params, sargs)
+    stopifnot(is(sim, "CmdStanFit"))
     t_j <- sim$time()$total
-
-    TIMES <- c(TIMES, t_j)
     cat(", time = ", t_j, " s", sep = "")
     x <- get_x_sim(sim)
-    err <- compute_sol_error(x, p_x, "max")
-    cat(", mae = ", err, sep = "")
-    ERR <- c(ERR, err)
+    err_j <- compute_sol_error(x, p_x, "max")
+    cat(", mae = ", err_j, sep = "")
     is <- use_psis(sim, p_sim)
     k_j <- is$diagnostics$pareto_k
-    n_j <- is$diagnostics$n_eff
+    n_j <- is$diagnostics$n_eff / S
     cat(", k_hat = ", k_j, ", n_eff = ", n_j, "\n", sep = "")
-    K_HAT <- c(K_HAT, k_j)
-    N_EFF <- c(N_EFF, n_j)
-
-    if (idx > 1 && err < err_tol) {
-      out <- list(
-        tols = tols[1:idx],
-        max_abs_errors = ERR,
-        k_hats = K_HAT,
-        n_effs = N_EFF,
-        times = TIMES,
-        last_sim = sim,
-        last_tol = tols[idx]
-      )
-      return(out)
-    }
+    res_j <- c(tol_j, t_j, err_j, k_j, n_j)
+    res <- rbind(res, res_j)
   }
-  warning("err_tol was not reached")
-  out <- list(
-    tols = tols[1:idx], max_abs_errors = ERR, k_hats = K_HAT,
-    n_effs = N_EFF,
-    times = TIMES, last_sim = sim,
-    last_tol = tols[idx]
-  )
-  return(out)
+  colnames(res) <- c("tol", "time", "mae", "k_hat", "p_eff")
+  res <- data.frame(res)
+  rownames(res) <- NULL
+  return(res)
 }
 
+# Plot tuning results
+plot_tuning <- function(tuning) {
+  p_A <- ggplot(tuning, aes(x = tol, y = mae)) +
+    geom_line() +
+    geom_point() +
+    scale_x_log10()
+  p_B <- ggplot(tuning, aes(x = tol, y = k_hat)) +
+    geom_line() +
+    geom_point() +
+    scale_x_log10()
+  p_C <- ggplot(tuning, aes(x = tol, y = p_eff)) +
+    geom_line() +
+    geom_point() +
+    scale_x_log10()
+  p_D <- ggplot(tuning, aes(x = tol, y = time)) +
+    geom_line() +
+    geom_point() +
+    scale_x_log10()
+  plt <- ggpubr::ggarrange(p_A, p_B, p_C, p_D, labels = "auto", nrow = 2, ncol = 2)
+  return(plt)
+}
 
 # PLOTTING ----------------------------------------------------------------
 

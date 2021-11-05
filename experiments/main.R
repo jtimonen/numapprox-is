@@ -50,45 +50,21 @@ setup$plot(prior_sim)
 solver_args_sample <- list(
   abs_tol = 1e-4,
   rel_tol = 1e-4,
-  max_num_steps = 1e6
+  max_num_steps = 1e4
 )
 post_fit <- setup$sample_posterior(solver_args_sample, refresh = 1000)
 post_draws <- post_fit$draws(setup$param_names)
 
 # Simulate using posterior draws
-post_sim <- simulate(setup, post_draws, setup$solver_args_gen)
+post_sim <- simulate(setup, post_draws, solver_args_sample)
 setup$plot(post_sim)
 
-# Analyzing the numerical method
-# TOLS <- 10^seq(-9, -4)
-# atols <- TOLS
-# rtols <- TOLS
-# sims <- simulate_many(setup, prior_draws, atols, rtols)
-
-# Plot
-# mean_abs_sol_error <- compute_sol_errors(sims$sims, "mean")
-# max_abs_sol_error <- compute_sol_errors(sims$sims, "max")
-# plot_sim_errors(atols, rtols, mean_abs_sol_error)
-# plot_sim_errors(atols, rtols, max_abs_sol_error)
-# mean_abs_loglik_error <- compute_loglik_errors(sims$log_liks, "mean")
-# max_abs_loglik_error <- compute_loglik_errors(sims$log_liks, "max")
-# plot_sim_errors(atols, rtols, mean_abs_loglik_error, log = FALSE)
-# plot_sim_errors(atols, rtols, max_abs_loglik_error, log = FALSE)
-
-# Computational challenges
-# plot_sim_times(atols, rtols, sims$times)
-# print(post_fit$time())
-
 # Tune the numerical method in $M_{high}$ so that it is reliable at these draws.
-TOLS <- 10^seq(-4, -12) # could be just halving for example
-tuning_tol <- 0
+tuning_factor <- 2
 tuning <- tune_solver(
-  TOLS, setup, post_sim, post_draws, solver_args_sample$max_num_steps, tuning_tol
+  setup, post_sim, post_draws, solver_args_sample, tuning_factor
 )
-plot(log10(tuning$tols), tuning$max_abs_errors, "o", pch = 16)
-
-# Print the final tolerance
-print(tuning$last_tol)
+plot_tuning(tuning)
 
 # Compute importance weights and Pareto-$k$
 is <- use_psis(post_sim, tuning$last_sim)
