@@ -48,12 +48,26 @@ setup$set_init(prior_draws)
 setup$plot(prior_sim)
 
 # Sample posterior
-solver_args_sample <- list(
-  abs_tol = 1e-4,
-  rel_tol = 1e-4,
-  max_num_steps = 1e6
-)
-post_fit <- setup$sample_posterior(solver_args_sample, refresh = 1000)
+TOLS <- 10^seq(-4,-8)
+L <- length(TOLS)
+WT <- matrix(0.0, L, 4)
+ST <- matrix(0.0, L, 4)
+TT <- matrix(0.0, L, 4)
+j <- 0
+for (ttol in TOLS) {
+  print(ttol)
+  j <- j + 1
+  solver_args_sample <- list(
+    abs_tol = ttol, #1e-4,
+    rel_tol = ttol, #1e-4,
+    max_num_steps = 1e6
+  )
+  post_fit <- setup$sample_posterior(solver_args_sample, refresh = 1000)
+  WT[j,] <- post_fit$time()$chains$warmup
+  ST[j,] <- post_fit$time()$chains$sampling
+  TT[j,] <- post_fit$time()$chains$total
+}
+
 post_draws <- post_fit$draws(setup$param_names)
 
 # Simulate using posterior draws
@@ -86,8 +100,8 @@ solver_args_refsample <- list(
   max_num_steps = solver_args_sample$max_num_steps
 )
 fit_ref <- sample_posterior(stanmodels$posterior, dat,
-  solver_args_refsample, stan_opts,
-  refresh = 1000,
-  init = 0
+                            solver_args_refsample, stan_opts,
+                            refresh = 1000,
+                            init = 0
 )
 print(fit_ref$time()$total)
