@@ -35,7 +35,7 @@ setup <- OdeExperimentSetup$new(
 )
 
 # Fit prior model
-prior_fit <- setup$sample_prior(refresh = 1000)
+prior_fit <- setup$sample_prior(refresh = 0)
 prior_draws <- prior_fit$draws(setup$param_names)
 
 # Simulate solutions and data using prior draws

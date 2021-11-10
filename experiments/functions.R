@@ -107,19 +107,20 @@ run_workflow <- function(setup, tol_init = 1e-4, tol_reduce_factor = 2,
     rel_tol = tol_init,
     max_num_steps = max_num_steps
   )
-  cat("Sampling posterior with tol_init (", tol_init, ")...\n", sep = "")
+  cat("\n - Sampling posterior with tol_init (", tol_init, ")...\n", sep = "")
   post_fit <- setup$sample_posterior(
     solver_args = sargs_sample,
-    refresh = 0
+    refresh = 0,
+    show_messages = FALSE
   )
   post_draws <- post_fit$draws(setup$param_names)
-  cat("Done.\n")
 
   # Create a plot using posterior draws
   post_sim <- simulate(setup, post_draws, sargs_sample)
-  plot_sim_plot <- setup$plot(post_sim)
+  post_sim_plot <- setup$plot(post_sim)
 
   # Tune the reference method so that it is reliable at post_draws
+  cat("\n - Tuning tolerances...\n")
   tuning <- tune_solver_tols(
     setup, post_sim, post_draws, sargs_sample, tol_reduce_factor
   )
@@ -289,49 +290,6 @@ simulate <- function(setup, params, solver_args) {
   return(out)
 }
 
-# Using simulate with different tolerances
-simulate_many <- function(setup, params, atol, rtol) {
-  stopifnot(is(params, "draws"))
-  data <- setup$data
-  max_num_steps <- setup$solver_args_gen$max_num_steps
-  J1 <- length(atol)
-  J2 <- length(rtol)
-  S <- posterior::niterations(params) * posterior::nchains(params)
-  TIME <- array(0, dim = c(J1, J2))
-  XSIM <- array(0, dim = c(J1, J2, S, data$N * data$D))
-  LL <- array(0, dim = c(J1, J2, S))
-  for (j1 in 1:J1) {
-    for (j2 in 1:J2) {
-      solver_args <- list(
-        abs_tol = atol[j1],
-        rel_tol = rtol[j2],
-        max_num_steps = max_num_steps
-      )
-      tryCatch(
-        expr = {
-          sim <- simulate(setup, params, solver_args)
-          XSIM[j1, j2, , ] <- posterior::merge_chains(
-            sim$draws("x")
-          )[, 1, , drop = TRUE]
-          TIME[j1, j2] <- sim$time()$total
-          LL[j1, j2, ] <- posterior::merge_chains(
-            sim$draws("log_lik")
-          )[, 1, 1, drop = TRUE]
-        },
-        error = function(e) {
-          message(
-            "Caught an error in simulate! Likely max_num_steps was too",
-            " low or negative solution was obtained so likelihood could",
-            " not be computed!"
-          )
-          stop(e)
-        }
-      )
-    }
-  }
-  return(list(times = TIME, sims = XSIM, log_liks = LL))
-}
-
 # Function for posterior sampling
 sample_posterior <- function(model, data, solver_args, stan_opts, ...) {
   stopifnot(is(model, "CmdStanModel"))
@@ -429,7 +387,6 @@ tune_solver_tols <- function(setup, p_sim, p_params, p_sargs, factor) {
   p_t <- p_sim$time()$total
   res <- c(1 / tol_j, p_t, 0.0, 0.0, 1.0)
   idx <- 0
-  cat("Tuning tolerances...\n")
   while (idx < 13) {
     idx <- idx + 1
     tol_j <- tol_j / factor
@@ -474,7 +431,7 @@ plot_tuning <- function(tuning, ...) {
   }
   p_A <- add_geoms(ggplot(df, aes(x = inv_tol, y = mae)))
   p_B <- add_geoms(ggplot(df, aes(x = inv_tol, y = k_hat)))
-  p_C <- add_geoms(ggplot(df, aes(x = inv_tol, y = p_eff)))
+  p_C <- add_geoms(ggplot(df, aes(x = inv_tol, y = r_eff)))
   p_D <- add_geoms(ggplot(df, aes(x = inv_tol, y = time)))
   plt <- ggpubr::ggarrange(p_A, p_B, p_C, p_D, labels = "auto", ...)
   return(plt)
@@ -488,7 +445,7 @@ create_ribbon_plot_df <- function(rvar) {
   alpha2 <- 0.25
   c1 <- 100 * (1 - 2 * alpha1)
   c2 <- 100 * (1 - 2 * alpha2)
-  cat("Plotting median and central ", c1, "% and ", c2, "% intervals.\n",
+  message("Plotting median and central ", c1, "% and ", c2, "% intervals.\n",
     sep = ""
   )
   lower1 <- as.vector(quantile(rvar, probs = alpha1))
