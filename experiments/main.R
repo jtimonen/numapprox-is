@@ -54,4 +54,6 @@ run <- run_workflow(setup, 1e-4, 2, 1e6)
 # Reference timing
 tols <- 1 / run$tuning$metrics$inv_tol
 tps <- setup$time_posterior_sampling(tols, max_num_steps = 1e6, chains = 4)
-t_plot <- plot_timing(tols, tps)
+t1_plot <- plot_timing(tols, tps$total)
+t2_plot <- plot_timing(tols, tps$sampling)
+t3_plot <- plot_timing(tols, tps$warmup)

@@ -369,8 +369,8 @@ plot_timing <- function(tols, times) {
   inv_tol <- 1 / tols
   df <- data.frame(inv_tol, t_mean, t_std)
   aesth <- aes(x = inv_tol, y = t_mean, ymin = t_mean - t_std, ymax = t_mean + t_std)
-  plt <- ggplot(df, mapping=aesth)
-  plt <- plt + geom_line() + geom_errorbar(width=0.1, color="firebrick") + geom_point()
+  plt <- ggplot(df, mapping = aesth)
+  plt <- plt + geom_line() + geom_errorbar(width = 0.1, color = "firebrick") + geom_point()
   plt <- plt + scale_x_log10() + xlab(expression(tol^"-1")) + ylab("time (s)")
   return(plt)
 }
