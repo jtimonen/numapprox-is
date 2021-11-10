@@ -23,7 +23,7 @@ setup_stancode_sir <- function(solver = "rk45") {
   tpars <- "  real phi = inv(phi_inv);"
   prior <- "
     beta ~ normal(2, 1);
-    gamma ~ normal(0.4, 0.5);
+    gamma ~ normal(0.3, 0.3);
     phi_inv ~ exponential(5);
   "
   funs <- "
@@ -122,5 +122,5 @@ add_simulated_data_sir <- function(fit, data) {
   S <- dim(I_gen_arr)[1]
   idx <- sample.int(n = S, size = 1)
   data$I_data <- as.vector(I_gen_arr[idx, 1, ])
-  return(data)
+  list(data = data, idx = idx)
 }

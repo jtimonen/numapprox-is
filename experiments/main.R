@@ -18,6 +18,7 @@ stan_opts <- list(
 )
 
 # R functions
+source("classes.R")
 source("functions.R")
 source("setup_sir.R")
 
