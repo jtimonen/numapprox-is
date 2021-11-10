@@ -21,6 +21,9 @@ OdeExperimentSetup <- R6Class("OdeExperimentSetup", list(
   print = function(...) {
     cat("OdeExperimentSetup: \n")
     cat("  Name: ", self$name, "\n", sep = "")
+    cat("  Params: ", paste(self$param_names, collapse = ", "), "\n", sep = "")
+    cat("  Solver: ", self$solver, "\n", sep = "")
+    cat("  Init is NULL: ", is.null(self$init), "\n", sep = "")
     invisible(self)
   },
   sample_prior = function(...) {
@@ -38,6 +41,34 @@ OdeExperimentSetup <- R6Class("OdeExperimentSetup", list(
     sample_posterior(self$stanmodels$posterior, data, solver_args, stan_opts,
       init = init, ...
     )
+  },
+  time_posterior_sampling = function(tols, max_num_steps = 1e6, chains = 4, ...) {
+    L <- length(tols)
+    WT <- matrix(0.0, L, chains)
+    ST <- matrix(0.0, L, chains)
+    TT <- matrix(0.0, L, chains)
+    j <- 0
+    cat("Timing...\n")
+    for (tol_j in tols) {
+      cat(" * tol = ", tol_j)
+      j <- j + 1
+      sargs <- list(
+        abs_tol = tol_j,
+        rel_tol = tol_j,
+        max_num_steps = max_num_steps
+      )
+      post_fit <- setup$sample_posterior(sargs,
+        chains = chains,
+        refresh = 0
+      )
+      t <- post_fit$time()$chains$total
+      cat(", t_mean = ", mean(t), ", t_std = ", stats::sd(t), " \n")
+      WT[j, ] <- post_fit$time()$chains$warmup
+      ST[j, ] <- post_fit$time()$chains$sampling
+      TT[j, ] <- t
+    }
+    times <- list(warmup = WT, sampling = ST, total = TT)
+    return(times)
   },
   plot = function(fit) {
     eval(call(paste0("plot_", self$name), fit, self$data))
@@ -62,6 +93,64 @@ OdeExperimentSetup <- R6Class("OdeExperimentSetup", list(
     self$init <- pin
   }
 ))
+
+
+# WORKFLOW ----------------------------------------------------------------
+
+# Run the workflow
+run_workflow <- function(setup, tol_init = 1e-4, tol_reduce_factor = 2,
+                         max_num_steps = 1e6) {
+
+  # Sample posterior using tol_init
+  sargs_sample <- list(
+    abs_tol = tol_init,
+    rel_tol = tol_init,
+    max_num_steps = max_num_steps
+  )
+  cat("Sampling posterior with tol_init (", tol_init, ")...\n", sep = "")
+  post_fit <- setup$sample_posterior(
+    solver_args = sargs_sample,
+    refresh = 0
+  )
+  post_draws <- post_fit$draws(setup$param_names)
+  cat("Done.\n")
+
+  # Create a plot using posterior draws
+  post_sim <- simulate(setup, post_draws, sargs_sample)
+  plot_sim_plot <- setup$plot(post_sim)
+
+  # Tune the reference method so that it is reliable at post_draws
+  tuning <- tune_solver_tols(
+    setup, post_sim, post_draws, sargs_sample, tol_reduce_factor
+  )
+  tuning_plot <- plot_tuning(tuning)
+
+  # Compute importance weights and Pareto-$k$
+  is <- use_psis(post_sim, tuning$last_sim)
+
+  # Importance resampling
+  post_draws_resampled <- posterior::resample_draws(
+    post_draws,
+    weights = is$log_weights
+  )
+
+  # Timing
+  workflow_time <- post_fit$time()$total + post_sim$time()$total + tuning$total_time
+  cat("Total workflow time was", workflow_time, "seconds.\n", sep = " ")
+
+  # Return
+  list(
+    post_fit = post_fit,
+    post_sim = post_sim,
+    post_sim_plot = post_sim_plot,
+    tuning = tuning,
+    tuning_plot = tuning_plot,
+    is = is,
+    post_draws = post_draws,
+    post_draws_resampled = post_draws_resampled,
+    workflow_time = workflow_time
+  )
+}
 
 # UTILS -------------------------------------------------------------------
 
@@ -367,28 +456,26 @@ tune_solver_tols <- function(setup, p_sim, p_params, p_sargs, factor) {
   colnames(res) <- c("inv_tol", "time", "mae", "k_hat", "p_eff")
   res <- data.frame(res)
   rownames(res) <- NULL
-  list(metrics = res, last_sim = sim, total_time = sum(res$time), max_khat = max(res$k_hat))
+
+  # Return
+  list(
+    metrics = res,
+    last_sim = sim,
+    total_time = sum(res$time),
+    max_khat = max(res$k_hat, na.rm = TRUE)
+  )
 }
 
 # Plot tuning results
 plot_tuning <- function(tuning, ...) {
   df <- tuning$metrics
-  p_A <- ggplot(df, aes(x = inv_tol, y = mae)) +
-    geom_line() +
-    geom_point() +
-    scale_x_log10()
-  p_B <- ggplot(df, aes(x = inv_tol, y = k_hat)) +
-    geom_line() +
-    geom_point() +
-    scale_x_log10()
-  p_C <- ggplot(df, aes(x = inv_tol, y = p_eff)) +
-    geom_line() +
-    geom_point() +
-    scale_x_log10()
-  p_D <- ggplot(df, aes(x = inv_tol, y = time)) +
-    geom_line() +
-    geom_point() +
-    scale_x_log10()
+  add_geoms <- function(x) {
+    x + geom_line() + geom_point() + scale_x_log10()
+  }
+  p_A <- add_geoms(ggplot(df, aes(x = inv_tol, y = mae)))
+  p_B <- add_geoms(ggplot(df, aes(x = inv_tol, y = k_hat)))
+  p_C <- add_geoms(ggplot(df, aes(x = inv_tol, y = p_eff)))
+  p_D <- add_geoms(ggplot(df, aes(x = inv_tol, y = time)))
   plt <- ggpubr::ggarrange(p_A, p_B, p_C, p_D, labels = "auto", ...)
   return(plt)
 }
@@ -411,32 +498,4 @@ create_ribbon_plot_df <- function(rvar) {
   median <- as.vector(quantile(rvar, probs = 0.5))
   df <- data.frame(median, lower1, upper1, lower2, upper2)
   return(df)
-}
-
-# Runtimes plot
-plot_sim_times <- function(abs_tol, rel_tol, TIME) {
-  par(mfrow = c(1, 2))
-  plot(log10(rel_tol), diag(TIME),
-    xlab = "log10(tol)", ylab = "time (s)",
-    type = "o", pch = 16
-  )
-  grid()
-  image(log10(abs_tol), log10(rel_tol), TIME, main = "time (s)")
-}
-
-
-# Errors plot
-plot_sim_errors <- function(abs_tol, rel_tol, ERR, log = TRUE) {
-  main <- deparse(substitute(ERR))
-  if (log) {
-    ERR <- log(ERR)
-    main <- paste0("log(", main, ")")
-  }
-  par(mfrow = c(1, 2))
-  plot(log10(rel_tol), diag(ERR),
-    xlab = "log10(tol)", ylab = main,
-    type = "o", pch = 16
-  )
-  grid()
-  image(log10(abs_tol), log10(rel_tol), ERR, main = main)
 }
