@@ -51,5 +51,5 @@ setup$plot(prior_sim)
 run <- run_workflow(setup, 1e-4, 2, 1e6)
 
 # Reference timing
-tols <- 1 / run$tuning$metrics$inv_tols
-setup$time_posterior_sampling(tols, max_num_steps = 1e6, chains = 4, ...)
+tols <- 1 / run$tuning$metrics$inv_tol
+setup$time_posterior_sampling(tols, max_num_steps = 1e6, chains = 4)

@@ -107,7 +107,7 @@ run_workflow <- function(setup, tol_init = 1e-4, tol_reduce_factor = 2,
     rel_tol = tol_init,
     max_num_steps = max_num_steps
   )
-  cat("\n - Sampling posterior with tol_init (", tol_init, ")...\n", sep = "")
+  cat("\nSampling posterior with tol_init (", tol_init, ")...\n", sep = "")
   post_fit <- setup$sample_posterior(
     solver_args = sargs_sample,
     refresh = 0,
@@ -120,7 +120,7 @@ run_workflow <- function(setup, tol_init = 1e-4, tol_reduce_factor = 2,
   post_sim_plot <- setup$plot(post_sim)
 
   # Tune the reference method so that it is reliable at post_draws
-  cat("\n - Tuning tolerances...\n")
+  cat("\nTuning tolerances...\n")
   tuning <- tune_solver_tols(
     setup, post_sim, post_draws, sargs_sample, tol_reduce_factor
   )
@@ -445,7 +445,7 @@ create_ribbon_plot_df <- function(rvar) {
   alpha2 <- 0.25
   c1 <- 100 * (1 - 2 * alpha1)
   c2 <- 100 * (1 - 2 * alpha2)
-  message("Plotting median and central ", c1, "% and ", c2, "% intervals.\n",
+  message("Plotting median and central ", c1, "% and ", c2, "% intervals.",
     sep = ""
   )
   lower1 <- as.vector(quantile(rvar, probs = alpha1))
