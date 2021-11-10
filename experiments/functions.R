@@ -427,7 +427,7 @@ tune_solver_tols <- function(setup, p_sim, p_params, p_sargs, factor) {
   error_to_ref <- Inf
   p_x <- get_x_sim(p_sim)
   p_t <- p_sim$time()$total
-  res <- c(1 / tol_j, p_t, 0.0, NA, 1.0)
+  res <- c(1 / tol_j, p_t, 0.0, 0.0, 1.0)
   idx <- 0
   cat("Tuning tolerances...\n")
   while (idx < 13) {
@@ -442,18 +442,18 @@ tune_solver_tols <- function(setup, p_sim, p_params, p_sargs, factor) {
     sim <- simulate(setup, p_params, sargs)
     stopifnot(is(sim, "CmdStanFit"))
     t_j <- sim$time()$total
-    cat(", time = ", t_j, " s", sep = "")
+    cat(", time = ", round(t_j, 2), " s", sep = "")
     x <- get_x_sim(sim)
     err_j <- compute_sol_error(x, p_x, "max")
-    cat(", mae = ", err_j, sep = "")
+    cat(", mae = ", round(err_j, 4), sep = "")
     is <- use_psis(sim, p_sim)
     k_j <- is$diagnostics$pareto_k
-    n_j <- is$diagnostics$n_eff / S
-    cat(", k_hat = ", k_j, ", n_eff = ", n_j, "\n", sep = "")
-    res_j <- c(1 / tol_j, t_j, err_j, k_j, n_j)
+    r_j <- is$diagnostics$n_eff / S
+    cat(", k_hat = ", round(k_j, 3), ", r_eff = ", round(r_j, 3), "\n", sep = "")
+    res_j <- c(1 / tol_j, t_j, err_j, k_j, r_j)
     res <- rbind(res, res_j)
   }
-  colnames(res) <- c("inv_tol", "time", "mae", "k_hat", "p_eff")
+  colnames(res) <- c("inv_tol", "time", "mae", "k_hat", "r_eff")
   res <- data.frame(res)
   rownames(res) <- NULL
 
