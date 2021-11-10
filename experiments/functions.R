@@ -50,7 +50,7 @@ OdeExperimentSetup <- R6Class("OdeExperimentSetup", list(
     j <- 0
     cat("Timing...\n")
     for (tol_j in tols) {
-      cat(" * Timing posterior sampling with tol = ", tol_j, "...\n")
+      cat(" * Timing posterior sampling with tol = ", tol_j, "...\n", sep="")
       j <- j + 1
       sargs <- list(
         abs_tol = tol_j,
@@ -63,7 +63,6 @@ OdeExperimentSetup <- R6Class("OdeExperimentSetup", list(
         show_messages = FALSE
       )
       t <- post_fit$time()$chains$total
-      cat(", t_mean = ", mean(t), ", t_std = ", stats::sd(t), " \n")
       WT[j, ] <- post_fit$time()$chains$warmup
       ST[j, ] <- post_fit$time()$chains$sampling
       TT[j, ] <- t
