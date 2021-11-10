@@ -326,21 +326,23 @@ tune_solver_tols <- function(setup, p_sim, p_params, p_sargs, factor) {
   )
 }
 
+
+# PLOTTING ----------------------------------------------------------------
+
 # Plot tuning results
 plot_tuning <- function(tuning, ...) {
   df <- tuning$metrics
   add_geoms <- function(x) {
-    x + geom_line() + geom_point() + scale_x_log10()
+    x + geom_line() + geom_point() + scale_x_log10() + xlab(expression(tol^"-1"))
   }
   p_A <- add_geoms(ggplot(df, aes(x = inv_tol, y = mae)))
-  p_B <- add_geoms(ggplot(df, aes(x = inv_tol, y = k_hat)))
-  p_C <- add_geoms(ggplot(df, aes(x = inv_tol, y = r_eff)))
-  p_D <- add_geoms(ggplot(df, aes(x = inv_tol, y = time)))
+  p_B <- add_geoms(ggplot(df, aes(x = inv_tol, y = k_hat))) + ylab(expression(hat(k)))
+  p_C <- add_geoms(ggplot(df, aes(x = inv_tol, y = r_eff))) + ylab(expression(r[eff]))
+  p_D <- add_geoms(ggplot(df, aes(x = inv_tol, y = time))) + ylab("time (s)")
   plt <- ggpubr::ggarrange(p_A, p_B, p_C, p_D, labels = "auto", ...)
   return(plt)
 }
 
-# PLOTTING ----------------------------------------------------------------
 
 # Plotting helper
 create_ribbon_plot_df <- function(rvar) {
@@ -358,4 +360,17 @@ create_ribbon_plot_df <- function(rvar) {
   median <- as.vector(quantile(rvar, probs = 0.5))
   df <- data.frame(median, lower1, upper1, lower2, upper2)
   return(df)
+}
+
+# Plot timing results
+plot_timing <- function(tols, times) {
+  t_mean <- rowMeans(times)
+  t_std <- apply(times, 1, stats::sd)
+  inv_tol <- 1 / tols
+  df <- data.frame(inv_tol, t_mean, t_std)
+  aesth <- aes(x = inv_tol, y = t_mean, ymin = t_mean - t_std, ymax = t_mean + t_std)
+  plt <- ggplot(df, mapping=aesth)
+  plt <- plt + geom_line() + geom_errorbar(width=0.1, color="firebrick") + geom_point()
+  plt <- plt + scale_x_log10() + xlab(expression(tol^"-1")) + ylab("time (s)")
+  return(plt)
 }
