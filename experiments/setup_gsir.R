@@ -1,3 +1,10 @@
+# Example contact matrix
+create_contact_matrix <- function(G) {
+  M <- diag(G) + matrix(runif(G * G), G, G)
+  M <- M + t(M)
+  return(M / G)
+}
+
 # Data
 setup_standata_gsir <- function() {
   t <- as.numeric(seq(0.2, 15, by = 0.2))
@@ -8,6 +15,7 @@ setup_standata_gsir <- function() {
     t = t,
     I0 = c(5, 0, 0, 0),
     pop_sizes = c(2000, 4000, 3000, 1000),
+    contacts = create_contact_matrix(G),
     D = 2 * G,
     G = G,
     I_data = matrix(1.0, N, G) # dummy
@@ -19,7 +27,7 @@ setup_standata_gsir <- function() {
 setup_stancode_gsir <- function(solver = "rk45") {
   pars <- "
     real<lower=0> beta;
-    real<lower=0> gamma;
+    vector<lower=0>[G] gamma;
     real<lower=0> phi_inv;
   "
   tpars <- "  real phi = inv(phi_inv);"
@@ -30,37 +38,38 @@ setup_stancode_gsir <- function(solver = "rk45") {
   "
   funs <- "
   // SIR system right-hand side
-  vector SIR(real t, vector y, data int[] a0, vector theta) {
-    int G = size(a0);
+  vector SIR(real t, vector y, real beta, vector gamma, data matrix contacts,
+      data vector pop_sizes) {
+    int G = num_elements(pop_sizes);
     vector[2*G] dy_dt; // first G are susceptible, next G are infected
     vector[G] infection_rates;
     vector[G] recovery_rates;
+    vector[G] lambda = rep_vector(0.0, G);
     for(g in 1:G){
-      infection_rates[g] = theta[1] * y[G+g] * y[g] / a0[g];
-      recovery_rates[g] = theta[2] * y[G+g];
+      for(h in 1:G) {
+        lambda[g] += contacts[g,h] * y[G+h]/pop_sizes[h];
+      }
     }
     for(g in 1:G){
-      real lambda = sum(infection_rates);
-      dy_dt[g] = - lambda;
-      dy_dt[G+g] = lambda - recovery_rates[g];
+      dy_dt[g] = -  beta * lambda[g] * y[g];
+      dy_dt[G+g] =  beta * lambda[g] * y[g] - gamma[g] * y[G+g];
     }
-
     return dy_dt;
   }
   "
   data <- "
-    int<lower=1> N; // number of time points
-    real t[N]; // time points
-    int<lower=1> G; // number of groups
-    int<lower=1> pop_sizes[G]; // population sizes in each group
-    real<lower=0> I0[G]; // initial number of infected in each group
-    real<lower=0> rel_tol; // ODE solver relative tolerance
-    real<lower=0> abs_tol; // ODE solver absolute tolerance
-    int<lower=0> max_num_steps; // ODE solver maximum number of steps
+    int<lower=1> N;                 // number of time points
+    real t[N];                      // time points
+    int<lower=1> G;                 // number of groups
+    vector[G] pop_sizes;            // population sizes in each group
+    vector[G] I0;                   // initial number of infected in each group
+    matrix[G, G] contacts;          // contact matrix
+    real<lower=0> rel_tol;          // ODE solver relative tolerance
+    real<lower=0> abs_tol;          // ODE solver absolute tolerance
+    int<lower=0> max_num_steps;     // ODE solver maximum number of steps
   "
   tdata <- "
     real t0 = 0.0;
-    int a0[G] = pop_sizes;
     vector[2*G] x0;
     for(g in 1:G){
       x0[g] = pop_sizes[g] - I0[g]; // S
@@ -71,11 +80,11 @@ setup_stancode_gsir <- function(solver = "rk45") {
   "
   obsdata <- "  int<lower=0> I_data[N, G];"
   if (solver == "rk45") {
-    odesolve <- "  vector[2*G] x[N] = ode_rk45_tol(SIR, x0, t0, t, rel_tol, abs_tol, max_num_steps, a0, to_vector({beta, gamma}));"
+    odesolve <- "  vector[2*G] x[N] = ode_rk45_tol(SIR, x0, t0, t, rel_tol, abs_tol, max_num_steps, beta, gamma, contacts, pop_sizes);"
   } else if (solver == "bdf") {
-    odesolve <- "  vector[2*G] x[N] = ode_bdf_tol(SIR, x0, t0, t, rel_tol, abs_tol, max_num_steps, a0, to_vector({beta, gamma}));"
+    odesolve <- "  vector[2*G] x[N] = ode_bdf_tol(SIR, x0, t0, t, rel_tol, abs_tol, max_num_steps, beta, gamma, contacts, pop_sizes);"
   } else {
-    stop("Invalid solver argument!")
+    stop("Invalid 'solver' argument!")
   }
 
   likelihood <- "

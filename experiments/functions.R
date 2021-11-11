@@ -39,7 +39,8 @@ run_workflow <- function(setup, tol_init = 1e-4, tol_reduce_factor = 2,
   )
 
   # Timing
-  workflow_time <- post_fit$time()$total + post_sim$time()$total + tuning$total_time
+  workflow_time <- post_fit$time()$total + post_sim$time()$total +
+    tuning$total_time
   cat("Total workflow time was", workflow_time, "seconds.\n", sep = " ")
 
   # Return
@@ -65,7 +66,10 @@ check_sa <- function(solver_args) {
   checkmate::assert_names(names(solver_args), permutation.of = required)
   checkmate::assertNumeric(solver_args$rel_tol, lower = 0)
   checkmate::assertNumeric(solver_args$abs_tol, lower = 0)
-  checkmate::assertIntegerish(solver_args$max_num_steps, lower = 1, upper = MAX_INT)
+  checkmate::assertIntegerish(solver_args$max_num_steps,
+    lower = 1,
+    upper = MAX_INT
+  )
   TRUE
 }
 
@@ -103,10 +107,10 @@ stan_code <- function(blocks, codes) {
 }
 
 # Create full Stan code for prior sampling model
-prior_model_code <- function(pars, tpars, prior) {
+prior_model_code <- function(dat, pars, tpars, prior) {
   cat("* Creating CmdStanModel for prior sampling...\n")
-  blocks <- c("parameters", "transformed parameters", "model")
-  codes <- c(pars, tpars, prior)
+  blocks <- c("data", "parameters", "transformed parameters", "model")
+  codes <- c(dat, pars, tpars, prior)
   stan_code(blocks, codes)
 }
 
@@ -150,7 +154,7 @@ create_cmdstan_models <- function(code) {
   tdata <- code$tdata
   gq <- code$genquant
   codes <- list(
-    prior = prior_model_code(pars, tpars, prior),
+    prior = prior_model_code(data, pars, tpars, prior),
     simulator = simulator_model_code(
       funs, data, tdata, pars, tpars, ode, gq, obsdata
     ),
@@ -290,7 +294,7 @@ tune_solver_tols <- function(setup, p_sim, p_params, p_sargs, factor) {
   p_t <- p_sim$time()$total
   res <- c(1 / tol_j, p_t, 0.0, 0.0, 1.0)
   idx <- 0
-  while (idx < 13) {
+  while (idx < 10) {
     idx <- idx + 1
     tol_j <- tol_j / factor
     cat(" * tol = ", tol_j, sep = "")
@@ -309,7 +313,10 @@ tune_solver_tols <- function(setup, p_sim, p_params, p_sargs, factor) {
     is <- use_psis(sim, p_sim)
     k_j <- is$diagnostics$pareto_k
     r_j <- is$diagnostics$n_eff / S
-    cat(", k_hat = ", round(k_j, 3), ", r_eff = ", round(r_j, 3), "\n", sep = "")
+    cat(", k_hat = ", round(k_j, 3), ", r_eff = ",
+      round(r_j, 3), "\n",
+      sep = ""
+    )
     res_j <- c(1 / tol_j, t_j, err_j, k_j, r_j)
     res <- rbind(res, res_j)
   }
@@ -333,11 +340,14 @@ tune_solver_tols <- function(setup, p_sim, p_params, p_sargs, factor) {
 plot_tuning <- function(tuning, ...) {
   df <- tuning$metrics
   add_geoms <- function(x) {
-    x + geom_line() + geom_point() + scale_x_log10() + xlab(expression(tol^"-1"))
+    x + geom_line() + geom_point() + scale_x_log10() +
+      xlab(expression(tol^"-1"))
   }
   p_A <- add_geoms(ggplot(df, aes(x = inv_tol, y = mae)))
-  p_B <- add_geoms(ggplot(df, aes(x = inv_tol, y = k_hat))) + ylab(expression(hat(k)))
-  p_C <- add_geoms(ggplot(df, aes(x = inv_tol, y = r_eff))) + ylab(expression(r[eff]))
+  p_B <- add_geoms(ggplot(df, aes(x = inv_tol, y = k_hat))) +
+    ylab(expression(hat(k)))
+  p_C <- add_geoms(ggplot(df, aes(x = inv_tol, y = r_eff))) +
+    ylab(expression(r[eff]))
   p_D <- add_geoms(ggplot(df, aes(x = inv_tol, y = time))) + ylab("time (s)")
   plt <- ggpubr::ggarrange(p_A, p_B, p_C, p_D, labels = "auto", ...)
   return(plt)
@@ -368,9 +378,15 @@ plot_timing <- function(tols, times) {
   t_std <- apply(times, 1, stats::sd)
   inv_tol <- 1 / tols
   df <- data.frame(inv_tol, t_mean, t_std)
-  aesth <- aes(x = inv_tol, y = t_mean, ymin = t_mean - t_std, ymax = t_mean + t_std)
+  aesth <- aes(
+    x = inv_tol,
+    y = t_mean,
+    ymin = t_mean - t_std,
+    ymax = t_mean + t_std
+  )
   plt <- ggplot(df, mapping = aesth)
-  plt <- plt + geom_line() + geom_errorbar(width = 0.1, color = "firebrick") + geom_point()
+  plt <- plt + geom_line() +
+    geom_errorbar(width = 0.1, color = "firebrick") + geom_point()
   plt <- plt + scale_x_log10() + xlab(expression(tol^"-1")) + ylab("time (s)")
   return(plt)
 }

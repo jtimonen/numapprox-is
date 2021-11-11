@@ -11,6 +11,7 @@ library(ggplot2)
 library(ggdist)
 library(R6)
 library(ggpubr)
+library(tidyr)
 
 # Options
 stan_opts <- list(
@@ -49,11 +50,12 @@ setup$set_init(prior_draws)
 setup$plot(prior_sim)
 
 # Run workflow
-run <- run_workflow(setup, 1e-4, 2, 1e6)
+max_num_steps <- 1e4
+run <- run_workflow(setup, 1e-4, 2, max_num_steps)
 
 # Reference timing
 tols <- 1 / run$tuning$metrics$inv_tol
-tps <- setup$time_posterior_sampling(tols, max_num_steps = 1e6, chains = 4)
+tps <- setup$time_posterior_sampling(tols, max_num_steps, chains = 4)
 t1_plot <- plot_timing(tols, tps$total)
 t2_plot <- plot_timing(tols, tps$sampling)
 t3_plot <- plot_timing(tols, tps$warmup)

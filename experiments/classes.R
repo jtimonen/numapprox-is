@@ -22,7 +22,7 @@ OdeExperimentSetup <- R6Class("OdeExperimentSetup", list(
   print = function(...) {
     cat("OdeExperimentSetup: \n")
     cat("  Name: ", self$name, "\n", sep = "")
-    cat("  Params: {", paste(self$param_names, collapse = ", "), "}\n", sep = "")
+    cat("  Pars: {", paste(self$param_names, collapse = ", "), "}\n", sep = "")
     cat("  Solver: ", self$solver, "\n", sep = "")
     cat("  Init is NULL: ", is.null(self$init), "\n", sep = "")
     invisible(self)
@@ -30,6 +30,7 @@ OdeExperimentSetup <- R6Class("OdeExperimentSetup", list(
   sample_prior = function(...) {
     stan_opts <- self$stan_opts
     self$stanmodels$prior$sample(
+      data = self$data,
       sig_figs = stan_opts$sig_figs,
       seed = stan_opts$seed,
       ...
@@ -43,22 +44,24 @@ OdeExperimentSetup <- R6Class("OdeExperimentSetup", list(
       init = init, ...
     )
   },
-  time_posterior_sampling = function(tols, max_num_steps = 1e6, chains = 4, ...) {
+  time_posterior_sampling = function(tols, max_num_steps, chains = 4, ...) {
     L <- length(tols)
     WT <- matrix(0.0, L, chains)
     ST <- matrix(0.0, L, chains)
     TT <- matrix(0.0, L, chains)
     j <- 0
-    cat("Timing...\n")
     for (tol_j in tols) {
-      cat(" * Timing posterior sampling with tol = ", tol_j, "...\n", sep = "")
+      cat(" (", j, ") Timing posterior sampling with tol = ",
+        tol_j, "...\n",
+        sep = ""
+      )
       j <- j + 1
       sargs <- list(
         abs_tol = tol_j,
         rel_tol = tol_j,
         max_num_steps = max_num_steps
       )
-      post_fit <- setup$sample_posterior(sargs,
+      post_fit <- self$sample_posterior(sargs,
         chains = chains,
         refresh = 0,
         show_messages = FALSE
