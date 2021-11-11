@@ -26,15 +26,15 @@ setup_standata_gsir <- function() {
 # Stan code parts
 setup_stancode_gsir <- function(solver = "rk45") {
   pars <- "
-    real<lower=0> beta;
-    vector<lower=0>[G] gamma;
-    real<lower=0> phi_inv;
+  real<lower=0> beta;
+  vector<lower=0>[G] gamma;
+  real<lower=0> phi_inv;
   "
   tpars <- "  real phi = inv(phi_inv);"
   prior <- "
-    beta ~ normal(2, 1);
-    gamma ~ normal(0.3, 0.3);
-    phi_inv ~ exponential(5);
+  beta ~ normal(2, 1);
+  gamma ~ normal(0.3, 0.3);
+  phi_inv ~ exponential(5);
   "
   funs <- "
   // SIR system right-hand side
@@ -58,25 +58,22 @@ setup_stancode_gsir <- function(solver = "rk45") {
   }
   "
   data <- "
-    int<lower=1> N;                 // number of time points
-    real t[N];                      // time points
-    int<lower=1> G;                 // number of groups
-    vector[G] pop_sizes;            // population sizes in each group
-    vector[G] I0;                   // initial number of infected in each group
-    matrix[G, G] contacts;          // contact matrix
-    real<lower=0> rel_tol;          // ODE solver relative tolerance
-    real<lower=0> abs_tol;          // ODE solver absolute tolerance
-    int<lower=0> max_num_steps;     // ODE solver maximum number of steps
+  int<lower=1> N;                 // number of time points
+  real t[N];                      // time points
+  int<lower=1> G;                 // number of groups
+  vector[G] pop_sizes;            // population sizes in each group
+  vector[G] I0;                   // initial number of infected in each group
+  matrix[G, G] contacts;          // contact matrix
   "
   tdata <- "
-    real t0 = 0.0;
-    vector[2*G] x0;
-    for(g in 1:G){
-      x0[g] = pop_sizes[g] - I0[g]; // S
-    }
-    for(g in 1:G){
-      x0[G + g] = I0[g]; // I
-    }
+  real t0 = 0.0;
+  vector[2*G] x0;
+  for(g in 1:G){
+    x0[g] = pop_sizes[g] - I0[g]; // S
+  }
+  for(g in 1:G){
+    x0[G + g] = I0[g]; // I
+  }
   "
   obsdata <- "  int<lower=0> I_data[N, G];"
   if (solver == "rk45") {
@@ -88,21 +85,21 @@ setup_stancode_gsir <- function(solver = "rk45") {
   }
 
   likelihood <- "
-    for(n in 1:N) {
-      for(g in 1:G) {
-        I_data[n,g] ~ neg_binomial_2(x[n][G+g] + 10*abs_tol, phi);
-      }
+  for(n in 1:N) {
+    for(g in 1:G) {
+      I_data[n,g] ~ neg_binomial_2(x[n][G+g] + 10*abs_tol, phi);
     }
+  }
   "
   genquant <- "
-    int I_gen[N, G];
-    real log_lik = 0.0;
-    for(n in 1:N) {
-      for(g in 1:G) {
-        I_gen[n,g] = neg_binomial_2_rng(x[n][G+g] + 10*abs_tol, phi);
-        log_lik += neg_binomial_2_lpmf(I_data[n,g] | x[n][G+g] + 10*abs_tol, phi);
-      }
+  int I_gen[N, G];
+  real log_lik = 0.0;
+  for(n in 1:N) {
+    for(g in 1:G) {
+      I_gen[n,g] = neg_binomial_2_rng(x[n][G+g] + 10*abs_tol, phi);
+      log_lik += neg_binomial_2_lpmf(I_data[n,g] | x[n][G+g] + 10*abs_tol, phi);
     }
+  }
   "
 
   # Return

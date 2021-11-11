@@ -30,7 +30,8 @@ solver_args_gen <- list(
   max_num_steps = 1e9
 )
 solver <- "rk45"
-param_names <- c("beta", "gamma", "phi_inv")
+gpar <- paste("gamma[", c(1:4), "]", sep = "")
+param_names <- c("beta", gpar, "phi_inv")
 setup <- OdeExperimentSetup$new(
   "gsir", solver, solver_args_gen,
   stan_opts, param_names

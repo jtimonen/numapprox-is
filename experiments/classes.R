@@ -85,16 +85,6 @@ OdeExperimentSetup <- R6Class("OdeExperimentSetup", list(
     self$sim_par_idx <- sd$idx
   },
   set_init = function(param_draws) {
-    S <- dim(param_draws)[1]
-    idx <- sample.int(n = S, size = 1)
-    par_init <- param_draws[idx, , ]
-    nc <- posterior::nchains(param_draws)
-    pin <- list()
-    for (idx_c in 1:nc) {
-      a <- as.list(par_init[, idx_c, ])
-      names(a) <- self$param_names
-      pin[[idx_c]] <- a
-    }
-    self$init <- pin
+    self$init <- 0
   }
 ))

@@ -114,6 +114,14 @@ prior_model_code <- function(dat, pars, tpars, prior) {
   stan_code(blocks, codes)
 }
 
+data_odesolver <- function() {
+  "
+  real<lower=0> rel_tol;          // ODE solver relative tolerance
+  real<lower=0> abs_tol;          // ODE solver absolute tolerance
+  int<lower=0> max_num_steps;     // ODE solver maximum number of steps
+"
+}
+
 # Create full Stan code for simulator model
 simulator_model_code <- function(funs, data, tdata, pars, tpars, ode, gq, od) {
   cat("* Creating CmdStanModel for simulating...\n")
@@ -122,7 +130,7 @@ simulator_model_code <- function(funs, data, tdata, pars, tpars, ode, gq, od) {
     "parameters", "transformed parameters", "generated quantities"
   )
   gq <- paste(ode, gq, sep = "\n")
-  data <- paste(data, od, sep = "\n")
+  data <- paste(data, data_odesolver(), od, sep = "\n")
   codes <- c(funs, data, tdata, pars, tpars, gq)
   stan_code(blocks, codes)
 }
@@ -136,7 +144,7 @@ posterior_model_code <- function(funs, data, tdata, obsdata,
     "parameters", "transformed parameters", "model"
   )
   post <- paste(prior, ode, lik, sep = "\n")
-  data <- paste(data, obsdata, sep = "\n")
+  data <- paste(data, data_odesolver(), obsdata, sep = "\n")
   codes <- c(funs, data, tdata, pars, tpars, post)
   stan_code(blocks, codes)
 }
