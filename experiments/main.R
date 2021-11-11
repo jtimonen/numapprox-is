@@ -20,7 +20,7 @@ stan_opts <- list(
 # R functions
 source("classes.R")
 source("functions.R")
-source("setup_sir.R")
+source("setup_gsir.R")
 
 # Create experiment setup
 solver_args_gen <- list(
@@ -31,7 +31,7 @@ solver_args_gen <- list(
 solver <- "rk45"
 param_names <- c("beta", "gamma", "phi_inv")
 setup <- OdeExperimentSetup$new(
-  "sir", solver, solver_args_gen,
+  "gsir", solver, solver_args_gen,
   stan_opts, param_names
 )
 

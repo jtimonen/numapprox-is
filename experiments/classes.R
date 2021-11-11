@@ -76,8 +76,7 @@ OdeExperimentSetup <- R6Class("OdeExperimentSetup", list(
   },
   add_simulated_data = function(sim) {
     sd <- eval(call(
-      paste0("add_simulated_data_", self$name), sim,
-      self$data
+      paste0("add_simulated_data_", self$name), sim, self$data
     ))
     self$data <- sd$data
     self$sim_par_idx <- sd$idx
