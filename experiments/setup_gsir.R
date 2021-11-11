@@ -9,12 +9,15 @@ create_contact_matrix <- function(G) {
 setup_standata_gsir <- function() {
   t <- as.numeric(seq(0.2, 15, by = 0.2))
   N <- length(t)
-  G <- 4 # number of groups
+  G <- 10 # number of groups
+  I0 <- rep(0, G)
+  NNN <- round(1000 + 500*runif(10))
+  I0[1] <- 5
   data_list <- list(
     N = N,
     t = t,
-    I0 = c(5, 0, 0, 0),
-    pop_sizes = c(2000, 4000, 3000, 1000),
+    I0 = I0,
+    pop_sizes = NNN,
     contacts = create_contact_matrix(G),
     D = 2 * G,
     G = G,

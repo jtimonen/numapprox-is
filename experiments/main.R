@@ -4,6 +4,8 @@ idx <- args[1]
 cat("\n------------------- idx = ", idx, " ---------------------------\n", sep="")
 fn <- file.path("res", paste0("res_", idx, ".rds"))
 cat("Results will be saved to: ", fn, "\n", sep="")
+idx <- as.numeric(idx)
+print(idx)
 
 # Requirements
 library(cmdstanr)
@@ -22,7 +24,7 @@ library(tidyr)
 
 # Options
 stan_opts <- list(
-  sig_figs = 18 # number of significant figures to store in floats
+  sig_figs = 12 # number of significant figures to store in floats
 )
 
 # R functions
@@ -37,12 +39,14 @@ solver_args_gen <- list(
   max_num_steps = 1e9
 )
 solver <- "rk45"
-gpar <- paste("gamma[", c(1:4), "]", sep = "")
+gpar <- paste("gamma[", c(1:10), "]", sep = "")
 param_names <- c("beta", gpar, "phi_inv")
 setup <- OdeExperimentSetup$new(
   "gsir", solver, solver_args_gen,
   stan_opts, param_names
 )
+print(setup)
+print(setup$data)
 
 # Fit prior model
 prior_fit <- setup$sample_prior(refresh = 0)
@@ -57,7 +61,15 @@ setup$set_init(prior_draws)
 plot_prior <- setup$plot(prior_sim)
 
 # Run workflow
-max_num_steps <- 1e4
+if(idx > 40) {
+  MNS <- 1e6
+} else if(idx > 20) {
+  MNS <- 1e5
+} else {
+  MNS <- 1e4
+}
+max_num_steps <- MNS
+print(max_num_steps)
 run <- run_workflow(setup, 1e-4, 2, max_num_steps)
 
 # Reference timing
