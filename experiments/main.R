@@ -1,3 +1,10 @@
+#!/usr/bin/env Rscript
+args <- commandArgs(trailingOnly=TRUE)
+idx <- args[1]
+cat("\n------------------- idx = ", idx, " ---------------------------\n", sep="")
+fn <- file.path("res", paste0("res_", idx, ".rds"))
+cat("Results will be saved to: ", fn, "\n", sep="")
+
 # Requirements
 library(cmdstanr)
 library(posterior)
@@ -45,10 +52,9 @@ prior_draws <- prior_fit$draws(setup$param_names)
 prior_sim <- simulate(setup, prior_draws, setup$solver_args_gen)
 
 # Plot generated data
-setup$plot(prior_sim)
 setup$add_simulated_data(prior_sim)
 setup$set_init(prior_draws)
-setup$plot(prior_sim)
+plot_prior <- setup$plot(prior_sim)
 
 # Run workflow
 max_num_steps <- 1e4
@@ -60,3 +66,7 @@ tps <- setup$time_posterior_sampling(tols, max_num_steps, chains = 4)
 t1_plot <- plot_timing(tols, tps$total)
 t2_plot <- plot_timing(tols, tps$sampling)
 t3_plot <- plot_timing(tols, tps$warmup)
+
+all_results <- list(run = run, tps = tps, plot_prior = plot_prior, max_num_steps = max_num_steps)
+saveRDS(all_results, file=fn)
+
