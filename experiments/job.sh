@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH -p batch
-#SBATCH -t 08:00:00
+#SBATCH -t 2-08:00:00
 #SBATCH --array=1-60
 #SBATCH --mem=3000
 #SBATCH -o out/job-%a.out
