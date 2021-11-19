@@ -2,7 +2,7 @@
 
 # Run the workflow
 run_workflow <- function(setup, tol_init = 1e-4, tol_reduce_factor = 2,
-                         max_num_steps = 1e6) {
+                         max_num_steps = 1e6, tol_steps = 4) {
 
   # Sample posterior using tol_init
   sargs_sample <- list(
@@ -25,7 +25,7 @@ run_workflow <- function(setup, tol_init = 1e-4, tol_reduce_factor = 2,
   # Tune the reference method so that it is reliable at post_draws
   cat("\nTuning tolerances...\n")
   tuning <- tune_solver_tols(
-    setup, post_sim, post_draws, sargs_sample, tol_reduce_factor
+    setup, post_sim, post_draws, sargs_sample, tol_reduce_factor, tol_steps
   )
   tuning_plot <- plot_tuning(tuning)
 
@@ -291,7 +291,7 @@ get_x_sim <- function(sim) {
 }
 
 # Run tuning
-tune_solver_tols <- function(setup, p_sim, p_params, p_sargs, factor) {
+tune_solver_tols <- function(setup, p_sim, p_params, p_sargs, factor, steps) {
   S <- posterior::ndraws(posterior::merge_chains(p_sim$draws()))
   tol_j <- min(p_sargs$rel_tol, p_sargs$abs_tol)
   data <- setup$data
@@ -302,7 +302,7 @@ tune_solver_tols <- function(setup, p_sim, p_params, p_sargs, factor) {
   p_t <- p_sim$time()$total
   res <- c(1 / tol_j, p_t, 0.0, 0.0, 1.0)
   idx <- 0
-  while (idx < 10) {
+  while (idx < steps) {
     idx <- idx + 1
     tol_j <- tol_j / factor
     cat(" * tol = ", tol_j, sep = "")
@@ -382,19 +382,15 @@ create_ribbon_plot_df <- function(rvar) {
 
 # Plot timing results
 plot_timing <- function(tols, times) {
-  t_mean <- rowMeans(times)
-  t_std <- apply(times, 1, stats::sd)
-  inv_tol <- 1 / tols
-  df <- data.frame(inv_tol, t_mean, t_std)
-  aesth <- aes(
-    x = inv_tol,
-    y = t_mean,
-    ymin = t_mean - t_std,
-    ymax = t_mean + t_std
-  )
-  plt <- ggplot(df, mapping = aesth)
-  plt <- plt + geom_line() +
-    geom_errorbar(width = 0.1, color = "firebrick") + geom_point()
-  plt <- plt + scale_x_log10() + xlab(expression(tol^"-1")) + ylab("time (s)")
+  nrep <- ncol(times)
+  df <- data.frame(cbind(tols, times))
+  colnames(df) <- c("tol", paste0("rep", 1:nrep))
+  df <- pivot_longer(df, cols = starts_with("rep"))
+  colnames(df) <- c("inv_tol", "rep", "time")
+  df$inv_tol <- 1 / df$inv_tol
+  plt <- ggplot(df, aes(x = inv_tol, y = time, group = inv_tol)) +
+    geom_boxplot(fill = "firebrick2")
+  plt <- plt + scale_x_log10() + xlab(expression(tol^"-1")) +
+    ylab("time (s)") + ggtitle("Timing plot")
   return(plt)
 }

@@ -11,7 +11,7 @@ setup_standata_gsir <- function() {
   N <- length(t)
   G <- 10 # number of groups
   I0 <- rep(0, G)
-  NNN <- round(1000 + 500*runif(10))
+  NNN <- round(1000 + 500 * runif(10))
   I0[1] <- 5
   data_list <- list(
     N = N,

@@ -1,11 +1,20 @@
 #!/usr/bin/env Rscript
-args <- commandArgs(trailingOnly=TRUE)
-idx <- args[1]
-cat("\n------------------- idx = ", idx, " ---------------------------\n", sep="")
-fn <- file.path("res", paste0("res_", idx, ".rds"))
-cat("Results will be saved to: ", fn, "\n", sep="")
+if (interactive()) {
+  idx <- 0
+} else {
+  args <- commandArgs(trailingOnly = TRUE)
+  idx <- args[1]
+}
+res_dir <- "res"
+if (!dir.exists(res_dir)) {
+  message("res_dir doesn't exist, creating it...")
+  dir.create(res_dir)
+}
+
+cat("\n------ idx = ", idx, " --------\n", sep = "")
+fn <- file.path(res_dir, paste0("res_", idx, ".rds"))
+cat("Results will be saved to: ", fn, "\n", sep = "")
 idx <- as.numeric(idx)
-print(idx)
 
 # Requirements
 library(cmdstanr)
@@ -46,7 +55,6 @@ setup <- OdeExperimentSetup$new(
   stan_opts, param_names
 )
 print(setup)
-print(setup$data)
 
 # Fit prior model
 prior_fit <- setup$sample_prior(refresh = 0)
@@ -61,16 +69,16 @@ setup$set_init(prior_draws)
 plot_prior <- setup$plot(prior_sim)
 
 # Run workflow
-if(idx > 40) {
+if (idx > 40) {
   MNS <- 1e6
-} else if(idx > 20) {
+} else if (idx > 20) {
   MNS <- 1e5
 } else {
   MNS <- 1e4
 }
 max_num_steps <- MNS
 print(max_num_steps)
-run <- run_workflow(setup, 1e-4, 2, max_num_steps)
+run <- run_workflow(setup, 1e-4, 10, max_num_steps, 6)
 
 # Reference timing
 tols <- 1 / run$tuning$metrics$inv_tol
@@ -80,5 +88,4 @@ t2_plot <- plot_timing(tols, tps$sampling)
 t3_plot <- plot_timing(tols, tps$warmup)
 
 all_results <- list(run = run, tps = tps, plot_prior = plot_prior, max_num_steps = max_num_steps)
-saveRDS(all_results, file=fn)
-
+saveRDS(all_results, file = fn)
