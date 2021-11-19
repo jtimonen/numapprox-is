@@ -78,7 +78,7 @@ if (idx > 40) {
 }
 max_num_steps <- MNS
 print(max_num_steps)
-run <- run_workflow(setup, 1e-4, 10, max_num_steps, 6)
+run <- run_workflow(setup, 1e-3, 10, max_num_steps, 6)
 
 # Reference timing
 tols <- 1 / run$tuning$metrics$inv_tol
