@@ -2,7 +2,8 @@
 
 # Run the workflow
 run_workflow <- function(setup, tol_init = 1e-4, tol_reduce_factor = 2,
-                         max_num_steps = 1e6, tol_steps = 4) {
+                         max_num_steps = 1e6, tol_steps = 4,
+                         refresh = NULL) {
 
   # Sample posterior using tol_init
   sargs_sample <- list(
@@ -13,7 +14,7 @@ run_workflow <- function(setup, tol_init = 1e-4, tol_reduce_factor = 2,
   cat("\nSampling posterior with tol_init (", tol_init, ")...\n", sep = "")
   post_fit <- setup$sample_posterior(
     solver_args = sargs_sample,
-    refresh = 0,
+    refresh = refresh,
     show_messages = FALSE
   )
   post_draws <- post_fit$draws(setup$param_names)

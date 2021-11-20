@@ -4,5 +4,6 @@
 *.rds
 *.out
 *.pdf
+*.exe
 
 .Rproj.user

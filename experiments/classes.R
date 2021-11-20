@@ -62,9 +62,7 @@ OdeExperimentSetup <- R6Class("OdeExperimentSetup", list(
         max_num_steps = max_num_steps
       )
       post_fit <- self$sample_posterior(sargs,
-        chains = chains,
-        refresh = 0,
-        show_messages = FALSE
+        chains = chains
       )
       t <- post_fit$time()$chains$total
       WT[j, ] <- post_fit$time()$chains$warmup

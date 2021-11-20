@@ -67,6 +67,12 @@ prior_sim <- simulate(setup, prior_draws, setup$solver_args_gen)
 setup$add_simulated_data(prior_sim)
 setup$set_init(prior_draws)
 plot_prior <- setup$plot(prior_sim)
+cat("SETUP:\n")
+print(setup)
+cat("DATA:\n")
+print(setup$data)
+cat("INIT:\n")
+print(setup$init)
 
 # Run workflow
 if (idx > 40) {
@@ -76,16 +82,24 @@ if (idx > 40) {
 } else {
   MNS <- 1e4
 }
+MNS <- 1e6
 max_num_steps <- MNS
-print(max_num_steps)
 run <- run_workflow(setup, 1e-3, 10, max_num_steps, 6)
 
 # Reference timing
-tols <- 1 / run$tuning$metrics$inv_tol
+# tols <- 1 / run$tuning$metrics$inv_tol
+tols <- c(1e-4, 1e-6)
 tps <- setup$time_posterior_sampling(tols, max_num_steps, chains = 4)
 t1_plot <- plot_timing(tols, tps$total)
 t2_plot <- plot_timing(tols, tps$sampling)
 t3_plot <- plot_timing(tols, tps$warmup)
 
-all_results <- list(run = run, tps = tps, plot_prior = plot_prior, max_num_steps = max_num_steps)
+seed <- run$post_fit$runset$args$seed
+all_results <- list(
+  run = run, tps = tps, plot_prior = plot_prior,
+  max_num_steps = max_num_steps, setup = setup,
+  seed = seed
+)
+siz <- format(object.size(all_results), units = "Kb")
+cat("save size:", siz, "\n")
 saveRDS(all_results, file = fn)
