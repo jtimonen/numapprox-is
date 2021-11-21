@@ -56,16 +56,22 @@ transformed parameters {
 }
 
 model {
-  beta ~ normal(2, 1);
-  gamma ~ normal(0.3, 0.3);
-  phi_inv ~ exponential(5);
-  vector[2*G] x[N] = ode_rk45_tol(SIR, x0, t0, t, rel_tol, abs_tol, 
+  vector[2*G] x[N];
+  profile("prior") {
+    beta ~ normal(2, 1);
+    gamma ~ normal(0.3, 0.3);
+    phi_inv ~ exponential(5);
+  }
+  print("beta=", beta);
+  profile("odesolve") {
+  x = ode_rk45_tol(SIR, x0, t0, t, rel_tol, abs_tol, 
     max_num_steps, beta, gamma, contacts, pop_sizes);
-
+  }
+  profile("likelihood") {
   for(n in 1:N) {
     for(g in 1:G) {
       I_data[n,g] ~ neg_binomial_2(x[n][G+g] + 10*abs_tol, phi);
     }
   }
-  
+  }
 }
