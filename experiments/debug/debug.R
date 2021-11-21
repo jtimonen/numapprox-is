@@ -20,3 +20,6 @@ fit <- model$sample(
 )
 diag <- fit$sampler_diagnostics(inc_warmup = TRUE)
 diag[,,c("treedepth__", "n_leapfrog__", "stepsize__")]
+
+print(fit$time())
+print(fit$profiles())

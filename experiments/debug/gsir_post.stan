@@ -8,14 +8,16 @@ functions {
     vector[G] infection_rates;
     vector[G] recovery_rates;
     vector[G] lambda = rep_vector(0.0, G);
-    for(g in 1:G){
-      for(h in 1:G) {
-        lambda[g] += contacts[g,h] * y[G+h]/pop_sizes[h];
+    profile("rhs") {
+      for(g in 1:G){
+        for(h in 1:G) {
+          lambda[g] += contacts[g,h] * y[G+h]/pop_sizes[h];
+        }
       }
-    }
-    for(g in 1:G){
-      dy_dt[g] = -  beta * lambda[g] * y[g];
-      dy_dt[G+g] =  beta * lambda[g] * y[g] - gamma[g] * y[G+g];
+      for(g in 1:G){
+        dy_dt[g] = -  beta * lambda[g] * y[g];
+        dy_dt[G+g] =  beta * lambda[g] * y[g] - gamma[g] * y[G+g];
+      }
     }
     return dy_dt;
   }
