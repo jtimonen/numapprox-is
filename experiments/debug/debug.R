@@ -16,7 +16,8 @@ fit <- model$sample(
   iter_sampling = 1,
   chains = 1,
   save_warmup = TRUE,
-  save_latent_dynamics = TRUE
+  save_latent_dynamics = TRUE,
+  step_size = 1 # 0.01
 )
 diag <- fit$sampler_diagnostics(inc_warmup = TRUE)
 diag[, , c("treedepth__", "n_leapfrog__", "stepsize__")]
