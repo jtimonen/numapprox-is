@@ -15,7 +15,8 @@ run_workflow <- function(setup, tol_init = 1e-4, tol_reduce_factor = 2,
   post_fit <- setup$sample_posterior(
     solver_args = sargs_sample,
     refresh = refresh,
-    show_messages = FALSE
+    show_messages = FALSE,
+    step_size = setup$hmc_initial_step_size
   )
   post_draws <- post_fit$draws(setup$param_names)
 

@@ -1,5 +1,5 @@
 library(cmdstanr)
-set_cmdstan_path("~/Work/Research/cmdstan")
+# set_cmdstan_path("~/Work/Research/cmdstan")
 
 dat <- readRDS(file = "gsir_data.rds")
 model <- cmdstan_model("gsir_post.stan")
@@ -14,9 +14,8 @@ fit <- model$sample(
   init = 0,
   iter_warmup = 1,
   iter_sampling = 1,
-  chains = 1,
+  chains = 2,
   save_warmup = TRUE,
-  save_latent_dynamics = TRUE,
   step_size = 1 # 0.01
 )
 diag <- fit$sampler_diagnostics(inc_warmup = TRUE)

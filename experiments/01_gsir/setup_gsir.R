@@ -7,7 +7,7 @@ create_contact_matrix <- function(G) {
 
 # Data
 setup_standata_gsir <- function() {
-  t <- as.numeric(seq(0.2, 15, by = 0.2))
+  t <- as.numeric(seq(1, 15, by = 1))
   N <- length(t)
   G <- 10 # number of groups
   I0 <- rep(0, G)

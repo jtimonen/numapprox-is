@@ -1,6 +1,6 @@
 # Data
 setup_standata_sir <- function() {
-  t <- as.numeric(seq(0.2, 15, by = 0.2))
+  t <- as.numeric(seq(1, 15, by = 1))
   N <- length(t)
   data_list <- list(
     N = N,

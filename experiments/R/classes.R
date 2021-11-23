@@ -9,6 +9,7 @@ OdeExperimentSetup <- R6Class("OdeExperimentSetup", list(
   param_names = NULL,
   init = NULL,
   sim_par_idx = NULL,
+  hmc_initial_step_size = 1,
   initialize = function(name, solver, solver_args_gen, stan_opts, param_names) {
     self$data <- eval(call(paste0("setup_standata_", name)))
     self$name <- name
@@ -25,6 +26,7 @@ OdeExperimentSetup <- R6Class("OdeExperimentSetup", list(
     cat("  Pars: {", paste(self$param_names, collapse = ", "), "}\n", sep = "")
     cat("  Solver: ", self$solver, "\n", sep = "")
     cat("  Init is NULL: ", is.null(self$init), "\n", sep = "")
+    cat("  HMC initial step size: ", self$hmc_initial_step_size, "\n", sep = "")
     invisible(self)
   },
   sample_prior = function(...) {
@@ -44,11 +46,13 @@ OdeExperimentSetup <- R6Class("OdeExperimentSetup", list(
       init = init, ...
     )
   },
-  time_posterior_sampling = function(tols, max_num_steps, chains = 4, ...) {
+  time_posterior_sampling = function(res_dir, idx,
+                                     tols, max_num_steps, chains = 4, ...) {
     L <- length(tols)
     WT <- matrix(0.0, L, chains)
     ST <- matrix(0.0, L, chains)
     TT <- matrix(0.0, L, chains)
+    GT <- rep(0.0, L)
     j <- 0
     for (tol_j in tols) {
       cat(" (", j, ") Timing posterior sampling with tol = ",
@@ -56,20 +60,27 @@ OdeExperimentSetup <- R6Class("OdeExperimentSetup", list(
         sep = ""
       )
       j <- j + 1
+      fn <- file.path(res_dir, paste0("fit_t_", idx, "_", j, ".rds"))
       sargs <- list(
         abs_tol = tol_j,
         rel_tol = tol_j,
         max_num_steps = max_num_steps
       )
       post_fit <- self$sample_posterior(sargs,
-        chains = chains
+        chains = chains,
+        step_size = self$hmc_initial_step_size
       )
+      cat("Saving fit to ", fn, "\n", sep = "")
+      post_fit$save_object(fn)
       t <- post_fit$time()$chains$total
+      gt <- post_fit$time()$total
+      GT[j] <- gt
+      cat("Grand total time = ", gt, "seconds. \n")
       WT[j, ] <- post_fit$time()$chains$warmup
       ST[j, ] <- post_fit$time()$chains$sampling
       TT[j, ] <- t
     }
-    times <- list(warmup = WT, sampling = ST, total = TT)
+    times <- list(warmup = WT, sampling = ST, total = TT, grand_total = GT)
     return(times)
   },
   plot = function(fit) {
@@ -84,5 +95,8 @@ OdeExperimentSetup <- R6Class("OdeExperimentSetup", list(
   },
   set_init = function(param_draws) {
     self$init <- 0
+  },
+  set_hmc_initial_step_size = function(step_size) {
+    self$hmc_initial_step_size <- step_size
   }
 ))
