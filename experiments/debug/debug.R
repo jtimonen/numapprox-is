@@ -1,5 +1,5 @@
 library(cmdstanr)
-# set_cmdstan_path("~/Work/Research/cmdstan")
+set_cmdstan_path("C:\\Users/Juho/Work/Research/STAN/cmdstan/")
 
 dat <- readRDS(file = "gsir_data.rds")
 model <- cmdstan_model("gsir_post.stan")
