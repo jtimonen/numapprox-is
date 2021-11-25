@@ -12,8 +12,8 @@ library(ggdist)
 library(R6)
 library(ggpubr)
 library(tidyr)
-source("classes.R")
-source("functions.R")
+source("../R/classes.R")
+source("../R/functions.R")
 source("setup_gsir.R")
 
 R <- 60
@@ -25,7 +25,7 @@ for (idx in 1:60) {
   cat("idx=", idx, "\n", sep = "")
   tryCatch(
     {
-      fn <- file.path("res_gsir2", paste0("res_", idx, ".rds"))
+      fn <- file.path("res_gsir3", paste0("res_", idx, ".rds"))
       res <- readRDS(file = fn)
       tim <- res$run$post_fit$time()
       dtimes <- rbind(dtimes, c(tim$total, sum(tim$chains$total)))
