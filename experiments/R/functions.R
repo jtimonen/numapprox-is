@@ -393,7 +393,7 @@ create_ribbon_plot_df <- function(rvar) {
 }
 
 # Plot timing results
-plot_timing <- function(tols, times, mns=NULL) {
+plot_timing <- function(tols, times, mns = NULL, hours = FALSE) {
   times <- t(times)
   nrep <- ncol(times)
   ntols <- nrow(times)
@@ -401,6 +401,12 @@ plot_timing <- function(tols, times, mns=NULL) {
   colnames(df) <- c("tol", paste0("rep", 1:nrep))
   df <- pivot_longer(df, cols = starts_with("rep"))
   colnames(df) <- c("inv_tol", "rep", "time")
+  if (hours) {
+    df$time <- df$time / 3600
+    ylabel <- "time (hours)"
+  } else {
+    ylabel <- "time (seconds)"
+  }
   df$inv_tol <- 1 / df$inv_tol
   if (!is.null(mns)) {
     mns <- format(mns, scientific = TRUE)
@@ -408,10 +414,11 @@ plot_timing <- function(tols, times, mns=NULL) {
   }
   plt <- ggplot(df, aes(x = inv_tol, y = time, group = inv_tol)) +
     geom_boxplot(fill = "firebrick2")
-  plt <- plt + scale_x_log10() + xlab(expression(tol^"-1")) +
-    ylab("time (s)") + ggtitle("Timing plot")
-  if(!is.null(mns)) {
-    plt <- plt + facet_grid(.~max_num_steps)
+  plt <- plt + scale_x_log10(breaks = 1 / tols) + xlab(expression(tol^"-1")) +
+    ylab(ylabel) + ggtitle("Timing plot") +
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
+  if (!is.null(mns)) {
+    plt <- plt + facet_grid(. ~ max_num_steps)
   }
   return(plt)
 }

@@ -60,4 +60,4 @@ res$setup$stanmodels <- setup$stanmodels
 # Rerun workflow
 tol_steps <- 9
 run <- rerun_workflow(res, 10, tol_steps, NULL)
-saveRDS(run, file = fn_run)
+# saveRDS(run, file = fn_run)

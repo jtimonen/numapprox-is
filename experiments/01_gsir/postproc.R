@@ -18,9 +18,9 @@ source("setup_gsir.R")
 
 R <- 60
 ntol <- 11
-ttimes <- NULL # tuning time
-stimes <- NULL # sampling time
-gtimes <- NULL # init + sampling time
+sim_times <- NULL # tuning time
+sampling_times <- NULL # sampling time
+full_times <- NULL # init + sampling time
 for (idx in 1:60) {
   cat("idx=", idx, "\n", sep = "")
   tryCatch(
@@ -32,32 +32,29 @@ for (idx in 1:60) {
       tim <- res$run$post_fit$time()
       tim_sum_chains <- sum(tim$chains$total)
       times_sum_chains <- rowSums(res$tps$total)
-      ttimes <- rbind(ttimes, run$tuning$metrics$time)
-      stimes <- rbind(stimes, c(tim_sum_chains, times_sum_chains))
-      gtimes <- rbind(gtimes, c(tim$total, res$tps$grand_total))
-      ttols <- 1 / run$tuning$metrics$inv_tol
+      sim_times <- rbind(sim_times, run$tuning$metrics$time)
+      sampling_times <- rbind(sampling_times, c(tim_sum_chains, times_sum_chains))
+      full_times <- rbind(full_times, c(tim$total, res$tps$grand_total))
+      sim_tols <- 1 / run$tuning$metrics$inv_tol
     },
     error = function(e) {
-      cat(" - Could not open!\n")
+      cat(" - Could not open, idx = \n", idx, ".\n", sep = "")
     }
   )
 }
-stols <- 10^c(-3, -4, -6, -8, -10, -12)
-colnames(ttimes) <- ttols
-colnames(stimes) <- stols
-colnames(gtimes) <- stols
-diffs <- gtimes - stimes
+sampling_tols <- 10^c(-3, -4, -6, -8, -10, -12)
+colnames(sim_times) <- sim_tols
+colnames(sampling_times) <- sampling_tols
+colnames(full_times) <- sampling_tols
+diffs <- full_times - sampling_times
 mns <- rep(c(1e3, 1e4, 1e5), each = 20)
-plt1 <- plot_timing(ttols, ttimes, mns)
-plt2 <- plot_timing(stols, stimes, mns)
-plt3 <- plot_timing(stols, gtimes, mns)
-plt4 <- plot_timing(stols, diffs, mns)
+plt1 <- plot_timing(sim_tols, sim_times, mns) + ggtitle("Tuning time")
+plt2 <- plot_timing(sampling_tols, full_times, mns, hours = TRUE) + ggtitle("Sampling time")
+plt3 <- plot_timing(sampling_tols, diffs, mns) + ggtitle("sampler.init_stepsize() time")
+plt <- ggarrange(plt1, plt2, plt3, nrow = 3, labels = c("A", "B", "C"))
 
-ggarrange(plotlist = plt1, nrow = 1)
-# Plot
-diff <- dtimes[, 1] - dtimes[, 2]
-plot(diff,
-  pch = 16, col = "firebrick",
-  ylab = "total - sum(chains$total)"
-)
-grid()
+# Speedup plot
+asdd
+
+# reliability plot
+asd
