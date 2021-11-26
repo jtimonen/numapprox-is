@@ -3,21 +3,26 @@
 # Run the workflow
 run_workflow <- function(setup, tol_init = 1e-4, tol_reduce_factor = 2,
                          max_num_steps = 1e6, tol_steps = 4,
-                         refresh = NULL) {
-
-  # Sample posterior using tol_init
+                         refresh = NULL, post_fit = NULL) {
   sargs_sample <- list(
     abs_tol = tol_init,
     rel_tol = tol_init,
     max_num_steps = max_num_steps
   )
-  cat("\nSampling posterior with tol_init (", tol_init, ")...\n", sep = "")
-  post_fit <- setup$sample_posterior(
-    solver_args = sargs_sample,
-    refresh = refresh,
-    show_messages = FALSE,
-    step_size = setup$hmc_initial_step_size
-  )
+
+  if (is.null(post_fit)) {
+
+    # Sample posterior using tol_init
+    cat("\nSampling posterior with tol_init (", tol_init, ")...\n", sep = "")
+    post_fit <- setup$sample_posterior(
+      solver_args = sargs_sample,
+      refresh = refresh,
+      show_messages = FALSE,
+      step_size = setup$hmc_initial_step_size
+    )
+  } else {
+    cat("\n Using precomputed post_fit.\n")
+  }
   post_draws <- post_fit$draws(setup$param_names)
 
   # Create a plot using posterior draws
@@ -41,9 +46,14 @@ run_workflow <- function(setup, tol_init = 1e-4, tol_reduce_factor = 2,
   )
 
   # Timing
-  workflow_time <- post_fit$time()$total + post_sim$time()$total +
-    tuning$total_time
+  t1 <- post_fit$time()$total
+  t2 <- post_sim$time()$total
+  t3 <- tuning$total_time
+  workflow_time <- t1 + t2 + t3
   cat("Total workflow time was", workflow_time, "seconds.\n", sep = " ")
+  cat(" - Posterior sampling:", t1, "seconds.\n", sep = " ")
+  cat(" - Posterior simulation:", t2, "seconds.\n", sep = " ")
+  cat(" - Tuning:", t3, "seconds.\n", sep = " ")
 
   # Return
   list(
@@ -56,6 +66,17 @@ run_workflow <- function(setup, tol_init = 1e-4, tol_reduce_factor = 2,
     post_draws = post_draws,
     post_draws_resampled = post_draws_resampled,
     workflow_time = workflow_time
+  )
+}
+
+# Rerun workflow
+rerun_workflow <- function(res, tol_reduce_factor, tol_steps, refresh = NULL) {
+  tol_init <- 1 / res$run$tuning$metrics$inv_tol
+  tol_init <- tol_init[1]
+  run_workflow(res$setup, tol_init, tol_reduce_factor,
+    max_num_steps = res$max_num_steps,
+    tol_steps = tol_steps,
+    refresh = refresh, post_fit = res$run$post_fit
   )
 }
 
@@ -322,7 +343,8 @@ tune_solver_tols <- function(setup, p_sim, p_params, p_sargs, factor, steps) {
     cat(", mae = ", round(err_j, 4), sep = "")
     is <- use_psis(sim, p_sim)
     k_j <- is$diagnostics$pareto_k
-    r_j <- is$diagnostics$n_eff / S
+    n_eff <- is$diagnostics$n_eff
+    r_j <- n_eff / S
     cat(", k_hat = ", round(k_j, 3), ", r_eff = ",
       round(r_j, 3), "\n",
       sep = ""
@@ -337,7 +359,6 @@ tune_solver_tols <- function(setup, p_sim, p_params, p_sargs, factor, steps) {
   # Return
   list(
     metrics = res,
-    last_sim = sim,
     total_time = sum(res$time),
     max_khat = max(res$k_hat, na.rm = TRUE)
   )

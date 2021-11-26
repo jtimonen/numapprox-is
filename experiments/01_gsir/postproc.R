@@ -38,8 +38,13 @@ for (idx in 1:60) {
     }
   )
 }
+timing_tols <- 10^c(-4, -6, -8, -10, -12)
 colnames(ttimes) <- tols
-colnames(ptimes) <- tols
+colnames(ptimes) <- timing_tols
+
+
+plt1 <- plot_timing(timing_tols, t(ptimes)) # Without init_stepsize()
+plt2 <- plot_timing(tols, t(ttimes))
 
 # Plot
 diff <- dtimes[, 1] - dtimes[, 2]
