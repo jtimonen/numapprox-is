@@ -18,34 +18,42 @@ source("setup_gsir.R")
 
 R <- 60
 ntol <- 11
-ttimes <- NULL
-ptimes <- NULL
-dtimes <- NULL
+ttimes <- NULL # tuning time
+stimes <- NULL # sampling time
+gtimes <- NULL # init + sampling time
 for (idx in 1:60) {
   cat("idx=", idx, "\n", sep = "")
   tryCatch(
     {
-      fn <- file.path("res_gsir3", paste0("res_", idx, ".rds"))
-      res <- readRDS(file = fn)
+      fn_res <- file.path("res_gsir3", paste0("res_", idx, ".rds"))
+      fn_run <- file.path("res_gsir3", paste0("run_", idx, ".rds"))
+      res <- readRDS(file = fn_res)
+      run <- readRDS(file = fn_run)
       tim <- res$run$post_fit$time()
-      dtimes <- rbind(dtimes, c(tim$total, sum(tim$chains$total)))
-      ttimes <- rbind(ttimes, res$run$tuning$metrics$time)
-      ptimes <- rbind(ptimes, rowSums(res$tps$total))
-      tols <- 1 / res$run$tuning$metrics$inv_tol
+      tim_sum_chains <- sum(tim$chains$total)
+      times_sum_chains <- rowSums(res$tps$total)
+      ttimes <- rbind(ttimes, run$tuning$metrics$time)
+      stimes <- rbind(stimes, c(tim_sum_chains, times_sum_chains))
+      gtimes <- rbind(gtimes, c(tim$total, res$tps$grand_total))
+      ttols <- 1 / run$tuning$metrics$inv_tol
     },
     error = function(e) {
       cat(" - Could not open!\n")
     }
   )
 }
-timing_tols <- 10^c(-4, -6, -8, -10, -12)
-colnames(ttimes) <- tols
-colnames(ptimes) <- timing_tols
+stols <- 10^c(-3, -4, -6, -8, -10, -12)
+colnames(ttimes) <- ttols
+colnames(stimes) <- stols
+colnames(gtimes) <- stols
+diffs <- gtimes - stimes
+mns <- rep(c(1e3, 1e4, 1e5), each = 20)
+plt1 <- plot_timing(ttols, ttimes, mns)
+plt2 <- plot_timing(stols, stimes, mns)
+plt3 <- plot_timing(stols, gtimes, mns)
+plt4 <- plot_timing(stols, diffs, mns)
 
-
-plt1 <- plot_timing(timing_tols, t(ptimes)) # Without init_stepsize()
-plt2 <- plot_timing(tols, t(ttimes))
-
+ggarrange(plotlist = plt1, nrow = 1)
 # Plot
 diff <- dtimes[, 1] - dtimes[, 2]
 plot(diff,

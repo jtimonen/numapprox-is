@@ -393,16 +393,25 @@ create_ribbon_plot_df <- function(rvar) {
 }
 
 # Plot timing results
-plot_timing <- function(tols, times) {
+plot_timing <- function(tols, times, mns=NULL) {
+  times <- t(times)
   nrep <- ncol(times)
+  ntols <- nrow(times)
   df <- data.frame(cbind(tols, times))
   colnames(df) <- c("tol", paste0("rep", 1:nrep))
   df <- pivot_longer(df, cols = starts_with("rep"))
   colnames(df) <- c("inv_tol", "rep", "time")
   df$inv_tol <- 1 / df$inv_tol
+  if (!is.null(mns)) {
+    mns <- format(mns, scientific = TRUE)
+    df$max_num_steps <- rep(paste("max_num_steps =", mns), ntols)
+  }
   plt <- ggplot(df, aes(x = inv_tol, y = time, group = inv_tol)) +
     geom_boxplot(fill = "firebrick2")
   plt <- plt + scale_x_log10() + xlab(expression(tol^"-1")) +
     ylab("time (s)") + ggtitle("Timing plot")
+  if(!is.null(mns)) {
+    plt <- plt + facet_grid(.~max_num_steps)
+  }
   return(plt)
 }
