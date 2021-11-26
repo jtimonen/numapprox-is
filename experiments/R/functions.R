@@ -36,15 +36,6 @@ run_workflow <- function(setup, tol_init = 1e-4, tol_reduce_factor = 2,
   )
   tuning_plot <- plot_tuning(tuning)
 
-  # Compute importance weights and Pareto-$k$
-  is <- use_psis(post_sim, tuning$last_sim)
-
-  # Importance resampling
-  post_draws_resampled <- posterior::resample_draws(
-    post_draws,
-    weights = is$log_weights
-  )
-
   # Timing
   t1 <- post_fit$time()$total
   t2 <- post_sim$time()$total
@@ -62,9 +53,7 @@ run_workflow <- function(setup, tol_init = 1e-4, tol_reduce_factor = 2,
     post_sim_plot = post_sim_plot,
     tuning = tuning,
     tuning_plot = tuning_plot,
-    is = is,
     post_draws = post_draws,
-    post_draws_resampled = post_draws_resampled,
     workflow_time = workflow_time
   )
 }
