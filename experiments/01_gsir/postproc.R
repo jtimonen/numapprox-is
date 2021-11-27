@@ -21,6 +21,8 @@ ntol <- 11
 sim_times <- NULL # tuning time
 sampling_times <- NULL # sampling time
 full_times <- NULL # init + sampling time
+k_hats <- NULL
+maes <- NULL
 for (idx in 1:60) {
   cat("idx=", idx, "\n", sep = "")
   tryCatch(
@@ -36,6 +38,8 @@ for (idx in 1:60) {
       sampling_times <- rbind(sampling_times, c(tim_sum_chains, times_sum_chains))
       full_times <- rbind(full_times, c(tim$total, res$tps$grand_total))
       sim_tols <- 1 / run$tuning$metrics$inv_tol
+      k_hats <- rbind(k_hats, run$tuning$metrics$k_hat)
+      maes <- rbind(maes, run$tuning$metrics$mae)
     },
     error = function(e) {
       cat(" - Could not open, idx = \n", idx, ".\n", sep = "")
@@ -44,17 +48,29 @@ for (idx in 1:60) {
 }
 sampling_tols <- 10^c(-3, -4, -6, -8, -10, -12)
 colnames(sim_times) <- sim_tols
+colnames(k_hats) <- sim_tols
+colnames(maes) <- sim_tols
 colnames(sampling_times) <- sampling_tols
 colnames(full_times) <- sampling_tols
 diffs <- full_times - sampling_times
 mns <- rep(c(1e3, 1e4, 1e5), each = 20)
-plt1 <- plot_timing(sim_tols, sim_times, mns) + ggtitle("Tuning time")
-plt2 <- plot_timing(sampling_tols, full_times, mns, hours = TRUE) + ggtitle("Sampling time")
-plt3 <- plot_timing(sampling_tols, diffs, mns) + ggtitle("sampler.init_stepsize() time")
-plt <- ggarrange(plt1, plt2, plt3, nrow = 3, labels = c("A", "B", "C"))
+pltA <- plot_timing(sim_tols, sim_times, mns) + ggtitle("Log prob computation time (no gradients)")
+pltB <- plot_timing(sampling_tols, full_times, mns, unit = "hours") + ggtitle("Sampling time")
+pltC <- plot_timing(sampling_tols, diffs, mns) + ggtitle("sampler.init_stepsize() time")
+plt1 <- ggarrange(pltA, pltB, pltC, nrow = 3, labels = c("A", "B", "C"))
 
 # Speedup plot
-asdd
+su <- compute_speedup(sim_tols, sampling_tols, sim_times, full_times)
+su <- su[, 2:ncol(su)]
+plt2 <- plot_timing(NULL, su, mns = mns) +
+  ylab("(t_sample_low + t_prob_eval_high) / t_sample_high") + ggtitle("Relative time, shown number is median")
 
-# reliability plot
-asd
+# Reliability
+pltA <- plot_metric(k_hats, mns) + ylab("Pareto-k")
+pltB <- plot_metric(maes, mns) + ylab("Max absolute error")
+plt3 <- ggarrange(pltA, pltB, nrow = 2, labels = c("A", "B"))
+
+# Save plots
+ggsave(filename = "figs/timing.pdf", plot = plt1, width = 9.3, height = 10)
+ggsave(filename = "figs/relative_time.pdf", plot = plt2, width = 12, height = 5.5)
+ggsave(filename = "figs/reliability.pdf", plot = plt3, width = 8.5, height = 10)

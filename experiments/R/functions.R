@@ -98,6 +98,16 @@ print_output_if_failed <- function(stan_out) {
   }
 }
 
+# Determine speedup compared to full sampling
+compute_speedup <- function(sim_tols, sampling_tols, sim_times, full_times) {
+  t_sample_init <- full_times[, 1]
+  tols <- intersect(as.character(sim_tols), as.character(sampling_tols))
+  t_sim <- sim_times[, tols]
+  t_sample <- full_times[, tols]
+  tols <- as.numeric(tols)
+  t_workflow <- t_sample_init + t_sim
+  return(t_workflow / t_sample)
+}
 
 # CREATING STAN MODELS ------------------------------------------------------
 
@@ -392,33 +402,75 @@ create_ribbon_plot_df <- function(rvar) {
   return(df)
 }
 
-# Plot timing results
-plot_timing <- function(tols, times, mns = NULL, hours = FALSE) {
-  times <- t(times)
-  nrep <- ncol(times)
-  ntols <- nrow(times)
-  df <- data.frame(cbind(tols, times))
+# Useful data frame
+create_useful_plot_df <- function(tols, values, mns = NULL) {
+  if (is.null(tols)) {
+    tols <- as.numeric(colnames(values))
+  }
+  values <- t(values)
+  nrep <- ncol(values)
+  ntols <- nrow(values)
+  df <- data.frame(cbind(tols, values))
   colnames(df) <- c("tol", paste0("rep", 1:nrep))
   df <- pivot_longer(df, cols = starts_with("rep"))
-  colnames(df) <- c("inv_tol", "rep", "time")
-  if (hours) {
-    df$time <- df$time / 3600
-    ylabel <- "time (hours)"
-  } else {
-    ylabel <- "time (seconds)"
-  }
+  colnames(df) <- c("inv_tol", "rep", "value")
   df$inv_tol <- 1 / df$inv_tol
+
   if (!is.null(mns)) {
     mns <- format(mns, scientific = TRUE)
     df$max_num_steps <- rep(paste("max_num_steps =", mns), ntols)
   }
+  return(df)
+}
+
+# Plot timing results
+plot_timing <- function(tols, times, mns = NULL, unit = "seconds",
+                        median_text = TRUE) {
+  df <- create_useful_plot_df(tols, times, mns)
+  df$time <- df$value
+  df$value <- NULL
+  if (unit == "hours") {
+    df$time <- df$time / 3600
+    ylabel <- "time (hours)"
+  } else if (unit == "seconds") {
+    ylabel <- "time (seconds)"
+  } else {
+    ylabel <- ""
+  }
   plt <- ggplot(df, aes(x = inv_tol, y = time, group = inv_tol)) +
-    geom_boxplot(fill = "firebrick2")
-  plt <- plt + scale_x_log10(breaks = 1 / tols) + xlab(expression(tol^"-1")) +
+    geom_boxplot(fill = "firebrick2", col = "firebrick")
+  plt <- plt + scale_x_log10(breaks = unique(df$inv_tol)) + xlab(expression(tol^"-1")) +
     ylab(ylabel) + ggtitle("Timing plot") +
     theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
   if (!is.null(mns)) {
     plt <- plt + facet_grid(. ~ max_num_steps)
+    vars <- c("inv_tol", "max_num_steps")
+  } else {
+    vars <- c("inv_tol")
   }
+
+  if (median_text) {
+    df_meds <- plyr::ddply(df, vars, plyr::summarise,
+      t_med = round(median(time), 2)
+    )
+    plt <- plt + geom_text(
+      data = df_meds, aes(
+        x = inv_tol, y = t_med,
+        label = t_med
+      ),
+      size = 3, vjust = -2, col = "steelblue3"
+    )
+  }
+
+  return(plt)
+}
+
+# Plot any metric
+plot_metric <- function(values, mns = NULL) {
+  df <- create_useful_plot_df(NULL, values, mns = mns)
+  plt <- ggplot(df, aes(x = inv_tol, y = value, group = rep, col = max_num_steps)) +
+    geom_line(alpha = 0.7) +
+    scale_x_log10(breaks = unique(df$inv_tol)) +
+    geom_point(pch = 20, alpha = 0.7)
   return(plt)
 }
