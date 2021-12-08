@@ -4,17 +4,31 @@
 validate_fit <- function(setup, sampled, tols, max_num_steps, ...) {
   post_fit <- sampled$fit
   post_draws <- post_fit$draws(setup$param_names)
+  sargs <- list(
+    abs_tol = sampled$tol,
+    rel_tol = sampled$tol,
+    max_num_steps = max_num_steps
+  )
+  post_sim <- simulate(setup, post_draws, sargs)
 
   # Simulations
-  sims <- simulate_many(setup, post_draws, tols, max_num_steps)
+  sims_reference <- simulate_many(setup, post_draws, tols, max_num_steps)
+  times <- sapply(sims_reference, function(x) {
+    x$time()$total
+  })
 
   # Tune the reference method so that it is reliable at post_draws
   cat("\nValidating tolerances...\n")
-  # tuning <- validate_tols(
-  #  setup, post_sim, post_draws, setup, sampled, tols, max_num_steps
-  # )
+  tuning <- validate_tols(
+    setup, post_sim, sims_reference
+  )
   # tuning_plot <- plot_tuning(tuning)
-  return(sims)
+  list(
+    time = post_sim$time()$total,
+    sims_reference = sims_reference,
+    times_reference = times,
+    tuning = tuning
+  )
 }
 
 # UTILS -------------------------------------------------------------------
@@ -285,54 +299,28 @@ get_x_sim <- function(sim) {
 }
 
 # Run tuning
-validate_tols <- function(setup, p_sim, p_params, p_sargs, factor, steps) {
-  S <- posterior::ndraws(posterior::merge_chains(p_sim$draws()))
-  tol_j <- min(p_sargs$rel_tol, p_sargs$abs_tol)
-  data <- setup$data
-  stan_opts <- setup$stan_opts
-  model <- setup$stanmodels$simulator
-  error_to_ref <- Inf
-  p_x <- get_x_sim(p_sim)
-  p_t <- p_sim$time()$total
-  res <- c(1 / tol_j, p_t, 0.0, 0.0, 1.0)
-  idx <- 0
-  while (idx < steps) {
-    idx <- idx + 1
-    tol_j <- tol_j / factor
-    cat(" * tol = ", tol_j, sep = "")
-    sargs <- list(
-      abs_tol = tol_j,
-      rel_tol = tol_j,
-      max_num_steps = 10^9
-    )
-    sim <- simulate(setup, p_params, sargs)
-    stopifnot(is(sim, "CmdStanFit"))
-    t_j <- sim$time()$total
-    cat(", time = ", round(t_j, 2), " s", sep = "")
-    x <- get_x_sim(sim)
-    err_j <- compute_sol_error(x, p_x, "max")
-    cat(", mae = ", round(err_j, 4), sep = "")
-    is <- use_psis(sim, p_sim)
+validate_tols <- function(setup, sim, sims_reference) {
+  S <- posterior::ndraws(posterior::merge_chains(sim$draws()))
+  x <- get_x_sim(sim)
+  j <- 0
+  res <- NULL
+  for (sim_ref in sims_reference) {
+    j <- j + 1
+    tol_j <- as.numeric(names(sims_reference)[j])
+    x_ref <- get_x_sim(sim_ref)
+    err_j <- compute_sol_error(x_ref, x, "max")
+    is <- use_psis(sim_ref, sim)
     k_j <- is$diagnostics$pareto_k
     n_eff <- is$diagnostics$n_eff
+    t_j <- sim_ref$time()$total
     r_j <- n_eff / S
-    cat(", k_hat = ", round(k_j, 3), ", r_eff = ",
-      round(r_j, 3), "\n",
-      sep = ""
-    )
     res_j <- c(1 / tol_j, t_j, err_j, k_j, r_j)
     res <- rbind(res, res_j)
   }
   colnames(res) <- c("inv_tol", "time", "mae", "k_hat", "r_eff")
   res <- data.frame(res)
   rownames(res) <- NULL
-
-  # Return
-  list(
-    metrics = res,
-    total_time = sum(res$time),
-    max_khat = max(res$k_hat, na.rm = TRUE)
-  )
+  return(res)
 }
 
 
@@ -340,17 +328,20 @@ validate_tols <- function(setup, p_sim, p_params, p_sargs, factor, steps) {
 
 # Plot tuning results
 plot_tuning <- function(tuning, ...) {
-  df <- tuning$metrics
-  add_geoms <- function(x) {
-    x + geom_line() + geom_point() + scale_x_log10() +
-      xlab(expression(tol^"-1"))
+  df <- tuning
+  add_geoms <- function(x, breaks) {
+    x + geom_line() + geom_point() + scale_x_log10(breaks = breaks) +
+      xlab(expression(tol^"-1")) +
+      theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
   }
-  p_A <- add_geoms(ggplot(df, aes(x = inv_tol, y = mae)))
-  p_B <- add_geoms(ggplot(df, aes(x = inv_tol, y = k_hat))) +
+  tols <- df$inv_tol
+  p_A <- add_geoms(ggplot(df, aes(x = inv_tol, y = mae)), breaks = tols)
+  p_B <- add_geoms(ggplot(df, aes(x = inv_tol, y = k_hat)), breaks = tols) +
     ylab(expression(hat(k)))
-  p_C <- add_geoms(ggplot(df, aes(x = inv_tol, y = r_eff))) +
+  p_C <- add_geoms(ggplot(df, aes(x = inv_tol, y = r_eff)), breaks = tols) +
     ylab(expression(r[eff]))
-  p_D <- add_geoms(ggplot(df, aes(x = inv_tol, y = time))) + ylab("time (s)")
+  p_D <- add_geoms(ggplot(df, aes(x = inv_tol, y = time)), breaks = tols) +
+    ylab("time (s)")
   plt <- ggpubr::ggarrange(p_A, p_B, p_C, p_D, labels = "auto", ...)
   return(plt)
 }

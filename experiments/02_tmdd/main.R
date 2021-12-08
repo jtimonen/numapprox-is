@@ -37,7 +37,8 @@ library(tidyr)
 
 # Options
 stan_opts <- list(
-  sig_figs = 12 # number of significant figures to store in floats
+  sig_figs = 12, # number of significant figures to store in floats
+  seed = 123
 )
 
 # R functions
@@ -80,32 +81,39 @@ print(setup)
 saveRDS(setup$data, file = fn_data)
 
 # SAMPLING ----------------------------------------------------------
-max_num_steps <- 1e9
+max_num_steps <- 1e6
 tols <- c(
   0.1, 0.05, 0.01, 0.001, 1e-4, 1e-5, 1e-6, 1e-7, 1e-8, 1e-9, 1e-10,
-  1e-11, 1e-12, 1e-13
+  1e-11, 1e-12
 )
 post <- setup$sample_posterior_many(res_dir, idx, tols, max_num_steps, chains = 4)
 
 # Run workflow
-idx <- 1
-sampled <- load_fit(post, 1)
-run <- validate_fit(setup, sampled, tols, max_num_steps)
+idx <- 2
+sampled <- load_fit(post, idx)
+L <- length(tols)
+tols_val <- tols[(idx + 1):L]
+run <- validate_fit(setup, sampled, tols_val, max_num_steps)
 
 # Save result
-# run$post_fit$save_object(fn_fit)
+tune <- run$tuning
+tp <- plot_tuning(tune)
+ggsave("tuning_tmdd.pdf", width = 9.67, height = 6.17)
 
-# Reference timing
-# tols <- 1 / run$tuning$metrics$inv_tol
-
-
-
-# seed <- run$post_fit$runset$args$seed
-# all_results <- list(
-#  run = run, tps = tps, plot_prior = plot_prior,
-#  max_num_steps = max_num_steps, setup = setup,
-#  seed = seed
-# )
-# saveRDS(all_results, file = fn_res)
-# siz <- format(object.size(all_results), units = "Kb")
-# cat("save size:", siz, "\n")
+# Plot times
+t <- post$grand_total[idx:L]
+tols <- post$tols[idx:L]
+plot(-log10(tols), t, "o",
+  ylab = "time (s)", pch = 16, ylim = c(0, 320),
+  xlab = "-log10(T)"
+)
+grid()
+t_sample <- t[1]
+t2 <- tune$time + t_sample
+tols2 <- 1 / tune$inv_tol
+lines(-log10(tols2), t2, col = "firebrick3")
+points(-log10(tols2), t2, col = "firebrick3", pch = 17)
+legend(2, 200, c("HMC-NUTS using tol=T", "HMC-NUTS using tol=0.01 + PSIS with tol=T"),
+  lty = c(1, 1), col = c("black", "firebrick3"),
+  pch = c(16, 17)
+)
