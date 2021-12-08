@@ -43,7 +43,7 @@ stan_opts <- list(
 # R functions
 source("../R/classes.R")
 source("../R/functions.R")
-source("setup_pkpd.R")
+source("setup_tmdd.R")
 
 # Create experiment setup
 solver_args_gen <- list(
@@ -52,10 +52,10 @@ solver_args_gen <- list(
   max_num_steps = 1e9
 )
 solver <- "rk45"
-gpar <- paste("gamma[", c(1:10), "]", sep = "")
-param_names <- c("beta", gpar, "phi_inv")
+kpar <- paste("k[", c(1:6), "]", sep = "")
+param_names <- c(kpar, "sigma")
 setup <- OdeExperimentSetup$new(
-  "gsir", solver, solver_args_gen,
+  "tmdd", solver, solver_args_gen,
   stan_opts, param_names
 )
 setup$set_hmc_initial_step_size(0.1)
