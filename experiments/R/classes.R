@@ -46,21 +46,19 @@ OdeExperimentSetup <- R6Class("OdeExperimentSetup", list(
       init = init, ...
     )
   },
-  time_posterior_sampling = function(res_dir, idx,
-                                     tols, max_num_steps, chains = 4, ...) {
+  sample_posterior_many = function(res_dir, idx,
+                                   tols, max_num_steps, chains = 4, ...) {
     L <- length(tols)
     WT <- matrix(0.0, L, chains)
     ST <- matrix(0.0, L, chains)
     TT <- matrix(0.0, L, chains)
+    FN <- c()
     GT <- rep(0.0, L)
     j <- 0
     for (tol_j in tols) {
-      cat(" (", j, ") Timing posterior sampling with tol = ",
-        tol_j, "...\n",
-        sep = ""
-      )
+      cat(" (", j, ") Posterior sampling with tol = ", tol_j, "\n", sep = "")
       j <- j + 1
-      fn <- file.path(res_dir, paste0("fit_t_", idx, "_", j, ".rds"))
+      fn <- file.path(res_dir, paste0("fit_", idx, "_", j, ".rds"))
       sargs <- list(
         abs_tol = tol_j,
         rel_tol = tol_j,
@@ -72,6 +70,7 @@ OdeExperimentSetup <- R6Class("OdeExperimentSetup", list(
       )
       cat("Saving fit to ", fn, "\n", sep = "")
       post_fit$save_object(fn)
+      FN <- c(FN, fn)
       t <- post_fit$time()$chains$total
       gt <- post_fit$time()$total
       GT[j] <- gt
@@ -80,8 +79,11 @@ OdeExperimentSetup <- R6Class("OdeExperimentSetup", list(
       ST[j, ] <- post_fit$time()$chains$sampling
       TT[j, ] <- t
     }
-    times <- list(warmup = WT, sampling = ST, total = TT, grand_total = GT)
-    return(times)
+    out <- list(
+      warmup = WT, sampling = ST, total = TT, grand_total = GT,
+      files = FN, tols = tols
+    )
+    return(out)
   },
   plot = function(fit) {
     eval(call(paste0("plot_", self$name), fit, self$data))
@@ -93,8 +95,8 @@ OdeExperimentSetup <- R6Class("OdeExperimentSetup", list(
     self$data <- sd$data
     self$sim_par_idx <- sd$idx
   },
-  set_init = function(param_draws) {
-    self$init <- 0
+  set_init = function(init) {
+    self$init <- init
   },
   set_hmc_initial_step_size = function(step_size) {
     self$hmc_initial_step_size <- step_size

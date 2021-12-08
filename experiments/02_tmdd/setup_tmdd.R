@@ -1,9 +1,9 @@
 
 # Data
 setup_standata_tmdd <- function() {
-  t <- as.numeric(seq(1, 15, by = 0.2))
+  t <- c(0.001, 0.01, 0.05, 0.1, 0.2, 0.5, 1.0, 2.0, 4.0, 6.0, 8.0, 12.0, 16.0, 20.0)
   N <- length(t)
-  L0 <- 1
+  L0 <- 14.8
   data_list <- list(
     N = N,
     t = t,
@@ -25,8 +25,13 @@ setup_stancode_tmdd <- function(solver = "rk45") {
     vector[3] x0 = to_vector({L0, R0, 0.0});
   "
   prior <- "
-  k ~ normal(0.3, 0.5);
-  sigma ~ normal(1, 0.1);
+  k[1] ~ lognormal(-1, 0.3);  // k_on
+  k[2] ~ lognormal(0, 0.3);  // k_off
+  k[3] ~ lognormal(0, 0.3);  // k_in
+  k[4] ~ lognormal(0, 0.3);  // k_out
+  k[5] ~ lognormal(-1, 0.3);  // k_eL
+  k[6] ~ lognormal(-3, 0.3);  // k_eP
+  sigma ~ lognormal(1, 0.3);
   "
   funs <- "
   // TMDD system right-hand side
@@ -45,7 +50,7 @@ setup_stancode_tmdd <- function(solver = "rk45") {
   data <- "
   int<lower=1> N;            // number of time points
   real t[N];                 // time points
-  real L0;                   // initial number of infected in each group
+  real L0;                   // initial bolus
   "
   tdata <- "
     real t0 = 0.0;
@@ -66,10 +71,12 @@ setup_stancode_tmdd <- function(solver = "rk45") {
   "
   genquant <- "
   vector[N] y_gen;
+  vector[N] L_gen;
   real log_lik = 0.0;
   for(n in 1:N) {
-    y_gen[n] = normal_rng(x[n][3], sigma);
-    log_lik += normal_lpdf(y[n] | x[n][3], sigma);
+    L_gen[n] = x[n][1];
+    y_gen[n] = normal_rng(x[n][1], sigma);
+    log_lik += normal_lpdf(y[n] | x[n][1], sigma);
   }
   "
 
@@ -91,21 +98,12 @@ setup_stancode_tmdd <- function(solver = "rk45") {
 # Plotting
 plot_tmdd <- function(fit, data) {
   y_gen_rvar <- posterior::as_draws_rvars(fit$draws("y_gen"))$y_gen
-  G <- data$G
-  df <- NULL
-  for (g in 1:G) {
-    df_g <- create_ribbon_plot_df(y_gen_rvar[, g])
-    df_g$group <- rep(g, nrow(df_g))
-    df <- rbind(df, df_g)
-  }
-  df$group <- as.factor(df$group)
-
+  df <- create_ribbon_plot_df(y_gen_rvar)
   df$t <- data$t
   cs <- bayesplot::color_scheme_get()
   fill_alpha <- 1.0
-  plt_I <- ggplot(df, aes(
-    x = t, y = median, ymin = lower1, ymax = upper1,
-    group = group
+  plt_y <- ggplot(df, aes(
+    x = t, y = median, ymin = lower1, ymax = upper1
   )) +
     geom_ribbon(alpha = fill_alpha, fill = cs$light_highlight) +
     geom_ribbon(
@@ -113,20 +111,16 @@ plot_tmdd <- function(fit, data) {
       aes(ymin = lower2, ymax = upper2)
     ) +
     geom_line(col = cs$mid_highlight, lwd = 1) +
-    ylab("I") +
-    facet_wrap(. ~ group)
-  if (!is.null(data$I_data)) {
-    df <- data.frame(data$t, data$I_data)
-    colnames(df) <- c("t", 1:G)
-    df_long <- pivot_longer(df, cols = as.character(1:G))
-    colnames(df_long) <- c("t", "group", "I_data")
-    df_long$group <- as.factor(df_long$group)
-    plt_I <- plt_I + geom_point(
-      data = df_long, aes(x = t, y = I_data, group = group),
+    ylab("L")
+  if (!is.null(data$y)) {
+    df <- data.frame(data$t, data$y)
+    colnames(df) <- c("t", "y")
+    plt_y <- plt_y + geom_point(
+      data = df, aes(x = t, y = y),
       inherit.aes = FALSE, pch = 16
     )
   }
-  return(plt_I)
+  return(plt_y)
 }
 
 # Adding simulated data

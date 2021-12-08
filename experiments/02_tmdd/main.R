@@ -47,11 +47,11 @@ source("setup_tmdd.R")
 
 # Create experiment setup
 solver_args_gen <- list(
-  rel_tol = 1e-9,
-  abs_tol = 1e-9,
+  rel_tol = 1e-15,
+  abs_tol = 1e-15,
   max_num_steps = 1e9
 )
-solver <- "rk45"
+solver <- "bdf"
 kpar <- paste("k[", c(1:6), "]", sep = "")
 param_names <- c(kpar, "sigma")
 setup <- OdeExperimentSetup$new(
@@ -61,50 +61,51 @@ setup <- OdeExperimentSetup$new(
 setup$set_hmc_initial_step_size(0.1)
 print(setup)
 
-# Fit prior model
-prior_fit <- setup$sample_prior(refresh = 0)
-prior_draws <- prior_fit$draws(setup$param_names)
+# SIMULATION ----------------------------------------------------------
+
+# Define simulation parameters
+sim_k <- c(0.592, 0.900, 2.212, 0.823, 0.201, 0.024)
+sim_sigma <- 0.3
+sim_params <- as_draws_array(array(c(sim_k, sim_sigma), dim = c(1, 1, 7)))
+dimnames(sim_params)$variable <- param_names
 
 # Simulate solutions and data using prior draws
-prior_sim <- simulate(setup, prior_draws, setup$solver_args_gen)
+prior_sim <- simulate(setup, sim_params, setup$solver_args_gen)
 
 # Plot and save generated data
 setup$add_simulated_data(prior_sim)
-setup$set_init(prior_draws)
+setup$set_init(init = 0)
 plot_prior <- setup$plot(prior_sim)
-cat("SETUP:\n")
 print(setup)
-cat("DATA:\n")
-print(setup$data)
-cat("INIT:\n")
-print(setup$init)
 saveRDS(setup$data, file = fn_data)
 
+# SAMPLING ----------------------------------------------------------
+max_num_steps <- 1e9
+tols <- c(
+  0.1, 0.05, 0.01, 0.001, 1e-4, 1e-5, 1e-6, 1e-7, 1e-8, 1e-9, 1e-10,
+  1e-11, 1e-12, 1e-13
+)
+post <- setup$sample_posterior_many(res_dir, idx, tols, max_num_steps, chains = 4)
+
 # Run workflow
-if (idx > 40) {
-  MNS <- 1e5
-} else if (idx > 20) {
-  MNS <- 1e4
-} else {
-  MNS <- 1e3
-}
-max_num_steps <- MNS
-run <- run_workflow(setup, 1e-3, 10, max_num_steps, 7)
+idx <- 1
+sampled <- load_fit(post, 1)
+run <- validate_fit(setup, sampled, tols, max_num_steps)
 
 # Save result
-run$post_fit$save_object(fn_fit)
+# run$post_fit$save_object(fn_fit)
 
 # Reference timing
 # tols <- 1 / run$tuning$metrics$inv_tol
-tols <- 10^(c(-4, -6, -8, -10, -12))
-tps <- setup$time_posterior_sampling(res_dir, idx, tols, max_num_steps, chains = 4)
 
-seed <- run$post_fit$runset$args$seed
-all_results <- list(
-  run = run, tps = tps, plot_prior = plot_prior,
-  max_num_steps = max_num_steps, setup = setup,
-  seed = seed
-)
-saveRDS(all_results, file = fn_res)
-siz <- format(object.size(all_results), units = "Kb")
-cat("save size:", siz, "\n")
+
+
+# seed <- run$post_fit$runset$args$seed
+# all_results <- list(
+#  run = run, tps = tps, plot_prior = plot_prior,
+#  max_num_steps = max_num_steps, setup = setup,
+#  seed = seed
+# )
+# saveRDS(all_results, file = fn_res)
+# siz <- format(object.size(all_results), units = "Kb")
+# cat("save size:", siz, "\n")

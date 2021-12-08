@@ -1,72 +1,20 @@
 # WORKFLOW ----------------------------------------------------------------
 
 # Run the workflow
-run_workflow <- function(setup, tol_init = 1e-4, tol_reduce_factor = 2,
-                         max_num_steps = 1e6, tol_steps = 4,
-                         refresh = NULL, post_fit = NULL) {
-  sargs_sample <- list(
-    abs_tol = tol_init,
-    rel_tol = tol_init,
-    max_num_steps = max_num_steps
-  )
-
-  if (is.null(post_fit)) {
-
-    # Sample posterior using tol_init
-    cat("\nSampling posterior with tol_init (", tol_init, ")...\n", sep = "")
-    post_fit <- setup$sample_posterior(
-      solver_args = sargs_sample,
-      refresh = refresh,
-      show_messages = FALSE,
-      step_size = setup$hmc_initial_step_size
-    )
-  } else {
-    cat("\n Using precomputed post_fit.\n")
-  }
+validate_fit <- function(setup, sampled, tols, max_num_steps, ...) {
+  post_fit <- sampled$fit
   post_draws <- post_fit$draws(setup$param_names)
 
-  # Create a plot using posterior draws
-  post_sim <- simulate(setup, post_draws, sargs_sample)
-  post_sim_plot <- setup$plot(post_sim)
+  # Simulations
+  sims <- simulate_many(setup, post_draws, tols, max_num_steps)
 
   # Tune the reference method so that it is reliable at post_draws
-  cat("\nTuning tolerances...\n")
-  tuning <- tune_solver_tols(
-    setup, post_sim, post_draws, sargs_sample, tol_reduce_factor, tol_steps
-  )
-  tuning_plot <- plot_tuning(tuning)
-
-  # Timing
-  t1 <- post_fit$time()$total
-  t2 <- post_sim$time()$total
-  t3 <- tuning$total_time
-  workflow_time <- t1 + t2 + t3
-  cat("Total workflow time was", workflow_time, "seconds.\n", sep = " ")
-  cat(" - Posterior sampling:", t1, "seconds.\n", sep = " ")
-  cat(" - Posterior simulation:", t2, "seconds.\n", sep = " ")
-  cat(" - Tuning:", t3, "seconds.\n", sep = " ")
-
-  # Return
-  list(
-    post_fit = post_fit,
-    post_sim = post_sim,
-    post_sim_plot = post_sim_plot,
-    tuning = tuning,
-    tuning_plot = tuning_plot,
-    post_draws = post_draws,
-    workflow_time = workflow_time
-  )
-}
-
-# Rerun workflow
-rerun_workflow <- function(res, tol_reduce_factor, tol_steps, refresh = NULL) {
-  tol_init <- 1 / res$run$tuning$metrics$inv_tol
-  tol_init <- tol_init[1]
-  run_workflow(res$setup, tol_init, tol_reduce_factor,
-    max_num_steps = res$max_num_steps,
-    tol_steps = tol_steps,
-    refresh = refresh, post_fit = res$run$post_fit
-  )
+  cat("\nValidating tolerances...\n")
+  # tuning <- validate_tols(
+  #  setup, post_sim, post_draws, setup, sampled, tols, max_num_steps
+  # )
+  # tuning_plot <- plot_tuning(tuning)
+  return(sims)
 }
 
 # UTILS -------------------------------------------------------------------
@@ -227,6 +175,23 @@ simulate <- function(setup, params, solver_args) {
   return(out)
 }
 
+# Run simulate with many tolerances
+simulate_many <- function(setup, params, tols, max_num_steps) {
+  out <- list()
+  for (tol_j in tols) {
+    cat(" * Simulating with tol = ", tol_j, "\n", sep = "")
+    sargs <- list(
+      abs_tol = tol_j,
+      rel_tol = tol_j,
+      max_num_steps = max_num_steps
+    )
+    sim <- simulate(setup, params, sargs)
+    out <- c(out, sim)
+  }
+  names(out) <- tols
+  return(out)
+}
+
 # Function for posterior sampling
 sample_posterior <- function(model, data, solver_args, stan_opts, ...) {
   stopifnot(is(model, "CmdStanModel"))
@@ -243,6 +208,13 @@ sample_posterior <- function(model, data, solver_args, stan_opts, ...) {
   return(fit)
 }
 
+# Load fit from object returned by $sample_posterior_many()
+load_fit <- function(post, idx) {
+  fit <- readRDS(post$files[idx])
+  time <- post$grand_total[idx]
+  tol <- post$tols[idx]
+  list(fit = fit, time = time, tol = tol)
+}
 
 # COMPUTING ERRORS --------------------------------------------------------
 
@@ -313,7 +285,7 @@ get_x_sim <- function(sim) {
 }
 
 # Run tuning
-tune_solver_tols <- function(setup, p_sim, p_params, p_sargs, factor, steps) {
+validate_tols <- function(setup, p_sim, p_params, p_sargs, factor, steps) {
   S <- posterior::ndraws(posterior::merge_chains(p_sim$draws()))
   tol_j <- min(p_sargs$rel_tol, p_sargs$abs_tol)
   data <- setup$data
