@@ -105,7 +105,7 @@ t <- post$grand_total[idx:L]
 tols <- post$tols[idx:L]
 plot(-log10(tols), t, "o",
   ylab = "time (s)", pch = 16, ylim = c(0, 320),
-  xlab = "-log10(T)"
+  xlab = "T", xaxt="n"
 )
 grid()
 t_sample <- t[1]
@@ -113,7 +113,9 @@ t2 <- tune$time + t_sample
 tols2 <- 1 / tune$inv_tol
 lines(-log10(tols2), t2, col = "firebrick3")
 points(-log10(tols2), t2, col = "firebrick3", pch = 17)
-legend(2, 200, c("HMC-NUTS using tol=T", "HMC-NUTS using tol=0.01 + PSIS with tol=T"),
+legend(2, 200, c("HMC-NUTS using tol=T", "HMC-NUTS using tol=0.05 + PSIS with tol=T"),
   lty = c(1, 1), col = c("black", "firebrick3"),
   pch = c(16, 17)
 )
+axis(1, at = -log10(tols), las=2, labels = tols)
+

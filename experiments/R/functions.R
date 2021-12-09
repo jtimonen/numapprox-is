@@ -332,7 +332,7 @@ plot_tuning <- function(tuning, ...) {
   add_geoms <- function(x, breaks) {
     x + geom_line() + geom_point() + scale_x_log10(breaks = breaks) +
       xlab(expression(tol^"-1")) +
-      theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+      theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
   }
   tols <- df$inv_tol
   p_A <- add_geoms(ggplot(df, aes(x = inv_tol, y = mae)), breaks = tols)
