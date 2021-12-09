@@ -71,10 +71,8 @@ setup_stancode_tmdd <- function(solver = "rk45") {
   "
   genquant <- "
   vector[N] y_gen;
-  vector[N] L_gen;
   real log_lik = 0.0;
   for(n in 1:N) {
-    L_gen[n] = x[n][1];
     y_gen[n] = normal_rng(x[n][1], sigma);
     log_lik += normal_lpdf(y[n] | x[n][1], sigma);
   }

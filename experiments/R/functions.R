@@ -206,6 +206,15 @@ simulate_many <- function(setup, params, tols, max_num_steps) {
   return(out)
 }
 
+# Simulate but denser in time
+simulate_dense <- function(setup, params, solver_args, new_t) {
+  new_setup <- setup$clone()
+  new_setup$data$t <- new_t
+  new_setup$data$N <- length(new_t)
+  new_setup$data$y <- rep(1.0, new_setup$data$N)
+  simulate(new_setup, params, solver_args)
+}
+
 # Function for posterior sampling
 sample_posterior <- function(model, data, solver_args, stan_opts, ...) {
   stopifnot(is(model, "CmdStanModel"))

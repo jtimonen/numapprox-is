@@ -80,6 +80,25 @@ plot_prior <- setup$plot(prior_sim)
 print(setup)
 saveRDS(setup$data, file = fn_data)
 
+# Denser plot
+h <- 0.01
+new_t <- seq(h, max(setup$data$t), by = h)
+sim_dense <- simulate_dense(setup, sim_params, setup$solver_args_gen, new_t)
+x_dense <- get_x_sim(sim_dense)
+df_dense <- data.frame(x_dense, rep(c("L", "R", "P"), each = 2000), rep(new_t, times = 3))
+colnames(df_dense) <- c("x", "var", "t")
+plt_sim <- ggplot(df_dense, aes(x = t, y = x, group = var, color = var)) +
+  geom_line(lwd = 1) +
+  xlab("Concentration") +
+  ylab("Time")
+df_data <- data.frame(setup$data$t, setup$data$y)
+colnames(df_data) <- c("t", "y")
+plt_sim <- plt_sim + geom_point(
+  data = df_data, aes(x = t, y = y),
+  inherit.aes = FALSE
+) + ggtitle("Black dots = data of L (drug concentration)")
+ggsave("data_tmdd.pdf", width = 8, height = 5.3)
+
 # SAMPLING ----------------------------------------------------------
 max_num_steps <- 1e6
 tols <- c(
@@ -98,14 +117,14 @@ run <- validate_fit(setup, sampled, tols_val, max_num_steps)
 # Save result
 tune <- run$tuning
 tp <- plot_tuning(tune)
-ggsave("tuning_tmdd.pdf", width = 9.67, height = 6.17)
+ggsave("tmdd_tuning.pdf", width = 9.67, height = 6.17)
 
 # Plot times
 t <- post$grand_total[idx:L]
 tols <- post$tols[idx:L]
 plot(-log10(tols), t, "o",
   ylab = "time (s)", pch = 16, ylim = c(0, 320),
-  xlab = "T", xaxt="n"
+  xlab = "T", xaxt = "n"
 )
 grid()
 t_sample <- t[1]
@@ -117,5 +136,4 @@ legend(2, 200, c("HMC-NUTS using tol=T", "HMC-NUTS using tol=0.05 + PSIS with to
   lty = c(1, 1), col = c("black", "firebrick3"),
   pch = c(16, 17)
 )
-axis(1, at = -log10(tols), las=2, labels = tols)
-
+axis(1, at = -log10(tols), las = 2, labels = tols)
