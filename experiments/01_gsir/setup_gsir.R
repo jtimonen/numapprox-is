@@ -9,9 +9,9 @@ create_contact_matrix <- function(G) {
 setup_standata_gsir <- function() {
   t <- as.numeric(seq(1, 15, by = 1))
   N <- length(t)
-  G <- 10 # number of groups
+  G <- 8 # number of groups
   I0 <- rep(0, G)
-  NNN <- round(1000 + 500 * runif(10))
+  NNN <- round(1000 + 500 * runif(G))
   I0[1] <- 5
   data_list <- list(
     N = N,
@@ -31,9 +31,9 @@ setup_stancode_gsir <- function(solver = "rk45") {
   pars <- "
   real<lower=0> beta;
   vector<lower=0>[G] gamma;
-  real<lower=0> phi_inv;
+  vector<lower=0>[G] phi_inv;
   "
-  tpars <- "  real phi = inv(phi_inv);"
+  tpars <- "  vector[G] phi = inv(phi_inv);"
   prior <- "
   beta ~ normal(2, 1);
   gamma ~ normal(0.3, 0.3);
@@ -90,7 +90,7 @@ setup_stancode_gsir <- function(solver = "rk45") {
   likelihood <- "
   for(n in 1:N) {
     for(g in 1:G) {
-      I_data[n,g] ~ neg_binomial_2(x[n][G+g] + 10*abs_tol, phi);
+      I_data[n,g] ~ neg_binomial_2(x[n][G+g] + 10*abs_tol, phi[g]);
     }
   }
   "
@@ -99,8 +99,8 @@ setup_stancode_gsir <- function(solver = "rk45") {
   real log_lik = 0.0;
   for(n in 1:N) {
     for(g in 1:G) {
-      I_gen[n,g] = neg_binomial_2_rng(x[n][G+g] + 10*abs_tol, phi);
-      log_lik += neg_binomial_2_lpmf(I_data[n,g] | x[n][G+g] + 10*abs_tol, phi);
+      I_gen[n,g] = neg_binomial_2_rng(x[n][G+g] + 10*abs_tol, phi[g]);
+      log_lik += neg_binomial_2_lpmf(I_data[n,g] | x[n][G+g] + 10*abs_tol, phi[g]);
     }
   }
   "
