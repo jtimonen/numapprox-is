@@ -1,39 +1,15 @@
 #!/usr/bin/env Rscript
-if (interactive()) {
-  idx <- 0
-} else {
-  args <- commandArgs(trailingOnly = TRUE)
-  idx <- args[1]
-}
-res_dir <- "res"
-if (!dir.exists(res_dir)) {
-  message("res_dir doesn't exist, creating it...")
-  dir.create(res_dir)
-}
+args <- commandArgs(trailingOnly = TRUE)
 
-cat("\n------ idx = ", idx, " --------\n", sep = "")
-fn_res <- file.path(res_dir, paste0("res_", idx, ".rds"))
-fn_fit <- file.path(res_dir, paste0("fit_", idx, ".rds"))
-fn_data <- file.path(res_dir, paste0("dat_", idx, ".rds"))
-cat("Results will be saved to: ", fn_res, "\n", sep = "")
-cat("Fit will be saved to: ", fn_fit, "\n", sep = "")
-cat("Data will be saved to: ", fn_data, "\n", sep = "")
-idx <- as.numeric(idx)
-
-# Requirements
-library(cmdstanr)
+# R functions and requirements
+source("../utils.R")
+source("../models.R")
+library(odemodeling)
 library(posterior)
-library(bayesplot)
-library(checkmate)
-library(loo)
-library(stats)
-library(outbreaks)
-library(scales)
-library(ggplot2)
-library(ggdist)
-library(R6)
-library(ggpubr)
-library(tidyr)
+
+# Setup
+idx <- setup_experiment_index(args)
+fp <- setup_experiment_paths(idx)
 
 # Options
 stan_opts <- list(
@@ -41,30 +17,18 @@ stan_opts <- list(
   seed = 123
 )
 
-# R functions
-source("../R/classes.R")
-source("../R/functions.R")
-source("setup_tmdd.R")
-
 # Create experiment setup
-solver_args_gen <- list(
+solver_gen <- bdf(
   rel_tol = 1e-15,
   abs_tol = 1e-15,
   max_num_steps = 1e9
 )
-solver <- "bdf"
-kpar <- paste("k[", c(1:6), "]", sep = "")
-param_names <- c(kpar, "sigma")
-setup <- OdeExperimentSetup$new(
-  "tmdd", solver, solver_args_gen,
-  stan_opts, param_names
-)
-setup$set_hmc_initial_step_size(0.1)
-print(setup)
+prior <- ode_model_tmdd(prior_only = TRUE)
 
 # SIMULATION ----------------------------------------------------------
 
 # Define simulation parameters
+param_names <- c("k_on", "k_off", "k_in", "k_out", "k_eP", "k_eL", "sigma")
 sim_k <- c(0.592, 0.900, 2.212, 0.823, 0.201, 0.024)
 sim_sigma <- 0.3
 sim_params <- as_draws_array(array(c(sim_k, sim_sigma), dim = c(1, 1, 7)))

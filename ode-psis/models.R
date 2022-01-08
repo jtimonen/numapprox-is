@@ -45,6 +45,7 @@ ode_model_tmdd <- function(prior_only = FALSE, ...) {
     return dy_dt;
   "
 
+
   # Define log-likelihood function body
   loglik_body <- "
     real loglik = 0.0;
@@ -54,13 +55,21 @@ ode_model_tmdd <- function(prior_only = FALSE, ...) {
     return(loglik);
   "
 
+  # Set loglik depending on whether creating only prior model
+  if (prior_only) {
+    loglik_body <- ""
+    loglik_vars <- list(sigma_par) # no P_obs
+  } else {
+    loglik_vars <- list(sigma_par, P_obs)
+  }
+
   # Return
-  ode_model(
+  odemodeling::ode_model(
     N = N,
     odefun_vars = k_par,
     odefun_body = odefun_body,
     odefun_init = y0,
-    loglik_vars = list(sigma_par, P_obs),
+    loglik_vars = loglik_vars,
     loglik_body = loglik_body,
     other_vars = list(L0, R0),
     ...
