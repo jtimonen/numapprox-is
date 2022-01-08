@@ -35,7 +35,7 @@ sim_params <- prior$make_params(c(sim_k, sim_sigma))
 # Simulate ODE solution and data
 sim <- prior$gqs(
   t0 = 0,
-  t = seq(0.1, 10, by = 0.1),
+  t = c(0.0001, 0.001, 0.01, seq(0.1, 10, by = 0.1)),
   data = list(L0 = 10, D = 3),
   params = sim_params
 )
