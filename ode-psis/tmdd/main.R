@@ -28,21 +28,20 @@ prior <- ode_model_tmdd(prior_only = TRUE)
 # SIMULATION ----------------------------------------------------------
 
 # Define simulation parameters
-param_names <- c("k_on", "k_off", "k_in", "k_out", "k_eP", "k_eL", "sigma")
 sim_k <- c(0.592, 0.900, 2.212, 0.823, 0.201, 0.024)
 sim_sigma <- 0.3
-sim_params <- as_draws_array(array(c(sim_k, sim_sigma), dim = c(1, 1, 7)))
-dimnames(sim_params)$variable <- param_names
+sim_params <- prior$make_params(c(sim_k, sim_sigma))
 
-# Simulate solutions and data using prior draws
-prior_sim <- simulate(setup, sim_params, setup$solver_args_gen)
+# Simulate ODE solution and data
+sim <- prior$gqs(
+  t0 = 0,
+  t = seq(0.1, 10, by = 0.1),
+  data = list(L0 = 10, D = 3),
+  params = sim_params
+)
 
-# Plot and save generated data
-setup$add_simulated_data(prior_sim)
-setup$set_init(init = 0)
-plot_prior <- setup$plot(prior_sim)
-print(setup)
-saveRDS(setup$data, file = fn_data)
+# Plot
+plt_sim <- sim$plot_odesol()
 
 # Denser plot
 h <- 0.01
