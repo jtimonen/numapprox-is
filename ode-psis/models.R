@@ -9,6 +9,7 @@ ode_model_lv <- function(prior_only = FALSE, ...) {
   N <- stan_dim("N", lower = 1) # number of time points
   D <- stan_dim("D", lower = 1) # ODE system dimension
   y_obs <- stan_vector_array("y_obs", length = D, dims = list(N))
+  y_obs_init <- stan_vector("y_obs_init", length = D)
 
   # Define ODE system parameters and their priors
   lv_par <- list(
@@ -30,29 +31,27 @@ ode_model_lv <- function(prior_only = FALSE, ...) {
     "lognormal(log(10), 1)"
   )
 
-  # Define transformed parameters
-  R0 <- stan_transform(stan_var("R0"), "parameters", "k_in/k_out")
-  y0 <- stan_transform(
-    decl = stan_vector("y0", length = D),
-    origin = "parameters",
-    code = "to_vector({L0, R0, 0.0})"
+  # Initial point on log scale
+  log_y0 <- stan_transform(
+    stan_vector("log_y0", length = D),
+    "parameters",
+    "log(y0)"
   )
 
   # Define ODE system right-hand side
   odefun_body <- "
-    vector[2] dy_dt; // predator, prey
-    real u = y[1];
-    real v = y[2];
-    dy_dt[1] = (alpha - beta * v) * u;
-    dy_dt[2] = (-gamma + delta * u) * v;
-    return dy_dt;
+    real u = y[1]; // predator
+    real v = y[2]; // prey
+    real du_dt = (alpha - beta * v) * u;
+    real dv_dt = (-gamma + delta * u) * v;
+    return to_vector({du_dt, dv_dt});
   "
 
   # Define log-likelihood function body
   loglik_body <- "
-    real loglik = 0.0;
+    real loglik = lognormal_lpdf(y_obs_init | log_y0, sigma);
     for(n in 1:N) {
-      loglik += normal_lpdf(y_obs[n] | y_sol[n], sigma);
+      loglik += lognormal_lpdf(y_obs[n] | log(y_sol[n]), sigma);
     }
     return(loglik);
   "
@@ -60,9 +59,9 @@ ode_model_lv <- function(prior_only = FALSE, ...) {
   # Set loglik depending on whether creating only prior model
   if (prior_only) {
     loglik_body <- ""
-    loglik_vars <- list(sigma_par) # no P_obs
+    loglik_vars <- list(log_y0, sigma_par)
   } else {
-    loglik_vars <- list(sigma_par, y_obs)
+    loglik_vars <- list(log_y0, sigma_par, y_obs, y_obs_init)
   }
 
   # Return
