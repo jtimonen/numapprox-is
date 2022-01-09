@@ -1,8 +1,85 @@
 library(odemodeling)
 
+# Lotka-Volterra ------------------------------------------------------------
+
+# Create Lotka-Volterra model
+ode_model_lv <- function(prior_only = FALSE, ...) {
+
+  # Dimensions and other data
+  N <- stan_dim("N", lower = 1) # number of time points
+  D <- stan_dim("D", lower = 1) # ODE system dimension
+  y_obs <- stan_vector_array("y_obs", length = D, dims = list(N))
+
+  # Define ODE system parameters and their priors
+  lv_par <- list(
+    stan_param(stan_var("alpha", lower = 0), "normal(1, 0.5)"),
+    stan_param(stan_var("beta", lower = 0), "normal(0.05, 0.05)"),
+    stan_param(stan_var("gamma", lower = 0), "normal(1, 0.5)"),
+    stan_param(stan_var("delta", lower = 0), "normal(0.05, 0.05)")
+  )
+
+  # Define noise parameter and its prior
+  sigma_par <- stan_param(
+    stan_vector("sigma", lower = 0, length = D),
+    "lognormal(-1, 1)"
+  )
+
+  # Define initial point as parameter and its prior
+  y0_par <- stan_param(
+    stan_vector("y0", length = D, lower = 0),
+    "lognormal(log(10), 1)"
+  )
+
+  # Define transformed parameters
+  R0 <- stan_transform(stan_var("R0"), "parameters", "k_in/k_out")
+  y0 <- stan_transform(
+    decl = stan_vector("y0", length = D),
+    origin = "parameters",
+    code = "to_vector({L0, R0, 0.0})"
+  )
+
+  # Define ODE system right-hand side
+  odefun_body <- "
+    vector[2] dy_dt; // predator, prey
+    real u = y[1];
+    real v = y[2];
+    dy_dt[1] = (alpha - beta * v) * u;
+    dy_dt[2] = (-gamma + delta * u) * v;
+    return dy_dt;
+  "
+
+  # Define log-likelihood function body
+  loglik_body <- "
+    real loglik = 0.0;
+    for(n in 1:N) {
+      loglik += normal_lpdf(y_obs[n] | y_sol[n], sigma);
+    }
+    return(loglik);
+  "
+
+  # Set loglik depending on whether creating only prior model
+  if (prior_only) {
+    loglik_body <- ""
+    loglik_vars <- list(sigma_par) # no P_obs
+  } else {
+    loglik_vars <- list(sigma_par, y_obs)
+  }
+
+  # Return
+  odemodeling::ode_model(
+    N = N,
+    odefun_vars = lv_par,
+    odefun_body = odefun_body,
+    odefun_init = y0_par,
+    loglik_vars = loglik_vars,
+    loglik_body = loglik_body,
+    ...
+  )
+}
+
 # TMDD --------------------------------------------------------------------
 
-# Create TMDD model
+# Create target mediated drug disposition model
 ode_model_tmdd <- function(prior_only = FALSE, ...) {
 
   # Dimensions and other data
