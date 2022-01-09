@@ -20,7 +20,7 @@ setup_stancode_tmdd <- function(solver = "rk45") {
   vector<lower=0>[6] k; // on, off, in, out, eL, eP
   real<lower=0> sigma;
   "
-  tpars <- "  
+  tpars <- "
     real R0 = k[3]/k[4];
     vector[3] x0 = to_vector({L0, R0, 0.0});
   "
