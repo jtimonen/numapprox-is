@@ -11,7 +11,12 @@ load_data_lynxhare <- function() {
   colnames(y) <- c("hare", "lynx")
 
   # Return
-  list(t0 = df$year[1], t = df$year[2:(N + 1)], y_obs_init = y_init, y_obs = y)
+  list(
+    t0 = df$year[1],
+    t = df$year[2:(N + 1)],
+    y_obs_init = y_init,
+    y_obs = y
+  )
 }
 
 # Data from http://www.math.tamu.edu/~phoward/m442/modbasics.pdf

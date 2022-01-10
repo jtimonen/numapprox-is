@@ -1,4 +1,5 @@
 #!/usr/bin/env Rscript
+# TMDD experiment
 args <- commandArgs(trailingOnly = TRUE)
 
 # R functions and requirements
