@@ -16,7 +16,6 @@ setup_experiment_index <- function(args) {
   return(idx)
 }
 
-
 # Setup paths and result file names
 setup_experiment_paths <- function(idx, res_dir = "res") {
   if (!dir.exists(res_dir)) {

@@ -1,0 +1,20 @@
+# Lynx-hare data ----------------------------------------------------------
+
+# Following https://mc-stan.org/users/documentation/case-studies/lotka-volterra-predator-prey.html
+load_data_lynxhare <- function() {
+  df <- odemodeling::lynxhare
+  N <- length(df$year) - 1
+  ts <- 1:N
+  y_init <- c(df$hare[1], df$lynx[1])
+  y <- as.matrix(df[2:(N + 1), 2:3])
+  y <- cbind(y[, 2], y[, 1]) # hare, lynx order
+  colnames(y) <- c("hare", "lynx")
+
+  # Return
+  list(
+    t0 = df$year[1],
+    t = df$year[2:(N + 1)],
+    y_obs_init = y_init,
+    y_obs = y
+  )
+}

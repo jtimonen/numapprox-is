@@ -7,9 +7,10 @@ ITER <- 20
 CHAINS <- 2
 
 # R functions and requirements
-source("../utils.R")
-source("../models.R")
-source("../data.R")
+source("../R/utils.R")
+source("../R/models.R")
+source("../R/data.R")
+source("../R/functions.R")
 library(odemodeling)
 library(posterior)
 
@@ -47,16 +48,12 @@ fits <- model$sample_manyconf(
   iter_warmup = ITER, iter_sampling = ITER, chains = CHAINS
 )
 
-gq <- fit$gqs(solver = rk45(rel_tol = 1e-12, abs_tol = 1e-12))
+# Load first fist
+fit <- readRDS(file = fits$files[1])
+
+gq <- fit$gqs(solver = rk45(tol = 1e-12))
 is <- psis(fit, gq)
 print(is$diagnostics)
-
-max_num_steps <- 1e6
-tols <- c(
-  0.1, 0.05, 0.01, 0.001, 1e-4, 1e-5, 1e-6, 1e-7, 1e-8, 1e-9, 1e-10,
-  1e-11, 1e-12
-)
-post <- setup$sample_posterior_many(res_dir, idx, tols, max_num_steps, chains = 4)
 
 # Run workflow
 idx <- 2
