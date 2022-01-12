@@ -51,9 +51,10 @@ fits <- model$sample_manyconf(
 # Load first fist
 fit <- readRDS(file = fits$files[1])
 
-gq <- fit$gqs(solver = rk45(tol = 1e-12))
-is <- psis(fit, gq)
-print(is$diagnostics)
+rel_solvers <- rk45_list(tols = tols)
+reliab <- fit$reliability(solvers = rel_solvers, force = TRUE)
+
+# TODO:
 
 # Run workflow
 idx <- 2
