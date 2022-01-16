@@ -18,3 +18,9 @@ load_data_lynxhare <- function() {
     y_obs = y
   )
 }
+
+# Following https://github.com/jriou/covid_adjusted_cfr/
+load_data_lombardia <- function(parent_dir = ".") {
+  fp <- file.path(parent_dir, "data_lombardia.rds")
+  readRDS(file = fp)
+}

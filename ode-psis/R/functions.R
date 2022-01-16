@@ -8,13 +8,13 @@ validate_fit <- function(setup, sampled, tols, max_num_steps, ...) {
     max_num_steps = max_num_steps
   )
   post_sim <- simulate(setup, post_draws, sargs)
-  
+
   # Simulations
   sims_reference <- simulate_many(setup, post_draws, tols, max_num_steps)
   times <- sapply(sims_reference, function(x) {
     x$time()$total
   })
-  
+
   # Tune the reference method so that it is reliable at post_draws
   cat("\nValidating tolerances...\n")
   tuning <- validate_tols(
