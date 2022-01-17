@@ -40,8 +40,8 @@ init <- rep(list(init), CHAINS) # same for all chains
 
 # SAMPLING ----------------------------------------------------------
 # solver_fit <- rk45(abs_tol = 1e-5, rel_tol = 1e-5, max_num_steps = 1e5)
-tols <- c(0.01, 0.005, 0.001, 0.0005, 0.00001, 0.00005, 10^(-5:-12))
-solvers <- rk45_list(tols = tols, max_num_steps = 1e4)
+tols <- c(0.01, 0.005, 0.001, 0.0005, 0.0001, 0.00005, 10^(-5:-12))
+solvers <- rk45_list(tols = tols, max_num_steps = 1e5)
 fits <- model$sample_manyconf(
   t0 = dat$t0, t = dat$t, data = add_data, init = init,
   solvers = solvers, step_size = 0.1, savedir = fp$res_dir,
@@ -49,7 +49,7 @@ fits <- model$sample_manyconf(
 )
 
 # Load first fist
-idx <- 3
+idx <- 4
 fit <- readRDS(file = fits$files[idx])
 
 # Run reliability check
@@ -58,6 +58,8 @@ rel_solvers <- rk45_list(tols = tols_rel, max_num_steps = 1e9)
 reliab <- fit$reliability(solvers = rel_solvers, force = TRUE)
 
 plt <- plot_metrics(reliab, tols = tols_rel)
+
+stop("HELLO")
 
 # Run workflow
 idx <- 2
