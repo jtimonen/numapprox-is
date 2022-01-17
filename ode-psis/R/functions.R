@@ -1,3 +1,5 @@
+library(ggplot2)
+
 # Validate fit
 validate_fit <- function(setup, sampled, tols, max_num_steps, ...) {
   post_fit <- sampled$fit
@@ -91,6 +93,25 @@ plot_pareto_k <- function(metrics, tols = NULL, num_steps = NULL) {
   plt <- plot_metric(metrics, "pareto_k", tols, num_steps)
   plt <- plt + geom_hline(yintercept = 0.5, lty = 2, color = "firebrick3")
   plt <- plt + geom_hline(yintercept = 0.7, lty = 2, color = "steelblue")
-  plt <- plt + ylab("Pareto-k") 
+  plt <- plt + ylab("Pareto-k")
+  add_inv_tol_xlab(plt)
+}
+
+# Plot r_eff metric
+plot_r_eff <- function(metrics, tols = NULL, num_steps = NULL) {
+  plt <- plot_metric(metrics, "r_eff", tols, num_steps)
+  plt <- plt + ylab("Relative efficiency")
+  add_inv_tol_xlab(plt)
+}
+
+
+# Plot maximum absolute differences
+plot_mad <- function(metrics, tols = NULL, num_steps = NULL, loglik = FALSE) {
+  name <- "mad_odesol"
+  if (loglik) {
+    name <- "mad_loglik"
+  }
+  plt <- plot_metric(metrics, name, tols, num_steps)
+  plt <- plt + ylab(name)
   add_inv_tol_xlab(plt)
 }
