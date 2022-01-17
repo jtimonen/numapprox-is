@@ -54,7 +54,7 @@ fit <- readRDS(file = fits$files[1])
 rel_solvers <- rk45_list(tols = tols)
 reliab <- fit$reliability(solvers = rel_solvers, force = TRUE)
 
-plt <- plot_pareto_k(reliab$metrics, tols = tols)
+plt <- plot_pareto_k(reliab, tols = tols)
 
 # Run workflow
 idx <- 2
