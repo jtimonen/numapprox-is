@@ -51,6 +51,7 @@ fits <- model$sample_manyconf(
 # Load first fist
 fit <- readRDS(file = fits$files[1])
 
+# Run reliability check
 rel_solvers <- rk45_list(tols = tols)
 reliab <- fit$reliability(solvers = rel_solvers, force = TRUE)
 
