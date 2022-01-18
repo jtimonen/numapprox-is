@@ -18,10 +18,7 @@ setup_experiment_index <- function(args) {
 
 # Setup paths and result file names
 setup_experiment_paths <- function(idx, res_dir = "res") {
-  if (!dir.exists(res_dir)) {
-    message("res_dir doesn't exist, creating it...")
-    dir.create(res_dir)
-  }
+  odemodeling:::create_dir_if_not_exist(res_dir)
   res_file <- file.path(res_dir, paste0("res_", idx, ".rds"))
   message("results will be saved to: ", res_file, sep = "")
   list(
