@@ -1,6 +1,26 @@
 library(ggplot2)
 library(ggpubr)
 
+# Load a fit from file and compile
+load_fit <- function(file) {
+  fit <- readRDS(file)
+  ensure_compiled(fit)
+}
+
+# Compile model in fit if not already compiled
+ensure_compiled <- function(fit) {
+  tryCatch(
+    {
+      fit$model$assert_stanfile_exists()
+    },
+    error = function(e) {
+      fit$model$reinit()
+    }
+  )
+  fit$model$assert_stanfile_exists()
+  return(fit)
+}
+
 # Plot all metrics
 plot_metrics <- function(rel, tols = NULL, num_steps = NULL, flat = FALSE,
                          arrange = TRUE) {
