@@ -6,13 +6,14 @@ source("../R/functions.R")
 library(odemodeling)
 library(posterior)
 
+
 # Read in sampling results
 res_rk45 <- readRDS("results_rk45/sampling.rds")
 fits <- res_rk45$fits
 tols <- get_tol_vec(fits$solvers)
 
 # Load fit
-idx <- 3 # 1 and 2 fail
+idx <- 4 # 1 and 2 fail
 inds_rel <- (1 + idx):length(tols)
 fit <- load_fit(file = fits$files[idx])
 
@@ -25,6 +26,7 @@ reliab <- fit$reliability(
 )
 
 plt <- plot_metrics(reliab, tols = tols_rel)
+reffs <- get_diags_df(fits)
 
 # Plot times
 plot_time_comparison <- function(fits, reliab, idx_ok) {
