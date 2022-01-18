@@ -26,7 +26,7 @@ reliab <- fit$reliability(
 )
 
 plt <- plot_metrics(reliab, tols = tols_rel)
-reffs <- get_diags_df(fits)
+diags <- get_diags_df(fits)
 
 # Plot times
 plot_time_comparison <- function(fits, reliab, idx_ok) {

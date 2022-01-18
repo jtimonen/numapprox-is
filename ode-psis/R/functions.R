@@ -13,7 +13,7 @@ get_diags_df <- function(fits){
 # Get sampling diagnostics
 get_diags <- function(file){
   fit <- readRDS(file)
-  a <- fit$loglik()
+  a <- exp(fit$loglik())
   reff <- as.numeric(loo::relative_eff(a))
   max_rhat <- max(fit$summary()[,"rhat"])
   c(reff, max_rhat)
