@@ -13,7 +13,7 @@ fits <- res_rk45$fits
 tols <- get_tol_vec(fits$solvers)
 
 # Load fit
-idx <- 4 # 1 and 2 fail
+idx <- 3 # 1 and 2 fail
 inds_rel <- (1 + idx):length(tols)
 fit <- load_fit(file = fits$files[idx])
 
