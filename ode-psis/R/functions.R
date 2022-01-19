@@ -2,7 +2,7 @@ library(ggplot2)
 library(ggpubr)
 
 # Get relative efficencies
-get_diags_df <- function(fits){
+get_diags_df <- function(fits) {
   x <- sapply(fits$files, get_diags)
   colnames(x) <- NULL
   x <- data.frame(t(x))
@@ -11,11 +11,11 @@ get_diags_df <- function(fits){
 }
 
 # Get sampling diagnostics
-get_diags <- function(file){
+get_diags <- function(file) {
   fit <- readRDS(file)
   a <- exp(fit$loglik())
   reff <- as.numeric(loo::relative_eff(a))
-  max_rhat <- max(fit$summary()[,"rhat"])
+  max_rhat <- max(fit$summary()[, "rhat"])
   c(reff, max_rhat)
 }
 
