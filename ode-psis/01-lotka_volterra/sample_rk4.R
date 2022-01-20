@@ -10,7 +10,7 @@ odemodeling:::create_dir_if_not_exist(res_dir)
 source("setup.R")
 
 # Run sampling
-num_steps <- 2:16
+num_steps <- 2:20
 solvers <- rk4_list(num_steps = num_steps)
 fits <- model$sample_manyconf(
   t0 = dat$t0, t = dat$t, data = add_data, init = init,
