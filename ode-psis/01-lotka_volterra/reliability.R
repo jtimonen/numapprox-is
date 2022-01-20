@@ -38,16 +38,30 @@ reliability <- function(dir, idx) {
   )
 
   # Return list
-  list(fits = fits, reliab = reliab, confs = confs, res = res)
+  list(
+    fits = fits,
+    reliab = reliab,
+    confs = confs,
+    confs_rel = confs_rel,
+    res = res,
+    idx = idx
+  )
 }
 
 # Run
-r1 <- reliability("results_rk45", 3)
-r2 <- reliability("results_rk4", 3)
-r3 <- reliability("results_midpoint", 3)
+idx_1 <- 3
+idx_2 <- 3
+idx_3 <- 3
+r1 <- reliability("results_rk45", idx_1)
+r2 <- reliability("results_rk4", idx_2)
+r3 <- reliability("results_midpoint", idx_3)
 
 # Plots
-#plt1 <- plot_metrics(reliab, num_steps = ns_rel)
-#plt2 <- plot_time_comparison_ns(fits, reliab, idx)
-#plt3 <- plot_time_comparison_ns(fits, reliab, idx, TRUE)
-#diags <- get_diags_df(fits) # rhat and reff
+res <- r1
+fits <- res$fits
+reliab <- res$reliab
+
+plt1 <- plot_metrics(reliab, num_steps = res$confs)
+plt2 <- plot_time_comparison_ns(fits, reliab, res$idx)
+plt3 <- plot_time_comparison_ns(fits, reliab, res$idx, TRUE)
+diags <- get_diags_df(fits) # rhat and reff
