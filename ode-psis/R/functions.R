@@ -84,7 +84,11 @@ get_num_steps_vec <- function(solvers) {
 plot_time_comparison_tol <- function(fits, reliab, idx_ok, ylog=FALSE) {
   df <- create_time_comparison_df(fits, reliab, idx_ok, ylog)
   plt <- ggplot(df, aes(x = inv_tol, y = time, group = procedure, color = procedure))
-  add_plot_geoms(plt, df$inv_tol, TRUE)
+  plt <- add_plot_geoms(plt, df$inv_tol, TRUE)
+  if(ylog) {
+    plt <- plt + ylab("log(time)")
+  }
+  return(plt)
 }
 
 # Create data frame for plotting times
