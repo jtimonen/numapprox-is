@@ -31,3 +31,4 @@ diags <- get_diags_df(fits) # rhat and reff
 
 # Plot times
 plt2 <- plot_time_comparison_tol(fits, reliab, idx)
+plt3 <- plot_time_comparison_tol(fits, reliab, idx, TRUE)
