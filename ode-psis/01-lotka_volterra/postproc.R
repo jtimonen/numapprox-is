@@ -5,7 +5,7 @@ source("../R/data.R")
 source("../R/functions.R")
 library(odemodeling)
 library(posterior)
-
+library(ggplot2)
 
 # Read in sampling results
 res_rk45 <- readRDS("results_rk45/sampling.rds")
@@ -25,24 +25,9 @@ reliab <- fit$reliability(
   savedir = "results_rk45"
 )
 
+# Plot reliability metrics
 plt <- plot_metrics(reliab, tols = tols_rel)
-diags <- get_diags_df(fits)
+diags <- get_diags_df(fits) # rhat and reff
 
 # Plot times
-plot_time_comparison <- function(fits, reliab, idx_ok) {
-  tols <- get_tol_vec(fits$solvers)
-  tols_rel <- get_tol_vec(reliab$solvers)
-  gt <- fits$times$grand_total
-  plot(-log10(tols), gt, "o",
-    ylab = "time (s)", pch = 16,
-    xlab = "T", xaxt = "n"
-  )
-  grid()
-  t_sample <- gt[idx_ok]
-  t2 <- reliab$times + t_sample
-  lines(-log10(tols_rel), t2, col = "firebrick3")
-  points(-log10(tols_rel), t2, col = "firebrick3", pch = 17)
-  axis(1, at = -log10(tols), las = 2, labels = tols)
-}
-
-plot_time_comparison(fits, reliab, idx)
+plt2 <- plot_time_comparison_tol(fits, reliab, idx)

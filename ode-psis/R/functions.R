@@ -79,3 +79,56 @@ get_num_steps_vec <- function(solvers) {
   get_ns <- function(x) x$num_steps
   sapply(solvers, get_ns)
 }
+
+# Plot time comparison (different tolerances)
+plot_time_comparison_tol <- function(fits, reliab, idx_ok) {
+  df <- create_time_comparison_df(fits, reliab, idx_ok = idx_ok)
+  plt <- ggplot(df, aes(x = inv_tol, y = time, group = procedure, color = procedure))
+  add_plot_geoms(plt, df$inv_tol, TRUE)
+}
+
+# Create data frame for plotting times
+create_time_comparison_df <- function(fits, reliab, idx_ok) {
+  has_tol <- is(fits$solvers[[1]], "AdaptiveOdeSolver")
+  if (has_tol) {
+    x <- get_tol_vec(fits$solvers)
+    x_rel <- get_tol_vec(reliab$solvers)
+    x <- c(x, x_rel)
+    x <- 1 / x
+    x_name <- "inv_tol"
+  } else {
+    x <- get_num_steps_vec(fits$solvers)
+    x_rel <- get_num_steps_vec(reliab$solvers)
+    x_name <- "num_steps"
+  }
+
+  times <- fits$times$grand_total
+  t_sample <- times[idx_ok]
+  times_rel <- reliab$times + t_sample
+  l1 <- "t_high"
+  l2 <- "t_low + t_gq"
+  fac <- c(rep(l1, length(times)), rep(l2, length(times_rel)))
+  df <- data.frame(fac, c(times, times_rel), x)
+  df$fac <- as.factor(df$fac)
+  colnames(df) <- c("procedure", "time", x_name)
+  return(df)
+}
+
+# Add geoms and theme to ggplot
+add_plot_geoms <- function(plt, breaks, log10) {
+  plt <- plt + geom_line() + geom_point() + theme_bw()
+  if (log10) {
+    plt <- plt + scale_x_log10(breaks = breaks)
+  } else {
+    plt <- plt + scale_x_continuous(breaks = breaks)
+  }
+  if (log10) {
+    plt <- plt + theme(
+      axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)
+    )
+    plt <- odemodeling:::add_inv_tol_xlab(plt)
+  }
+  plt + theme(
+    panel.grid.minor = element_blank()
+  )
+}
