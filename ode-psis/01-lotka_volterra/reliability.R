@@ -23,11 +23,11 @@ reliability <- function(dir, idx) {
   fit <- load_fit(file = fits$files[idx])
   confs_rel <- confs[inds_rel]
   if (solver1$name == "rk45") {
-    rel_solvers <- rk45_list(tols = confs)
+    rel_solvers <- rk45_list(tols = confs_rel)
   } else if (solver1$name == "rk4") {
-    rel_solvers <- rk4_list(num_steps = confs)
+    rel_solvers <- rk4_list(num_steps = confs_rel)
   } else if (solver1$name == "midpoint") {
-    rel_solvers <- midpoint_list(num_steps = confs)
+    rel_solvers <- midpoint_list(num_steps = confs_rel)
   } else {
     stop("unknown solver")
   }
