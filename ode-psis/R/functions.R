@@ -48,6 +48,12 @@ plot_metrics <- function(rel, tols = NULL, num_steps = NULL, flat = FALSE,
     pdims <- c(2, 3)
   }
   pA <- plot_pareto_k(rel, tols = tols, num_steps = num_steps)
+  pareto_k <- rel$metrics[, "pareto_k"]
+  ymin <- min(pareto_k)
+  ymax <- max(pareto_k)
+  if (is.finite(ymax)) {
+    pA <- pA + ylim(c(ymin, ymax))
+  }
   pB <- plot_r_eff(rel, tols = tols, num_steps = num_steps)
   pC <- plot_metric(rel$times, "time", tols = tols, num_steps = num_steps) +
     ylab("Time (s)")
@@ -81,11 +87,22 @@ get_num_steps_vec <- function(solvers) {
 }
 
 # Plot time comparison (different tolerances)
-plot_time_comparison_tol <- function(fits, reliab, idx_ok, ylog=FALSE) {
+plot_time_comparison_tol <- function(fits, reliab, idx_ok, ylog = FALSE) {
   df <- create_time_comparison_df(fits, reliab, idx_ok, ylog)
   plt <- ggplot(df, aes(x = inv_tol, y = time, group = procedure, color = procedure))
   plt <- add_plot_geoms(plt, df$inv_tol, TRUE)
-  if(ylog) {
+  if (ylog) {
+    plt <- plt + ylab("log(time)")
+  }
+  return(plt)
+}
+
+# Plot time comparison (different number of steps)
+plot_time_comparison_ns <- function(fits, reliab, idx_ok, ylog = FALSE) {
+  df <- create_time_comparison_df(fits, reliab, idx_ok, ylog)
+  plt <- ggplot(df, aes(x = num_steps, y = time, group = procedure, color = procedure))
+  plt <- add_plot_geoms(plt, df$num_steps, FALSE)
+  if (ylog) {
     plt <- plt + ylab("log(time)")
   }
   return(plt)
@@ -103,6 +120,7 @@ create_time_comparison_df <- function(fits, reliab, idx_ok, ylog) {
   } else {
     x <- get_num_steps_vec(fits$solvers)
     x_rel <- get_num_steps_vec(reliab$solvers)
+    x <- c(x, x_rel)
     x_name <- "num_steps"
   }
 
@@ -110,7 +128,7 @@ create_time_comparison_df <- function(fits, reliab, idx_ok, ylog) {
   t_sample <- times[idx_ok]
   times_rel <- reliab$times + t_sample
   t <- c(times, times_rel)
-  if(ylog) {
+  if (ylog) {
     t <- log(t)
   }
   l1 <- "t_high"
