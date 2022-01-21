@@ -1,0 +1,6 @@
+> print(times)
+Time differences in secs
+[1] -4351.4466  5405.8427  6611.1351   169.6889
+
+> print(minutes)
+[1] -72.524  90.097 110.186   2.828
