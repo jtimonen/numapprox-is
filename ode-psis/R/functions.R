@@ -89,7 +89,8 @@ get_num_steps_vec <- function(solvers) {
 # Plot time comparison (different tolerances)
 plot_time_comparison_tol <- function(fits, reliab, idx_ok, ylog = FALSE) {
   df <- create_time_comparison_df(fits, reliab, idx_ok, ylog)
-  plt <- ggplot(df, aes(x = inv_tol, y = time, group = procedure, color = procedure))
+  map <- aes(x = inv_tol, y = time, group = procedure, color = procedure)
+  plt <- ggplot(df, map)
   plt <- add_plot_geoms(plt, df$inv_tol, TRUE)
   if (ylog) {
     plt <- plt + ylab("log(time)")

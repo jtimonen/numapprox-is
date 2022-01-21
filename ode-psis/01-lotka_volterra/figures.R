@@ -40,3 +40,30 @@ plot_results <- function(res, ylog = TRUE) {
 p1 <- plot_results(results[[1]])
 p2 <- plot_results(results[[2]])
 p3 <- plot_results(results[[3]])
+
+# Create better plots
+odemodeling:::create_dir_if_not_exist("figures")
+
+# Helper function
+time_df <- function(result, ylog) {
+  fits <- result$res$fits
+  reliab <- result$reliab
+  idx <- result$idx
+  create_time_comparison_df(fits, reliab, idx, ylog)
+}
+
+ylog <- TRUE
+df2 <- time_df(results[[2]], ylog)
+df3 <- time_df(results[[3]], ylog)
+df <- rbind(df2, df3)
+method <- c(rep("rk4", nrow(df2)), rep("midpoint", nrow(df3)))
+df$method <- as.factor(method)
+df$group <- paste(df$procedure, df$method, sep = "-")
+
+plt <- ggplot(df, aes(x = num_steps, y = time, group = group, color = group)) +
+  geom_line() +
+  geom_point() +
+  scale_color_brewer(type = "div", palette = 5)
+if (ylog) {
+  plt <- plt + ylab("log(time)")
+}
