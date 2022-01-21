@@ -16,29 +16,27 @@ for (j in 1:3) {
 }
 names(results) <- dirs
 
-# Plots
-res <- results[[1]]
-fits <- res$res$fits
-reliab <- res$reliab
-plt1_A <- plot_metrics(reliab, tols = res$confs_rel)
-plt2_A <- plot_time_comparison_tol(fits, reliab, res$idx)
-plt3_A <- plot_time_comparison_tol(fits, reliab, res$idx, TRUE)
-diags_A <- get_diags_df(fits) # rhat and reff
+# Plotting
+plot_results <- function(res, ylog = TRUE) {
+  fits <- res$res$fits
+  reliab <- res$reliab
+  is_adaptive <- is(fits$solvers[[1]], "AdaptiveOdeSolver")
+  reliab <- res$reliab
+  if (is_adaptive) {
+    plt_A <- plot_metrics(reliab, tols = res$confs_rel)
+    plt_B <- plot_time_comparison_tol(fits, reliab, res$idx, ylog)
+  } else {
+    plt_A <- plot_metrics(reliab, num_steps = res$confs_rel)
+    plt_B <- plot_time_comparison_ns(fits, reliab, res$idx, ylog)
+  }
+  list(
+    metrics = plt_A,
+    times = plt_B,
+    diags = get_diags_df(fits) # rhat and reff
+  )
+}
 
-# Plots
-res <- results[[2]]
-fits <- res$res$fits
-reliab <- res$reliab
-plt1_B <- plot_metrics(reliab, num_steps = res$confs_rel)
-plt2_B <- plot_time_comparison_ns(fits, reliab, res$idx)
-plt3_B <- plot_time_comparison_ns(fits, reliab, res$idx, TRUE)
-diags_B <- get_diags_df(fits) # rhat and reff
-
-# Plots
-res <- results[[3]]
-fits <- res$res$fits
-reliab <- res$reliab
-plt1_C <- plot_metrics(reliab, num_steps = res$confs_rel)
-plt2_C <- plot_time_comparison_ns(fits, reliab, res$idx)
-plt3_C <- plot_time_comparison_ns(fits, reliab, res$idx, TRUE)
-diags_C <- get_diags_df(fits) # rhat and reff
+# Create plots
+p1 <- plot_results(results[[1]])
+p2 <- plot_results(results[[2]])
+p3 <- plot_results(results[[3]])
