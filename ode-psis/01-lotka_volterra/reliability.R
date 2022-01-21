@@ -39,7 +39,6 @@ reliability <- function(dir, idx) {
 
   # Return list
   list(
-    fits = fits,
     reliab = reliab,
     confs = confs,
     confs_rel = confs_rel,
@@ -49,37 +48,11 @@ reliability <- function(dir, idx) {
 }
 
 # Run
-idx_1 <- 3 # 1 and 2 fail
-idx_2 <- 1
-idx_3 <- 1
-r1 <- reliability("results_rk45", idx_1)
-r2 <- reliability("results_rk4", idx_2)
-r3 <- reliability("results_midpoint", idx_3)
-
-# Plots
-res <- r1
-fits <- res$fits
-reliab <- res$reliab
-plt1_A <- plot_metrics(reliab, tols = res$confs_rel)
-plt2_A <- plot_time_comparison_tol(fits, reliab, res$idx)
-plt3_A <- plot_time_comparison_tol(fits, reliab, res$idx, TRUE)
-diags_A <- get_diags_df(fits) # rhat and reff
-
-# Plots
-res <- r2
-fits <- res$fits
-reliab <- res$reliab
-plt1_B <- plot_metrics(reliab, num_steps = res$confs_rel)
-plt2_B <- plot_time_comparison_ns(fits, reliab, res$idx)
-plt3_B <- plot_time_comparison_ns(fits, reliab, res$idx, TRUE)
-diags_B <- get_diags_df(fits) # rhat and reff
-
-
-# Plots
-res <- r3
-fits <- res$fits
-reliab <- res$reliab
-plt1_C <- plot_metrics(reliab, num_steps = res$confs_rel)
-plt2_C <- plot_time_comparison_ns(fits, reliab, res$idx)
-plt3_C <- plot_time_comparison_ns(fits, reliab, res$idx, TRUE)
-diags_C <- get_diags_df(fits) # rhat and reff
+dirs <- c("results_rk45", "results_rk4", "results_midpoint")
+inds <- c(3, 1, 1)
+for (j in 1:3) {
+  res_dir <- dirs[j]
+  fp <- file.path(res_dir, "reliability.rds")
+  out <- reliability(res_dir, inds[j])
+  saveRDS(out, file = fp)
+}

@@ -1,4 +1,4 @@
-# Run Lotka-Volterra experiments
+# Run all Lotka-Volterra experiments
 
 # Sampling
 t_start <- Sys.time()
