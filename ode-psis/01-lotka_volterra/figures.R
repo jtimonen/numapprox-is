@@ -58,12 +58,19 @@ df3 <- time_df(results[[3]], ylog)
 df <- rbind(df2, df3)
 method <- c(rep("rk4", nrow(df2)), rep("midpoint", nrow(df3)))
 df$method <- as.factor(method)
-df$group <- paste(df$procedure, df$method, sep = "-")
+df$group <- paste0(df$procedure, " (", df$method, ")")
 
-plt <- ggplot(df, aes(x = num_steps, y = time, group = group, color = group)) +
+plt <- ggplot(df, aes(x = num_steps, y = time, group = group, 
+                      color = group)) +
   geom_line() +
   geom_point() +
-  scale_color_brewer(type = "div", palette = 5)
+  scale_color_brewer(type = "div", palette = 5, 
+                     labels = c("a", "b", "c", "d")) +
+  theme_bw()
 if (ylog) {
   plt <- plt + ylab("log(time)")
 }
+
+lab1 <- expression(tau[1])
+lab2 <- expression(tau[2])
+labs <- c(lab1, lab2)

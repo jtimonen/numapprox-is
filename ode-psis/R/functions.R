@@ -132,11 +132,11 @@ create_time_comparison_df <- function(fits, reliab, idx_ok, ylog) {
   if (ylog) {
     t <- log(t)
   }
-  l1 <- "t_high"
-  l2 <- "t_low + t_gq"
+  l1 <- "high"
+  l2 <- "low+psis"
   fac <- c(rep(l1, length(times)), rep(l2, length(times_rel)))
+  fac <- factor(x = fac)
   df <- data.frame(fac, t, x)
-  df$fac <- as.factor(df$fac)
   colnames(df) <- c("procedure", "time", x_name)
   return(df)
 }
