@@ -5,7 +5,6 @@ source("../R/data.R")
 source("../R/functions.R")
 library(odemodeling)
 library(posterior)
-library(ggplot2)
 
 # Define function
 reliability <- function(dir, idx) {
