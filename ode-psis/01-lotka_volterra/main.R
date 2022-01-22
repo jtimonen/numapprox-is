@@ -13,7 +13,7 @@ t3 <- Sys.time()
 source("reliability.R")
 t4 <- Sys.time()
 
-times <- c(t_start - t1, t2 - t1, t3 - t2, t4 - t3)
+times <- c(t1 - t_start, t2 - t1, t3 - t2, t4 - t3)
 minutes <- round(as.numeric(times / 60), 3)
 print(times)
 print(minutes)
