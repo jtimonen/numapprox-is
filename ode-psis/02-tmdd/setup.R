@@ -8,6 +8,12 @@ source("../R/functions.R")
 library(odemodeling)
 library(posterior)
 
+dat <- readRDS("simulated_data.rds")
+
+model <- ode_model_tmdd()
+
+data <- list(L0 = 10, D = 3, t = dat$t, P_obs = dat$P_obs)
+
 # Data
 setup_standata_tmdd <- function() {
   t <- c(0.05, 0.1, 0.2, 0.5, 1.0, 2.0, 4.0, 6.0, 8.0, 12.0, 16.0, 20.0)
@@ -49,15 +55,4 @@ plot_tmdd <- function(fit, data) {
     )
   }
   return(plt_y)
-}
-
-# Adding simulated data
-add_simulated_data_tmdd <- function(fit, data) {
-  y_gen_arr <- posterior::merge_chains(fit$draws("y_gen"))
-  S <- dim(y_gen_arr)[1]
-  idx <- sample.int(n = S, size = 1)
-  y_gen <- subset_draws(y_gen_arr, draw = idx)
-  y_gen <- mean(as_draws_rvars(y_gen)$y_gen)
-  data$y <- y_gen
-  list(data = data, idx = idx)
 }
