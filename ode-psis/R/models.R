@@ -121,7 +121,6 @@ ode_model_tmdd <- function(prior_only = FALSE, ...) {
     return dy_dt;
   "
 
-
   # Define log-likelihood function body
   loglik_body <- "
     real loglik = 0.0;

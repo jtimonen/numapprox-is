@@ -9,8 +9,6 @@ source("../R/functions.R")
 library(odemodeling)
 library(posterior)
 
-SEED <- set.seed(123)
-
 # Create model and simulation solver
 solver_sim <- bdf(
   rel_tol = 1e-15,
@@ -39,6 +37,8 @@ y_sol <- sim$extract_odesol()
 P_sol <- y_sol[1, , 3]
 
 # Add noise and save data
+SEED <- 123
+set.seed(SEED)
 P_dat <- P_sol + rnorm(P_sol, sd = sim_sigma)
 dat <- list(
   t = t_sim, P_sol = P_sol, P_obs = P_dat, sim_k = sim_k,

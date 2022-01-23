@@ -8,26 +8,11 @@ source("../R/functions.R")
 library(odemodeling)
 library(posterior)
 
+# Create model and load data
 dat <- readRDS("simulated_data.rds")
-
 model <- ode_model_tmdd()
-
-data <- list(L0 = 10, D = 3, t = dat$t, P_obs = dat$P_obs)
-
-# Data
-setup_standata_tmdd <- function() {
-  t <- c(0.05, 0.1, 0.2, 0.5, 1.0, 2.0, 4.0, 6.0, 8.0, 12.0, 16.0, 20.0)
-  N <- length(t)
-  L0 <- 14.8
-  data_list <- list(
-    N = N,
-    t = t,
-    L0 = L0,
-    D = 3,
-    y = rep(1.0, N) # dummy
-  )
-  return(data_list)
-}
+add_data <- list(L0 = dat$L0, P_obs = dat$P_obs, D = 3)
+init <- 0
 
 # Plotting
 plot_tmdd <- function(fit, data) {
