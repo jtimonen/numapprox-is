@@ -7,40 +7,28 @@ library(odemodeling)
 library(posterior)
 
 # Load results
-dirs <- c("results_bdf")
-results <- list()
-inds <- c(1)
-for (j in 1:1) {
-  index <- inds[j]
-  res_dir <- dirs[j]
-  fn <- paste0("reliability_idx", index, ".rds")
-  fp <- file.path(res_dir, fn)
-  results[[j]] <- readRDS(file = fp)
-}
-names(results) <- dirs
+res_dir <- c("results_bdf")
+fn <- paste0("reliability", ".rds")
+fp <- file.path(res_dir, fn)
+results <- readRDS(file = fp)
+
 
 # Plotting
 plot_results <- function(res, ylog = TRUE) {
   fits <- res$res$fits
   reliab <- res$reliab
-  is_adaptive <- is(fits$solvers[[1]], "AdaptiveOdeSolver")
-  reliab <- res$reliab
-  if (is_adaptive) {
-    plt_A <- plot_metrics(reliab, tols = res$confs_rel)
-    plt_B <- plot_time_comparison_tol(fits, reliab, res$idx, ylog)
-  } else {
-    plt_A <- plot_metrics(reliab, num_steps = res$confs_rel)
-    plt_B <- plot_time_comparison_ns(fits, reliab, res$idx, ylog)
-  }
   list(
-    metrics = plt_A,
-    times = plt_B,
+    metrics = plot_metrics(reliab, tols = res$confs_rel),
+    times = plot_time_comparison_tol(fits, reliab, res$idx, ylog),
     diags = get_diags_df(fits) # rhat and reff
   )
 }
 
 # Create plots
-p1 <- plot_results(results[[1]])
+p1 <- plot_results(results$outputs[[1]])
+p2 <- plot_results(results$outputs[[2]])
+p3 <- plot_results(results$outputs[[3]])
+p4 <- plot_results(results$outputs[[4]])
 
 # Create better plots
 odemodeling:::create_dir_if_not_exist("figures")
@@ -56,29 +44,41 @@ ylog <- TRUE
 
 # BDF --------------------------------------------------------------------
 
-tol_bdf <- results[[1]]$confs[results[[1]]$idx]
-
-df1 <- time_df(results[[1]], ylog)
-df1$logtol <- log10(1 / df1$inv_tol)
-lab1 <- expression(time[MCMC]^{
+df <- NULL
+lab0 <- expression(time[MCMC]^{
   BDF(tol)
 })
-lab2 <- expression(time[MCMC]^
-  {
-    BDF(0.06)
-  } + time[IS]^{
-    BDF(tol)
-  })
+labs <- list()
+labs[[1]] <- lab0
+for (j in 1:4) {
+  out <- results$outputs[[j]]
+  tol_bdf <- out$confs[out$idx]
+  df_j <- time_df(out, ylog)
+  df_j$logtol <- log10(1 / df_j$inv_tol)
+  if (j > 1) {
+    df_j <- df_j[which(df_j$procedure != "high"), ]
+  }
+  df_j$procedure <- as.character(df_j$procedure)
+  df_j$procedure[which(df_j$procedure != "high")] <- paste0("low", j)
+  df <- rbind(df, df_j)
+  str <- paste0("time[MCMC]^{BDF(", tol_bdf, ")} + time[IS]^{BDF(tol)}")
+  labs[[j + 1]] <- parse(text = str)
+}
+df$procedure <- as.factor(df$procedure)
 
-labs <- c(lab1, lab2)
+# Plot
+cols <- c("#010101", "#ca0020", "#f4a582", "#92c5de", "#0571b0")
 aesth <- aes(x = logtol, y = time, group = procedure, color = procedure)
-plt_A <- ggplot(df1, aesth) +
+plt_A <- ggplot(df, aesth) +
   geom_line() +
   geom_point() +
   theme_bw() +
-  scale_color_discrete(labels = labs) +
-  theme(legend.position = c(0.7, 0.25), legend.title = element_blank()) +
-  scale_x_reverse(breaks = unique(round(df1$logtol))) +
+  scale_color_manual(
+    values = cols,
+    labels = labs
+  ) +
+  theme(legend.position = c(0.2, 0.75), legend.title = element_blank()) +
+  scale_x_reverse(breaks = unique(round(df$logtol))) +
   xlab("log10(tol)")
 if (ylog) {
   plt_A <- plt_A + ylab("log(time)")
