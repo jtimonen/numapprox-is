@@ -228,6 +228,7 @@ ode_model_gsir <- function(prior_only = FALSE, ...) {
       dy_dt[2*G+g] = gamma[g]*I_g;
       dy_dt[3*G+g] = mu[g]*I_g;
     }
+    print(dy_dt);
     return dy_dt;
   "
 

@@ -12,4 +12,5 @@ library(odemodeling)
 source("setup.R")
 
 # Sampling
-fit <- model$sample(t0=t0, t=t, data = add_data)
+fit <- model$sample(t0=t0, t=t, data = add_data, init=0,  
+                    solver=bdf(tol=1e-6))
