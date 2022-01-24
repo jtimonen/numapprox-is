@@ -1,0 +1,47 @@
+#!/usr/bin/env Rscript
+# Setup GSIR experiment
+
+# R functions and requirements
+source("../R/utils.R")
+source("../R/models.R")
+source("../R/data.R")
+source("../R/functions.R")
+library(odemodeling)
+
+# Hello
+create_data_matrix <- function(x, p) {
+  N <- length(x)
+  P <- length(p)
+  X <- matrix(rep(x, P), nrow = N, byrow = F)
+  return(X * p)
+}
+
+# Load data
+dat <- load_data_lombardia("../../data/lombardia/")
+X <- dat$lombardy_data_4may
+inc_I <- dat$incidence_cases
+inc_D <- dat$incidence_deaths
+p_I <- dat$agedistr_cases / sum(dat$agedistr_cases)
+p_D <- dat$agedistr_deaths / sum(dat$agedistr_deaths)
+pop_sizes <- dat$age_dist * dat$pop_t
+N <- nrow(X)
+
+# Create the actual Stan data
+I_data <- round(create_data_matrix(inc_I, p_I))
+D_data <- round(create_data_matrix(inc_D, p_D))
+t0 <- 0
+t <- 1:N
+G <- length(pop_sizes)
+add_data <- list(
+  pop_sizes = pop_sizes,
+  contacts = dat$contacts,
+  G = G,
+  I_data = I_data,
+  D_data = D_data,
+  delta = 0.001,
+  I0 = I_data[1,],
+  D = G*4
+)
+
+# Create model
+model <- ode_model_gsir()

@@ -58,7 +58,6 @@ data_lombardia <- function() {
   # (https://github.com/pcm-dpc/COVID-19/blob/master/dati-regioni/dpc-covid19-ita-regioni.csv)
   incidence_deaths <- pull(lombardy_data_4may, deaths)
 
-
   # Age distribution of cases
   # (https://www.epicentro.iss.it/coronavirus/bollettino/Bolletino-sorveglianza-integrata-COVID-19_28-aprile-2020_appendix.pdf)
   fp <- "covid_adjusted_cfr/data/lombardy/age_distributions_cases_deaths_4may.csv"
