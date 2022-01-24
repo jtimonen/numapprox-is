@@ -62,7 +62,7 @@ lab1 <- expression(time[MCMC]^{
 })
 lab2 <- expression(time[MCMC]^
   {
-    BDF(0.04)
+    BDF(0.05)
   } + time[IS]^{
     BDF(tol)
   })

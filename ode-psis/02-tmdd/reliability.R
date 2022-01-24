@@ -44,7 +44,7 @@ reliability <- function(dir, idx) {
 
 # Run
 dirs <- c("results_bdf")
-inds <- c(7)
+inds <- c(6)
 for (j in 1:1) {
   res_dir <- dirs[j]
   fp <- file.path(res_dir, "reliability.rds")
