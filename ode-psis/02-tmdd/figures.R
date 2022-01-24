@@ -54,6 +54,7 @@ ylog <- TRUE
 # BDF --------------------------------------------------------------------
 
 tol_bdf <- results[[1]]$confs[results[[1]]$idx]
+
 df1 <- time_df(results[[1]], ylog)
 df1$logtol <- log10(1 / df1$inv_tol)
 lab1 <- expression(time[MCMC]^{
@@ -61,7 +62,7 @@ lab1 <- expression(time[MCMC]^{
 })
 lab2 <- expression(time[MCMC]^
   {
-    BDF(0.05)
+    BDF(0.04)
   } + time[IS]^{
     BDF(tol)
   })

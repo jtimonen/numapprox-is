@@ -30,7 +30,7 @@ reliability <- function(dir, idx) {
   # Run reliability check
   reliab <- fit$reliability(
     solvers = rel_solvers, force = TRUE, savedir = dir
-  )wa
+  )
 
   # Return list
   list(
@@ -44,7 +44,7 @@ reliability <- function(dir, idx) {
 
 # Run
 dirs <- c("results_bdf")
-inds <- c(6)
+inds <- c(7)
 for (j in 1:1) {
   res_dir <- dirs[j]
   fp <- file.path(res_dir, "reliability.rds")
