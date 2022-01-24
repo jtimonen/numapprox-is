@@ -21,12 +21,8 @@ reliability <- function(dir, idx) {
   inds_rel <- (1 + idx):length(confs)
   fit <- load_fit(file = fits$files[idx])
   confs_rel <- confs[inds_rel]
-  if (solver1$name == "rk45") {
-    rel_solvers <- rk45_list(tols = confs_rel)
-  } else if (solver1$name == "rk4") {
-    rel_solvers <- rk4_list(num_steps = confs_rel)
-  } else if (solver1$name == "midpoint") {
-    rel_solvers <- midpoint_list(num_steps = confs_rel)
+  if (solver1$name == "bdf") {
+    rel_solvers <- bdf_list(tols = confs_rel)
   } else {
     stop("unknown solver")
   }
@@ -34,7 +30,7 @@ reliability <- function(dir, idx) {
   # Run reliability check
   reliab <- fit$reliability(
     solvers = rel_solvers, force = TRUE, savedir = dir
-  )
+  )wa
 
   # Return list
   list(
@@ -47,9 +43,9 @@ reliability <- function(dir, idx) {
 }
 
 # Run
-dirs <- c("results_rk45", "results_rk4", "results_midpoint")
-inds <- c(3, 1, 1)
-for (j in 1:3) {
+dirs <- c("results_bdf")
+inds <- c(6)
+for (j in 1:1) {
   res_dir <- dirs[j]
   fp <- file.path(res_dir, "reliability.rds")
   out <- reliability(res_dir, inds[j])
