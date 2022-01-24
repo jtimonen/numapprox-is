@@ -28,8 +28,9 @@ reliability <- function(dir, idx) {
   }
 
   # Run reliability check
+  bn <- paste0("odegq_idx", idx) 
   reliab <- fit$reliability(
-    solvers = rel_solvers, force = TRUE, savedir = dir
+    solvers = rel_solvers, force = TRUE, savedir = dir, basename = bn
   )
 
   # Return list
@@ -44,10 +45,12 @@ reliability <- function(dir, idx) {
 
 # Run
 dirs <- c("results_bdf")
-inds <- c(6)
+inds <- c(1)
 for (j in 1:1) {
+  index <- inds[j]
   res_dir <- dirs[j]
-  fp <- file.path(res_dir, "reliability.rds")
-  out <- reliability(res_dir, inds[j])
+  fn <- paste0("reliability_idx", index, ".rds")
+  fp <- file.path(res_dir, fn)
+  out <- reliability(res_dir, index)
   saveRDS(out, file = fp)
 }

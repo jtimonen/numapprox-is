@@ -9,9 +9,12 @@ library(posterior)
 # Load results
 dirs <- c("results_bdf")
 results <- list()
+inds <- c(1)
 for (j in 1:1) {
+  index <- inds[j]
   res_dir <- dirs[j]
-  fp <- file.path(res_dir, "reliability.rds")
+  fn <- paste0("reliability_idx", index, ".rds")
+  fp <- file.path(res_dir, fn)
   results[[j]] <- readRDS(file = fp)
 }
 names(results) <- dirs
@@ -62,7 +65,7 @@ lab1 <- expression(time[MCMC]^{
 })
 lab2 <- expression(time[MCMC]^
   {
-    BDF(0.05)
+    BDF(0.06)
   } + time[IS]^{
     BDF(tol)
   })
