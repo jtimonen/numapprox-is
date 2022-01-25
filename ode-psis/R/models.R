@@ -228,7 +228,6 @@ ode_model_gsir <- function(prior_only = FALSE, ...) {
       dy_dt[2*G+g] = gamma[g]*I_g;
       dy_dt[3*G+g] = mu[g]*I_g;
     }
-    print(dy_dt);
     return dy_dt;
   "
 
@@ -236,7 +235,7 @@ ode_model_gsir <- function(prior_only = FALSE, ...) {
     real log_lik = 0.0;
     for(n in 1:N-1) {
       for(g in 1:G) {
-        real I_incidence = y_sol[n+1][G + g] - y_sol[n][G + g];
+        real I_incidence = y_sol[n][g] - y_sol[n+1][g];
         real D_incidence = y_sol[n+1][3*G + g] - y_sol[n][3*G + g];
         log_lik += neg_binomial_2_lpmf(I_data[n,g] | I_incidence + delta,
           phi[g]);

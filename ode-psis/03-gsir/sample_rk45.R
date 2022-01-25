@@ -10,7 +10,10 @@ library(odemodeling)
 
 # Setup data and model
 source("setup.R")
+add_data <- aggregate_data(add_data)
 
 # Sampling
-fit <- model$sample(t0=t0, t=t, data = add_data, init=0,  
-                    solver=bdf(tol=1e-6))
+fit <- model$sample(
+  t0 = t0, t = t, data = add_data, init = 0,
+  solver = rk45(tol = 1e-4, max_num_steps = 1e5)
+)

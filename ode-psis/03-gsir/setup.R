@@ -16,6 +16,19 @@ create_data_matrix <- function(x, p) {
   return(X * p)
 }
 
+# Aggregate the groups
+aggregate_data <- function(add_data) {
+  N <- nrow(add_data$I_data)
+  add_data$pop_sizes <- array(sum(add_data$pop_sizes), dim = c(1))
+  add_data$G <- 1
+  add_data$I_data <- array(rowSums(add_data$I_data), dim = c(N, 1))
+  add_data$D_data <- array(rowSums(add_data$D_data), dim = c(N, 1))
+  add_data$D <- 4
+  add_data$contacts <- matrix(1, 1, 1)
+  add_data$I0 <- array(sum(add_data$I0), dim = c(1))
+  return(add_data)
+}
+
 # Load data
 dat <- load_data_lombardia("../../data/lombardia/")
 X <- dat$lombardy_data_4may
@@ -39,8 +52,8 @@ add_data <- list(
   I_data = I_data,
   D_data = D_data,
   delta = 0.001,
-  I0 = I_data[1,],
-  D = G*4
+  I0 = I_data[1, ],
+  D = G * 4
 )
 
 # Create model
