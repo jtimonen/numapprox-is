@@ -37,11 +37,14 @@ inc_D <- dat$incidence_deaths
 p_I <- dat$agedistr_cases / sum(dat$agedistr_cases)
 p_D <- dat$agedistr_deaths / sum(dat$agedistr_deaths)
 pop_sizes <- dat$age_dist * dat$pop_t
-N <- nrow(X)
 
 # Create the actual Stan data
-I_data <- round(create_data_matrix(inc_I, p_I))
-D_data <- round(create_data_matrix(inc_D, p_D))
+I_mat <- create_data_matrix(inc_I, p_I)
+I0 <- I_mat[1, ]
+D_mat <- create_data_matrix(inc_D, p_D)
+I_data <- round(I_mat[2:nrow(X), ])
+D_data <- round(D_mat[2:nrow(X), ])
+N <- nrow(I_data)
 t0 <- 0
 t <- 1:N
 G <- length(pop_sizes)
@@ -52,7 +55,7 @@ add_data <- list(
   I_data = I_data,
   D_data = D_data,
   delta = 0.001,
-  I0 = I_data[1, ],
+  I0 = I0,
   D = G * 4
 )
 
