@@ -169,8 +169,8 @@ ode_model_gsir <- function(prior_only = FALSE, ...) {
   beta <- stan_param(stan_var("beta", lower = 0), "normal(2, 1)")
   gamma_decl <- stan_vector("gamma", lower = 0, length = G)
   mu_decl <- stan_vector("mu", lower = 0, length = G)
-  gamma <- stan_param(gamma_decl, "normal(0.3, 0.3)")
-  mu <- stan_param(mu_decl, "normal(0.3, 0.3)")
+  gamma <- stan_param(gamma_decl, "normal(0.4, 0.5)")
+  mu <- stan_param(mu_decl, "normal(0.4, 0.5)")
 
   # All odefun variables
   odefun_vars <- list(pop_sizes, I0, contacts, beta, gamma, mu)
@@ -197,17 +197,20 @@ ode_model_gsir <- function(prior_only = FALSE, ...) {
 
   # Observation model data
   delta <- stan_var("delta", lower = 0)
-  I_data <- stan_array("I_data", type = "int", dims = list(N, G), lower = 0)
-  D_data <- stan_array("D_data", type = "int", dims = list(N, G), lower = 0)
+  deaths_cumulative <- stan_array("deaths_cumulative",
+    type = "int",
+    dims = list(N, G),
+    lower = 0
+  )
 
   # Observation model parameters phi_inv
-  phi_inv_var <- stan_vector("phi_inv", lower = 0, length = G)
-  phi_var <- stan_vector("phi", lower = 0, length = G)
-  phi_inv <- stan_param(phi_inv_var, "exponential(5);")
-  phi <- stan_transform(phi_var, "parameters", "inv(phi_inv);")
+  phi_D_inv_var <- stan_var("phi_D_inv", lower = 0)
+  phi_D_var <- stan_var("phi_D", lower = 0)
+  phi_D_inv <- stan_param(phi_D_inv_var, "exponential(5);")
+  phi_D <- stan_transform(phi_D_var, "parameters", "inv(phi_D_inv);")
 
   # All loglik variables
-  loglik_vars <- list(delta, I_data, D_data, phi_inv, phi)
+  loglik_vars <- list(delta, deaths_cumulative, phi_D_inv, phi_D)
 
   # Function bodies
   odefun_body <- "
@@ -233,21 +236,19 @@ ode_model_gsir <- function(prior_only = FALSE, ...) {
 
   loglik_body <- "
     real log_lik = 0.0;
-    for(n in 1:N-1) {
+    for(n in 1:N) {
       for(g in 1:G) {
-        real I_incidence = y_sol[n][g] - y_sol[n+1][g];
-        real D_incidence = y_sol[n+1][3*G + g] - y_sol[n][3*G + g];
-        log_lik += neg_binomial_2_lpmf(I_data[n,g] | I_incidence + delta,
-          phi[g]);
-        log_lik += neg_binomial_2_lpmf(D_data[n,g] | D_incidence + delta,
-          phi[g]);
+        real D_sol = y_sol[n][3*G + g];
+        log_lik += neg_binomial_2_lpmf(deaths_cumulative[n,g] | D_sol + delta,
+          phi_D);
       }
     }
     return(log_lik);
   "
+
   if (prior_only) {
     loglik_body <- ""
-    loglik_vars <- list(delta, phi_inv, phi) # no I_data
+    loglik_vars <- list(delta, phi_D_inv, phi_D)
   }
 
   # Return

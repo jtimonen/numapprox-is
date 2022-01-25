@@ -38,6 +38,15 @@ p_I <- dat$agedistr_cases / sum(dat$agedistr_cases)
 p_D <- dat$agedistr_deaths / sum(dat$agedistr_deaths)
 pop_sizes <- dat$age_dist * dat$pop_t
 
+# Function
+cumulative_column_sums <- function(x){
+  y <- array(0, dim=dim(x))
+  for(j in 1:ncol(x)){
+    y[,j] <- cumsum(x[,j])
+  }
+  return(y)
+}
+
 # Create the actual Stan data
 I_mat <- create_data_matrix(inc_I, p_I)
 I0 <- I_mat[1, ]
@@ -56,7 +65,8 @@ add_data <- list(
   D_data = D_data,
   delta = 0.001,
   I0 = I0,
-  D = G * 4
+  D = G * 4,
+  deaths_cumulative = cumulative_column_sums(D_data)
 )
 
 # Create model

@@ -31,3 +31,8 @@ df <- df[irow, ]
 plt <- ggplot(df, aes(x = t, y = ysol, group = idx)) +
   facet_grid(. ~ ydim) +
   geom_line(color = "firebrick", alpha = 0.3)
+
+dead <- cumsum(add_data$D_data)
+df_dead <- data.frame(t = t, y = dead, ydim = rep("D", length(dead)))
+df_dead$ydim <- as.factor(df_dead$ydim)
+plt <- plt + geom_point(data = df_dead, aes(x = t, y = y), inherit.aes = FALSE)
