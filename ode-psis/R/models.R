@@ -152,54 +152,41 @@ ode_model_tmdd <- function(prior_only = FALSE, ...) {
 }
 
 
-# GSIR --------------------------------------------------------------------
+# SIRD --------------------------------------------------------------------
 
-ode_model_gsir <- function(prior_only = FALSE, ...) {
+ode_model_sird <- function(prior_only = FALSE, ...) {
 
   # Time points
   N <- stan_dim("N", lower = 0) # number of timepoints
 
   # Data needed by ODE function
-  G <- stan_dim("G", lower = 1) # number of groups
-  pop_sizes <- stan_vector("pop_sizes", G) # population sizes in each group
-  I0 <- stan_vector("I0", G, lower = 0) # initial no. infected in each group
-  contacts <- stan_matrix("contacts", G, G) # contact matrix
+  pop_size <- stan_var("pop_size", type = "int", lower = 1) # population size
+  I0 <- stan_param(stan_var("I0", lower = 0), "normal(0,20)") # initial no. infected
 
   # ODE function parameters
   beta <- stan_param(stan_var("beta", lower = 0), "normal(2, 1)")
-  gamma_decl <- stan_vector("gamma", lower = 0, length = G)
-  mu_decl <- stan_vector("mu", lower = 0, length = G)
-  gamma <- stan_param(gamma_decl, "normal(0.4, 0.5)")
-  mu <- stan_param(mu_decl, "normal(0.4, 0.5)")
+  gamma <- stan_param(stan_var("gamma", lower = 0), "normal(0.4, 0.5)")
+  mu <- stan_param(stan_var("mu", lower = 0), "normal(0.4, 0.5)")
 
   # All odefun variables
-  odefun_vars <- list(pop_sizes, I0, contacts, beta, gamma, mu)
+  odefun_vars <- list(pop_size, I0, beta, gamma, mu)
 
   # Initial value
   D <- stan_dim("D", lower = 0) # number of ODE dimensions
   y0_var <- stan_vector("y0", length = D)
-  y0_code <-
+  y0_code <- "
+      y0[1] = pop_size - I0; // initial number of S
+      y0[2] = I0; // initial number of I
+      y0[3] = 0; // initial number of R
+      y0[4] = 0; // initial number of D
     "
-    for(g in 1:G) {
-      y0[g] = pop_sizes[g] - I0[g]; // initial number of S
-    }
-    for(g in 1:G) {
-      y0[G + g] = I0[g]; // initial number of I
-    }
-    for(g in 1:G) {
-      y0[2*G + g] = 0; // initial number of R
-    }
-    for(g in 1:G) {
-      y0[3*G + g] = 0; // initial number of D
-    }
-  "
-  y0 <- stan_transform(y0_var, "data", y0_code)
+  y0 <- stan_transform(y0_var, "parameters", y0_code)
 
   # Observation model data
   delta <- stan_var("delta", lower = 0)
   deaths_cumulative <- stan_array("deaths_cumulative",
     type = "int",
-    dims = list(N, G),
+    dims = list(N),
     lower = 0
   )
 
@@ -214,34 +201,24 @@ ode_model_gsir <- function(prior_only = FALSE, ...) {
 
   # Function bodies
   odefun_body <- "
-    vector[4*G] dy_dt; // first G are S, next G are I, etc...
-    vector[G] lambda = rep_vector(0.0, G); // force of infection
-    for(g in 1:G) {
-      for(h in 1:G) {
-        lambda[g] += contacts[g,h] * y[G+h]/pop_sizes[h];
-      }
-    }
-    for(g in 1:G) {
-      real S_g = y[g];
-      real I_g = y[G+g];
-      real R_g = y[2*G+g];
-      real D_g = y[3*G+g];
-      dy_dt[g] = -  beta * lambda[g] * S_g;
-      dy_dt[G+g] =  beta * lambda[g] * S_g - (gamma[g] + mu[g]) * I_g;
-      dy_dt[2*G+g] = gamma[g]*I_g;
-      dy_dt[3*G+g] = mu[g]*I_g;
-    }
+    vector[4] dy_dt;
+    real S_g = y[1];
+    real I_g = y[2];
+    real R_g = y[3];
+    real D_g = y[4];
+    real infection_rate = beta * I_g/pop_size * S_g;
+    dy_dt[1] = - infection_rate;
+    dy_dt[2] = infection_rate - (gamma + mu) * I_g;
+    dy_dt[3] = gamma*I_g;
+    dy_dt[4] = mu*I_g;
     return dy_dt;
   "
 
   loglik_body <- "
     real log_lik = 0.0;
     for(n in 1:N) {
-      for(g in 1:G) {
-        real D_sol = y_sol[n][3*G + g];
-        log_lik += neg_binomial_2_lpmf(deaths_cumulative[n,g] | D_sol + delta,
+      log_lik += neg_binomial_2_lpmf(deaths_cumulative[n] | y_sol[n][4] + delta,
           phi_D);
-      }
     }
     return(log_lik);
   "

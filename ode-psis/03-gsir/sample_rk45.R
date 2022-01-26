@@ -1,5 +1,4 @@
 #!/usr/bin/env Rscript
-# Setup GSIR experiment
 
 # R functions and requirements
 source("../R/utils.R")
@@ -10,7 +9,6 @@ library(odemodeling)
 
 # Setup data and model
 source("setup.R")
-add_data <- aggregate_data(add_data)
 
 # Sampling
 fit <- model$sample(
@@ -29,10 +27,14 @@ draw_inds <- sample.int(size = 100, n = 4000)
 irow <- which(df$idx %in% draw_inds)
 df <- df[irow, ]
 plt <- ggplot(df, aes(x = t, y = ysol, group = idx)) +
-  facet_grid(. ~ ydim) +
+  facet_grid(. ~ ydim, scales = "free_y") +
   geom_line(color = "firebrick", alpha = 0.3)
 
-dead <- cumsum(add_data$D_data)
+dead <- add_data$deaths_cumulative
 df_dead <- data.frame(t = t, y = dead, ydim = rep("D", length(dead)))
 df_dead$ydim <- as.factor(df_dead$ydim)
-plt <- plt + geom_point(data = df_dead, aes(x = t, y = y), inherit.aes = FALSE)
+plt <- plt + geom_point(
+  data = df_dead,
+  aes(x = t, y = y),
+  inherit.aes = FALSE
+)
