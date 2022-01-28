@@ -1,0 +1,4 @@
+*.rds
+*.out
+disease_transmission_workflow/
+
