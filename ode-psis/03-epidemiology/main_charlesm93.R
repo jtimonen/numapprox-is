@@ -36,12 +36,7 @@ tswitch <- df_swiss %>%
   filter(date < date_switch) %>%
   nrow() + 1 # convert time to number
 data_forcing <- list(n_days = n_days, t0 = t0, ts = t, N = N, cases = cases, tswitch = tswitch)
-model_forcing <- stan_model("charlesm93_final.stan")
-fit_forcing <- sampling(model_forcing,
-  data_forcing,
-  iter = 1000,
-  seed = 4
-)
+model_forcing_survey <- stan_model("charlesm93_final.stan")
 
 # Survey
 date_survey_left <- "2020-05-04"

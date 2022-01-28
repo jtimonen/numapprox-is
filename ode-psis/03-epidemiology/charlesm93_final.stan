@@ -72,7 +72,7 @@ transformed parameters{
   theta = {beta, gamma, a, eta, nu, xi, i0, e0};
   y = integrate_ode_rk45(sir, rep_array(0.0, 4), t0, ts, theta, x_r, x_i);
   for (i in 1:n_days-1){
-    incidence[i] = -(y[i+1, 2] - y[i, 2] + y[i+1, 1] - y[i, 1]) * p_reported; //-(E(t+1) - E(t) + S(t+1) - S(t))
+    incidence[i] = -(y[i+1, 2] - y[i, 2] + y[i+1, 1] - y[i, 1]) * p_reported + 0.0001; //-(E(t+1) - E(t) + S(t+1) - S(t))
   }
   // mean number of infected + recovered people during week 5
   p_infected_survey = mean(to_vector(y[t_survey_start:t_survey_end, 4])) / N;
