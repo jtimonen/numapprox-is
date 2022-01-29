@@ -165,6 +165,7 @@ ode_model_seir <- function(prior_only = FALSE, ...) {
   tswitch <- stan_var("tswitch")
   pop_size <- stan_var("pop_size") # population size
   cases <- stan_array("cases", dims = list(n_days), type = "int")
+  delta <- stan_var("delta", lower = 0)
 
   # Antibody survey data
   t_survey_start <- stan_var("t_survey_start", type = "int")
@@ -190,7 +191,7 @@ ode_model_seir <- function(prior_only = FALSE, ...) {
   # Reporting rate (probability for an infected person to be reported)
   p_reported <- stan_param(
     decl = stan_var("p_reported", lower = 0, upper = 1),
-    prior = "beta(2,1)"
+    prior = "beta(2, 1)"
   )
 
   # Slope of quarantine implementation
@@ -216,15 +217,6 @@ ode_model_seir <- function(prior_only = FALSE, ...) {
   # All ODE parameters
   ode_params <- list(gamma, beta, a, eta, nu, xi, tswitch)
 
-  # Incidence
-  incidence <- stan_transform(
-    stan_array("incidence", dims = list(n_days_m1)),
-    origin = "parameters",
-    code = "  for (i in 1:n_days_m1){
-    incidence[i] = -(y[i+1, 2] - y[i, 2] + y[i+1, 1] - y[i, 1]) * p_reported + 0.0001; //-(E(t+1) - E(t) + S(t+1) - S(t))
-  }"
-  )
-
   # Initial state
   D <- stan_dim("D", lower = 4, upper = 4) # SEIR
   y0 <- stan_transform(
@@ -239,11 +231,22 @@ ode_model_seir <- function(prior_only = FALSE, ...) {
   # All loglik variables
   loglik_vars <- list(
     cases, phi, p_reported, t_survey_start, t_survey_end,
-    n_tested_survey, n_infected_survey, pop_size
+    n_tested_survey, n_infected_survey, pop_size, delta
+  )
+
+  # Incidence
+  incidence_gq <- stan_transform(
+    stan_vector("incidence_gq", length = n_days_m1),
+    origin = "model",
+    code = "
+      real incidence[n_days - 1];
+      for (i in 1:n_days-1){
+        incidence[i] = -(y_sol_gq[i+1][2] - y_sol_gq[i][2] + y_sol_gq[i+1][1] - y_sol_gq[i][1]) * p_reported + delta;
+      }"
   )
 
   # Other variables
-  other_vars <- list(phi_inv, xi_raw, e0, i0)
+  other_vars <- list(phi_inv, xi_raw, e0, i0, incidence_gq)
 
   # Function bodies
   odefun_body <- "
@@ -267,11 +270,11 @@ ode_model_seir <- function(prior_only = FALSE, ...) {
     real incidence[n_days - 1];
     real p_infected_survey; // proportion of people having been infected at week 5
     for (i in 1:n_days-1){
-      incidence[i] = -(y_sol[i+1][2] - y_sol[i][2] + y_sol[i+1][1] - y_sol[i][1]) * p_reported + 0.0001; //-(E(t+1) - E(t) + S(t+1) - S(t))
+      incidence[i] = -(y_sol[i+1][2] - y_sol[i][2] + y_sol[i+1][1] - y_sol[i][1]) * p_reported + delta;
     }
     // mean number of infected + recovered people during week 5
     p_infected_survey = mean(to_vector(y_sol[t_survey_start:t_survey_end][4])) / pop_size;
-    log_lik += binomial_lpmf(n_infected_survey | n_tested_survey, p_infected_survey); // we fit the survey data to our latent parameter
+    log_lik += binomial_lpmf(n_infected_survey | n_tested_survey, p_infected_survey);
     log_lik += neg_binomial_2_lpmf(cases[1:(n_days-1)] | incidence, phi);
     return(log_lik);
   "

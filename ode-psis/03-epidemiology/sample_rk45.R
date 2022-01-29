@@ -14,12 +14,15 @@ source("setup.R")
 fit <- model$sample(
   t0 = t0, t = t, data = add_data, init = init,
   solver = rk45(tol = 1e-4, max_num_steps = 1e4),
-  step_size = step_size, iter = 300, chains = 1
+  step_size = step_size, iter_warmup = 300, iter_sampling = 200, chains = 1
 )
+
+max_rhat <- max(fit$summary()$rhat, na.rm = TRUE)
+print(max_rhat)
 
 # Plot
 df <- fit$extract_odesol_df(
-  ydim_names = c("S", "I", "R", "D"),
+  ydim_names = c("S", "E", "I", "R"),
   include_y0 = TRUE
 )
 irow <- which(df$ydim %in% c("I", "D"))
