@@ -59,7 +59,7 @@ data_forcing_survey <- c(data_forcing, list(
 
 fit_forcing_survey_max <- sampling(model_forcing_survey,
   data_forcing_survey,
-  control = list(max_treedepth = 13, adapt_delta = 0.9, stepsize=0.1),
+  control = list(max_treedepth = 13, adapt_delta = 0.9, stepsize = 0.1),
   iter = 1000,
   seed = 0,
   init = 0,
