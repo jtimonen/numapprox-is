@@ -65,3 +65,6 @@ fit_forcing_survey_max <- sampling(model_forcing_survey,
   init = 0,
   refresh = 10
 )
+
+out <- list(fit = fit_forcing_survey_max, dat = data_forcing_survey)
+saveRDS(out, "fit_forcing_survey_max.rds")
