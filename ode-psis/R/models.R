@@ -234,23 +234,24 @@ ode_model_seir <- function(prior_only = FALSE, ...) {
   )
 
   # All odefun variables
-  odefun_vars <- c(ode_params, list(pop_size, i0, e0))
+  odefun_vars <- c(ode_params, list(pop_size))
 
   # All loglik variables
-  loglik_vars <- list(cases, phi)
+  loglik_vars <- list(cases, phi, p_reported, t_survey_start, t_survey_end,
+                      n_tested_survey, n_infected_survey, pop_size)
 
   # Other variables
-  other_vars <- list(phi_inv, xi_raw)
+  other_vars <- list(phi_inv, xi_raw, e0, i0)
 
   # Function bodies
   odefun_body <- "
     real forcing = eta + (1 - eta) / (1 + exp(xi * (t - tswitch - nu)));
-    real S = y[1] + pop_size - i0 - e0;
-    real E = y[2] + e0;
-    real I = y[3] + i0;
+    real S = y[1];
+    real E = y[2];
+    real I = y[3];
     real R = y[4];
     real inf_rate = forcing * beta * I * S / pop_size;
-      
+    
     real dS_dt = - inf_rate;
     real dE_dt = inf_rate - a * E;
     real dI_dt = a * E - gamma * I;
@@ -261,10 +262,15 @@ ode_model_seir <- function(prior_only = FALSE, ...) {
 
   loglik_body <- "
     real log_lik = 0.0;
-    //for(n in 1:N) {
-    //  log_lik += neg_binomial_2_lpmf(deaths_cumulative[n] | y_sol[n][4] + delta,
-    //      phi_D);
-    //}
+    real incidence[n_days - 1];
+    real p_infected_survey; // proportion of people having been infected at week 5
+    for (i in 1:n_days-1){
+      incidence[i] = -(y_sol[i+1][2] - y_sol[i][2] + y_sol[i+1][1] - y_sol[i][1]) * p_reported + 0.0001; //-(E(t+1) - E(t) + S(t+1) - S(t))
+    }
+    // mean number of infected + recovered people during week 5
+    p_infected_survey = mean(to_vector(y_sol[t_survey_start:t_survey_end][4])) / pop_size;
+    log_lik += binomial_lpmf(n_infected_survey | n_tested_survey, p_infected_survey); // we fit the survey data to our latent parameter
+    log_lik += neg_binomial_2_lpmf(cases[1:(n_days-1)] | incidence, phi);
     return(log_lik);
   "
 

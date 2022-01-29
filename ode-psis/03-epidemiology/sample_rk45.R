@@ -12,8 +12,9 @@ source("setup.R")
 
 # Sampling
 fit <- model$sample(
-  t0 = t0, t = t, data = add_data, init = 0,
-  solver = rk45(tol = 1e-5, max_num_steps = 1e4)
+  t0 = t0, t = t, data = add_data, init = init,
+  solver = rk45(tol = 1e-4, max_num_steps = 1e4),
+  step_size = step_size, iter = 300, chains = 1
 )
 
 # Plot
