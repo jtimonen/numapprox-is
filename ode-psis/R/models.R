@@ -174,8 +174,8 @@ ode_model_seir <- function(prior_only = FALSE, ...) {
   n_tested_survey <- stan_var("n_tested_survey", type = "int")
 
   # SEIR parameters
-  gamma <- stan_param(stan_var("gamma", lower = 0), prior = "normal(2, 1)")
-  beta <- stan_param(stan_var("beta", lower = 0), prior = "normal(0.4, 0.5)")
+  gamma <- stan_param(stan_var("gamma", lower = 0), prior = "normal(0.4, 0.5)")
+  beta <- stan_param(stan_var("beta", lower = 0), prior = "normal(2, 1)")
   a <- stan_param(stan_var("a", lower = 0), prior = "normal(0.4, 0.5)")
 
   # Observation model parameters phi_inv
@@ -191,7 +191,7 @@ ode_model_seir <- function(prior_only = FALSE, ...) {
   # Reporting rate (probability for an infected person to be reported)
   p_reported <- stan_param(
     decl = stan_var("p_reported", lower = 0, upper = 1),
-    prior = "beta(2, 1)"
+    prior = "beta(1, 2)"
   )
 
   # Slope of quarantine implementation
