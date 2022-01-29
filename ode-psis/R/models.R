@@ -237,8 +237,10 @@ ode_model_seir <- function(prior_only = FALSE, ...) {
   odefun_vars <- c(ode_params, list(pop_size))
 
   # All loglik variables
-  loglik_vars <- list(cases, phi, p_reported, t_survey_start, t_survey_end,
-                      n_tested_survey, n_infected_survey, pop_size)
+  loglik_vars <- list(
+    cases, phi, p_reported, t_survey_start, t_survey_end,
+    n_tested_survey, n_infected_survey, pop_size
+  )
 
   # Other variables
   other_vars <- list(phi_inv, xi_raw, e0, i0)

@@ -15,8 +15,10 @@ model <- ode_model_seir()
 dat <- load_data_switzerland("../../data/switzerland/")
 
 # Create actual Stan data
-add_data <- dat[c("n_days", "cases", "tswitch", "t_survey_start",
-                  "t_survey_end", "n_infected_survey", "n_tested_survey")]
+add_data <- dat[c(
+  "n_days", "cases", "tswitch", "t_survey_start",
+  "t_survey_end", "n_infected_survey", "n_tested_survey"
+)]
 
 add_data$pop_size <- dat$N
 add_data$D <- 4
