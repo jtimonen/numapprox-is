@@ -13,3 +13,5 @@ model <- ode_model_seir()
 
 # Load data
 add_data <- load_data_switzerland("../../data/switzerland/")
+t <- seq(1, add_data$n_days, by = 1)
+t0 <- 0
