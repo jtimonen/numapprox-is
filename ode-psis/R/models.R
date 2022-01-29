@@ -239,9 +239,8 @@ ode_model_seir <- function(prior_only = FALSE, ...) {
     stan_vector("incidence_gq", length = n_days_m1),
     origin = "model",
     code = "
-      real incidence[n_days - 1];
       for (i in 1:n_days-1){
-        incidence[i] = -(y_sol_gq[i+1][2] - y_sol_gq[i][2] + y_sol_gq[i+1][1] - y_sol_gq[i][1]) * p_reported + delta;
+        incidence_gq[i] = -(y_sol_gq[i+1][2] - y_sol_gq[i][2] + y_sol_gq[i+1][1] - y_sol_gq[i][1]) * p_reported + delta;
       }"
   )
 
