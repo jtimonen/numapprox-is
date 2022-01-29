@@ -152,90 +152,131 @@ ode_model_tmdd <- function(prior_only = FALSE, ...) {
 }
 
 
-# SIRD --------------------------------------------------------------------
+# SEIR ---------------------------------------------------------------------
 
-ode_model_sird <- function(prior_only = FALSE, ...) {
+ode_model_seir <- function(prior_only = FALSE, ...) {
+  if (prior_only) {
+    stop("prior_only = FALSE not implemented!")
+  }
 
-  # Time points
-  N <- stan_dim("N", lower = 0) # number of timepoints
+  # Data block
+  n_days <- stan_dim("n_days", lower = 1)
+  n_days_m1 <- stan_dim("n_days_m1", lower = 0)
+  tswitch <- stan_var("tswitch")
+  pop_size <- stan_var("pop_size") # population size
+  cases <- stan_array("cases", dims = list(n_days), type = "int")
 
-  # Data needed by ODE function
-  pop_size <- stan_var("pop_size", type = "int", lower = 1) # population size
-  I0 <- stan_param(stan_var("I0", lower = 0), "normal(0,20)") # initial no. infected
+  # Antibody survey data
+  t_survey_start <- stan_var("t_survey_start", type = "int")
+  t_survey_end <- stan_var("t_survey_end", type = "int")
+  n_infected_survey <- stan_var("n_infected_survey", type = "int")
+  n_tested_survey <- stan_var("n_tested_survey", type = "int")
 
-  # ODE function parameters
-  beta <- stan_param(stan_var("beta", lower = 0), "normal(2, 1)")
-  gamma <- stan_param(stan_var("gamma", lower = 0), "normal(0.4, 0.5)")
-  mu <- stan_param(stan_var("mu", lower = 0), "normal(0.4, 0.5)")
-
-  # All odefun variables
-  odefun_vars <- list(pop_size, I0, beta, gamma, mu)
-
-  # Initial value
-  D <- stan_dim("D", lower = 0) # number of ODE dimensions
-  y0_var <- stan_vector("y0", length = D)
-  y0_code <- "
-      y0[1] = pop_size - I0; // initial number of S
-      y0[2] = I0; // initial number of I
-      y0[3] = 0; // initial number of R
-      y0[4] = 0; // initial number of D
-    "
-  y0 <- stan_transform(y0_var, "parameters", y0_code)
-
-  # Observation model data
-  delta <- stan_var("delta", lower = 0)
-  deaths_cumulative <- stan_array("deaths_cumulative",
-    type = "int",
-    dims = list(N),
-    lower = 0
-  )
+  # SEIR parameters
+  gamma <- stan_param(stan_var("gamma", lower = 0), prior = "normal(2, 1)")
+  beta <- stan_param(stan_var("beta", lower = 0), prior = "normal(0.4, 0.5)")
+  a <- stan_param(stan_var("a", lower = 0), prior = "normal(0.4, 0.5)")
 
   # Observation model parameters phi_inv
-  phi_D_inv_var <- stan_var("phi_D_inv", lower = 0)
-  phi_D_var <- stan_var("phi_D", lower = 0)
-  phi_D_inv <- stan_param(phi_D_inv_var, "exponential(5);")
-  phi_D <- stan_transform(phi_D_var, "parameters", "inv(phi_D_inv);")
+  phi_inv_var <- stan_var("phi_inv", lower = 0)
+  phi_var <- stan_var("phi", lower = 0)
+  phi_inv <- stan_param(phi_inv_var, "exponential(5);")
+  phi <- stan_transform(phi_var, "parameters", "inv(phi_inv);")
+
+  # Initial infected and exposed
+  i0 <- stan_param(stan_var("i0", lower = 0), prior = "normal(0, 10)")
+  e0 <- stan_param(stan_var("e0", lower = 0), prior = "normal(0, 10)")
+
+  # Reporting rate (probability for an infected person to be reported)
+  p_reported <- stan_param(
+    decl = stan_var("p_reported", lower = 0, upper = 1),
+    prior = "beta(2,1)"
+  )
+
+  # Slope of quarantine implementation
+  xi_raw <- stan_param(
+    decl = stan_var("xi_raw", lower = 0, upper = 1), prior = "beta(1, 1)"
+  )
+
+  # Reduction in transmission due to control measures
+  eta <- stan_param(
+    decl = stan_var("eta", lower = 0, upper = 1), prior = "beta(2.5, 4)"
+  )
+
+  # Shift of quarantine implementation
+  nu <- stan_param(
+    decl = stan_var("nu", lower = 0), prior = "exponential(1./5)"
+  )
+
+  # Transformed xi
+  xi <- stan_transform(
+    decl = stan_var("xi"), origin = "parameters", code = "xi_raw + 0.5"
+  )
+
+  # All ODE parameters
+  ode_params <- list(gamma, beta, a, eta, nu, xi, tswitch)
+
+  # Incidence
+  incidence <- stan_transform(
+    stan_array("incidence", dims = list(n_days_m1)),
+    origin = "parameters",
+    code = "  for (i in 1:n_days_m1){
+    incidence[i] = -(y[i+1, 2] - y[i, 2] + y[i+1, 1] - y[i, 1]) * p_reported + 0.0001; //-(E(t+1) - E(t) + S(t+1) - S(t))
+  }"
+  )
+
+  # Initial state
+  D <- stan_dim("D", lower = 4, upper = 4) # SEIR
+  y0 <- stan_transform(
+    decl = stan_vector("y0", length = D),
+    origin = "parameters",
+    code = "to_vector({pop_size - i0 - e0, e0, i0, 0.0})"
+  )
+
+  # All odefun variables
+  odefun_vars <- c(ode_params, list(pop_size, i0, e0))
 
   # All loglik variables
-  loglik_vars <- list(delta, deaths_cumulative, phi_D_inv, phi_D)
+  loglik_vars <- list(cases, phi)
+
+  # Other variables
+  other_vars <- list(phi_inv, xi_raw)
 
   # Function bodies
   odefun_body <- "
-    vector[4] dy_dt;
-    real S_g = y[1];
-    real I_g = y[2];
-    real R_g = y[3];
-    real D_g = y[4];
-    real infection_rate = beta * I_g/pop_size * S_g;
-    dy_dt[1] = - infection_rate;
-    dy_dt[2] = infection_rate - (gamma + mu) * I_g;
-    dy_dt[3] = gamma*I_g;
-    dy_dt[4] = mu*I_g;
-    return dy_dt;
+    real forcing = eta + (1 - eta) / (1 + exp(xi * (t - tswitch - nu)));
+    real S = y[1] + pop_size - i0 - e0;
+    real E = y[2] + e0;
+    real I = y[3] + i0;
+    real R = y[4];
+    real inf_rate = forcing * beta * I * S / pop_size;
+      
+    real dS_dt = - inf_rate;
+    real dE_dt = inf_rate - a * E;
+    real dI_dt = a * E - gamma * I;
+    real dR_dt = gamma * I;
+      
+    return to_vector({dS_dt, dE_dt, dI_dt, dR_dt});
   "
 
   loglik_body <- "
     real log_lik = 0.0;
-    for(n in 1:N) {
-      log_lik += neg_binomial_2_lpmf(deaths_cumulative[n] | y_sol[n][4] + delta,
-          phi_D);
-    }
+    //for(n in 1:N) {
+    //  log_lik += neg_binomial_2_lpmf(deaths_cumulative[n] | y_sol[n][4] + delta,
+    //      phi_D);
+    //}
     return(log_lik);
   "
 
-  if (prior_only) {
-    loglik_body <- ""
-    loglik_vars <- list(delta, phi_D_inv, phi_D)
-  }
-
   # Return
   ode_model(
-    N = N,
+    N = n_days,
     odefun_vars = odefun_vars,
     odefun_body = odefun_body,
     odefun_init = y0,
     loglik_vars = loglik_vars,
     loglik_body = loglik_body,
+    other_vars = other_vars,
     ...
   )
 }
