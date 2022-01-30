@@ -268,13 +268,15 @@ ode_model_seir <- function(prior_only = FALSE, ...) {
   loglik_body <- "
     real log_lik = 0.0;
     real incidence[n_days - 1];
-    real p_infected_survey; // proportion of people having been infected at week 5
+    real p_infected_survey = 0.0; // proportion of people having been infected at week 5
     for (i in 1:n_days-1){
       incidence[i] = -(y_sol[i+1][2] - y_sol[i][2] + y_sol[i+1][1] - y_sol[i][1]) * p_reported + delta;
     }
-    // mean number of infected + recovered people during week 5
-    p_infected_survey = mean(to_vector(y_sol[t_survey_start:t_survey_end][4])) / pop_size;
-    log_lik += binomial_lpmf(n_infected_survey | n_tested_survey, p_infected_survey);
+    for (i in t_survey_start:t_survey_end) {
+      p_infected_survey += y_sol[i][4];
+    }
+    p_infected_survey = p_infected_survey / ((t_survey_end - t_survey_start + 1)*(pop_size));
+    log_lik += binomial_lpmf(n_infected_survey | n_tested_survey, p_infected_survey + 1e-6);
     log_lik += neg_binomial_2_lpmf(cases[1:(n_days-1)] | incidence, phi);
     return(log_lik);
   "
