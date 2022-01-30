@@ -23,7 +23,6 @@ add_data <- dat[c(
 add_data$pop_size <- dat$N
 add_data$D <- 4
 add_data$n_days_m1 <- add_data$n_days - 1
-add_data$delta <- 1e-4
 t <- dat$ts
 t0 <- dat$t0
 

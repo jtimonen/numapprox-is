@@ -165,7 +165,7 @@ ode_model_seir <- function(prior_only = FALSE, ...) {
   tswitch <- stan_var("tswitch")
   pop_size <- stan_var("pop_size") # population size
   cases <- stan_array("cases", dims = list(n_days), type = "int")
-  delta <- stan_var("delta", lower = 0)
+  delta <- stan_transform(stan_var("delta"), "data", "10*abs_tol")
 
   # Antibody survey data
   t_survey_start <- stan_var("t_survey_start", type = "int")

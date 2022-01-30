@@ -9,12 +9,13 @@ library(odemodeling)
 
 # Setup data and model
 source("setup.R")
+ITER <- 300
 
 # Sampling
 fit <- model$sample(
-  t0 = t0, t = t, data = add_data, init = 1,
-  solver = midpoint(), # rk45(tol = 1e-2, max_num_steps = 1e4),
-  step_size = step_size, iter_warmup = 300, iter_sampling = 200, chains = 4
+  t0 = t0, t = t, data = add_data, init = 0,
+  solver = rk45(rel_tol = 1e-4, abs_tol = 1e-3, max_num_steps = 1e4),
+  step_size = step_size, iter_warmup = ITER, iter_sampling = ITER, chains = 4
 )
 
 max_rhat <- max(fit$summary()$rhat, na.rm = TRUE)
