@@ -9,17 +9,19 @@ library(odemodeling)
 
 # Setup data and model
 source("setup.R")
-ITER <- 300
+ITER <- 2000
 
 # Sampling
 fit <- model$sample(
   t0 = t0, t = t, data = add_data, init = 0,
-  solver = rk45(rel_tol = 1e-4, abs_tol = 1e-3, max_num_steps = 1e4),
+  solver = rk45(rel_tol = 1e-4, abs_tol = 1e-4, max_num_steps = 1e3),
   step_size = step_size, iter_warmup = ITER, iter_sampling = ITER, chains = 4
 )
 
 max_rhat <- max(fit$summary()$rhat, na.rm = TRUE)
 print(max_rhat)
+print(fit$summary)
+
 
 # Plot incidence
 df_dat <- data.frame(dat$cases, dat$ts)
