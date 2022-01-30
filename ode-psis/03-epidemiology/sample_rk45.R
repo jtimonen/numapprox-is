@@ -14,7 +14,7 @@ ITER <- 300
 # Sampling
 fit <- model$sample(
   t0 = t0, t = t, data = add_data, init = 0,
-  solver = rk45(rel_tol = 1e-4, abs_tol = 1e-3, max_num_steps = 1e4),
+  solver = rk45(rel_tol = 1e-6, abs_tol = 1e-6, max_num_steps = 1e4),
   step_size = step_size, iter_warmup = ITER, iter_sampling = ITER, chains = 4
 )
 
@@ -29,4 +29,4 @@ plt <- ggplot(df, aes(x = t, y = median, ymin = lower, ymax = upper)) +
   geom_line(color = "firebrick") +
   geom_ribbon(fill = "firebrick2", alpha = 0.6) +
   geom_point(data = df_dat, mapping = aes(x = t, y = cases), inherit.aes = FALSE) +
-  ylab("Incidence")
+  ylab("Number of reported cases")
