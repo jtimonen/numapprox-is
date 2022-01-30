@@ -221,12 +221,12 @@ ode_model_seir <- function(prior_only = FALSE, ...) {
   D <- stan_dim("D", lower = 4, upper = 4) # SEIR
   y0 <- stan_transform(
     decl = stan_vector("y0", length = D),
-    origin = "parameters",
-    code = "to_vector({pop_size - i0 - e0, e0, i0, 0.0})"
+    origin = "data",
+    code = "to_vector({0.0, 0.0, 0.0, 0.0})"
   )
 
   # All odefun variables
-  odefun_vars <- c(ode_params, list(pop_size))
+  odefun_vars <- c(ode_params, list(pop_size, e0, i0))
 
   # All loglik variables
   loglik_vars <- list(
@@ -240,24 +240,25 @@ ode_model_seir <- function(prior_only = FALSE, ...) {
     origin = "model",
     code = "
       for (i in 1:n_days-1){
-        incidence_gq[i] = -(y_sol_gq[i+1][2] - y_sol_gq[i][2] + y_sol_gq[i+1][1] - y_sol_gq[i][1]) * p_reported + delta;
+        incidence_gq[i] = -(y_sol_gq[i+1][2] - y_sol_gq[i][2] +
+          y_sol_gq[i+1][1] - y_sol_gq[i][1]) * p_reported + delta;
       }"
   )
 
   # Other variables
-  other_vars <- list(phi_inv, xi_raw, e0, i0, incidence_gq)
+  other_vars <- list(phi_inv, xi_raw, incidence_gq)
 
   # Function bodies
   odefun_body <- "
     real forcing = eta + (1 - eta) / (1 + exp(xi * (t - tswitch - nu)));
-    real S = y[1];
-    real E = y[2];
-    real I = y[3];
+    real S = pop_size - e0 - i0 + y[1];
+    real E = e0 + y[2];
+    real I = i0 + y[3];
     real R = y[4];
-    real inf_rate = forcing * beta * I * S / pop_size;
+    real exposing_rate = forcing * beta * I * S / pop_size;
     
-    real dS_dt = - inf_rate;
-    real dE_dt = inf_rate - a * E;
+    real dS_dt = - exposing_rate;
+    real dE_dt = exposing_rate - a * E;
     real dI_dt = a * E - gamma * I;
     real dR_dt = gamma * I;
       
