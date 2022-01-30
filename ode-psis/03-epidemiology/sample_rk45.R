@@ -9,28 +9,25 @@ library(odemodeling)
 
 # Setup data and model
 source("setup.R")
-ITER <- 300
-print(model$stanmodel)
+ITER <- 1000
+res_dir <- "results_rk45"
+odemodeling:::create_dir_if_not_exist(res_dir)
 
 # Sampling
-fit <- model$sample(
-  t0 = t0, t = t, data = add_data, init = 1,
-  solver = rk45(rel_tol = 1e-4, abs_tol = 1e-4, max_num_steps = 1e4),
-  step_size = step_size, iter_warmup = ITER, iter_sampling = ITER, chains = 1,
-  adapt_delta = 0.9, max_treedepth = 13
+tols <- c(0.05, 0.001, 10^c(-2:-10))
+solvers <- rk45_list(tols = tols, max_num_steps = 1e3)
+fits <- model$sample_manyconf(
+  t0 = t0, t = t, data = add_data, init = init,
+  solvers = solvers,
+  step_size = step_size, iter_warmup = ITER, iter_sampling = ITER, chains = 4,
+  adapt_delta = 0.9, max_treedepth = 13, refresh = 25,
+  savedir = res_dir
 )
 
-max_rhat <- max(fit$summary()$rhat, na.rm = TRUE)
-print(max_rhat)
-print(fit$summary)
-
-# Plot incidence
-df_dat <- data.frame(dat$cases, dat$ts)
-colnames(df_dat) <- c("cases", "t")
-df <- get_incidence_quantiles_df(fit)
-map <- aes(x = t, y = cases)
-plt <- ggplot(df, aes(x = t, y = median, ymin = lower, ymax = upper)) +
-  geom_line(color = "firebrick") +
-  geom_ribbon(fill = "firebrick2", alpha = 0.6) +
-  geom_point(data = df_dat, mapping = map, inherit.aes = FALSE) +
-  ylab("Number of reported cases")
+# Save results
+results <- list(
+  fits = fits,
+  session_info = sessionInfo()
+)
+fp <- file.path(res_dir, "sampling.rds")
+saveRDS(results, file = fp)
