@@ -1,6 +1,6 @@
 # numapprox-is
-A principled framework for fast and reliable inference in Bayesian models 
-that require numerical solutions of implicitly defined functions. 
+An importance sampling framework for reliable and efficient inference in Bayesian models 
+that require numerical approximations, such as solutions of implicitly defined functions. 
 Ordinary differential equation (ODE) models are one example.
 
 ## Experiments
