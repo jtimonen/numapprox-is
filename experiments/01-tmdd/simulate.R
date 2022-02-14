@@ -46,17 +46,3 @@ dat <- list(
   t0_sim = t0_sim, seed = SEED
 )
 saveRDS(dat, file = "simulated_data.rds")
-
-# Plot
-plt_sim <- sim$plot_odesol(
-  ydim_names = c("L", "R", "P"), include_y0 = TRUE
-)
-df_dat <- data.frame(t = t_sim, y = P_dat, ydim = rep("P", length(t_sim)))
-plt <- plt_sim +
-  geom_point(data = df_dat, aes(x = t, y = y), inherit.aes = FALSE) +
-  ylab("Concentration") + xlab("Time")
-
-# Save plot
-odemodeling:::create_dir_if_not_exist("figures")
-fp <- file.path("figures", "simulated_data.pdf")
-ggsave(plt, file = fp, width = 7, height = 3.5)
