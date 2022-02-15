@@ -53,5 +53,27 @@ fp <- file.path(res_dir, fn)
 results <- readRDS(file = fp)
 out <- results$outputs[[3]]
 fits <- out$res$fits
-fit <- readRDS(fits$files[1])
-fit$plot_odesol_dist(include_y0 = TRUE)
+
+# Load two fits and plot their ODE solution distribution
+fit_low <- readRDS(fits$files[3]) # mcmc fit with tol=0.04
+fit_high <- readRDS(fits$files[16]) # mcmc fit with tol=1e-12
+probs <- c(0.05, 0.5, 0.95)
+qlow <- fit_low$extract_odesol_df_dist(
+  p = probs, ydim_names = ynam, include_y0 = TRUE
+)
+qhigh <- fit_high$extract_odesol_df_dist(
+  p = probs, ydim_names = ynam, include_y0 = TRUE
+)
+df_dist <- rbind(qlow, qhigh)
+tol_low <- fit_low$solver$abs_tol
+tol_high <- fit_high$solver$abs_tol
+df_dist$tol <- as.factor(rep(c(tol_low, tol_high), each = nrow(qlow)))
+colnames(df_dist) <- c("t", "ydim", "lower", "median", "upper", "tol")
+plt <- ggplot(df_dist, aes(
+  x = t, y = median, group = tol, color = tol,
+  fill = tol, ymin = lower, ymax = upper, lty = tol
+)) +
+  geom_line() +
+  facet_wrap(. ~ ydim) +
+  geom_ribbon(alpha = 0.1) +
+  theme_bw()
