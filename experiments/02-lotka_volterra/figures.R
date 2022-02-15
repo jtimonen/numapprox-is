@@ -10,7 +10,7 @@ library(posterior)
 dirs <- c("results_rk45", "results_rk4", "results_midpoint")
 results <- list()
 for (j in 1:3) {
-  res_dir <- dirs[j] 
+  res_dir <- dirs[j]
   fp <- file.path(res_dir, "reliability.rds")
   results[[j]] <- readRDS(file = fp)
 }

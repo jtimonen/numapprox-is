@@ -256,12 +256,12 @@ ode_model_seir <- function(prior_only = FALSE, ...) {
     real I = i0 + y[3];
     real R = y[4];
     real exposing_rate = forcing * beta * I * S / pop_size;
-    
+
     real dS_dt = - exposing_rate;
     real dE_dt = exposing_rate - a * E;
     real dI_dt = a * E - gamma * I;
     real dR_dt = gamma * I;
-      
+
     return to_vector({dS_dt, dE_dt, dI_dt, dR_dt});
   "
 

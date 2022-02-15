@@ -33,18 +33,10 @@ sim <- prior$gqs(
 )
 P_dat <- simdat$P_obs
 
-# Plot
+# Simulation ODE solution and noisy data
 ynam <- c("x1", "x2", "x3")
-plt_sim <- sim$plot_odesol(
-  ydim_names = ynam, include_y0 = TRUE
-)
+df_sim <- sim$extract_odesol_df(ydim_names = ynam, include_y0 = TRUE)
 df_dat <- data.frame(t = t_sim, y = P_dat, ydim = rep(ynam[3], length(t_sim)))
-plt_sim <- plt_sim +
-  geom_point(data = df_dat, aes(x = t, y = y), inherit.aes = FALSE) +
-  ylab("Concentration") + xlab("t")
-
-
-# inference results -------------------------------------------------------
 
 # Load results
 res_dir <- c("results_bdf")
@@ -76,4 +68,10 @@ plt <- ggplot(df_dist, aes(
   geom_line() +
   facet_wrap(. ~ ydim) +
   geom_ribbon(alpha = 0.1) +
-  theme_bw()
+  theme_bw() +
+  geom_line(data = df_sim, aes(x = t, y = ysol), inherit.aes = FALSE) +
+  geom_point(data = df_dat, aes(x = t, y = y), inherit.aes = FALSE) +
+  ylab("Concentration") +
+  xlab("t")
+
+# ggsave(plt, file = "figures/tmdd_simdata.pdf", width=7.9, height=6.3)
