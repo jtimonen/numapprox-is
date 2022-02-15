@@ -51,3 +51,7 @@ res_dir <- c("results_bdf")
 fn <- paste0("reliability", ".rds")
 fp <- file.path(res_dir, fn)
 results <- readRDS(file = fp)
+out <- results$outputs[[3]]
+fits <- out$res$fits
+fit <- readRDS(fits$files[1])
+fit$plot_odesol_dist(include_y0 = TRUE)
