@@ -6,9 +6,6 @@ source("../R/functions.R")
 library(odemodeling)
 library(posterior)
 
-
-# simulation --------------------------------------------------------------
-
 # Load simulated data
 simdat <- readRDS(file = "simulated_data.rds")
 
@@ -74,4 +71,4 @@ plt <- ggplot(df_dist, aes(
   ylab("Concentration") +
   xlab("t")
 
-# ggsave(plt, file = "figures/tmdd_simdata.pdf", width=7.9, height=6.3)
+ggsave(plt, file = "figures/tmdd_figure1.pdf", width = 7.9, height = 3.6)
