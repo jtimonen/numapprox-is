@@ -5,6 +5,7 @@ source("../R/data.R")
 source("../R/functions.R")
 library(odemodeling)
 library(posterior)
+library(scales)
 
 # Load results
 res_dir <- c("results_bdf")
@@ -39,7 +40,7 @@ time_df <- function(result, ylog) {
   idx <- result$idx
   create_time_comparison_df(fits, reliab, idx, ylog)
 }
-ylog <- TRUE
+ylog <- FALSE
 
 # BDF --------------------------------------------------------------------
 
@@ -60,15 +61,17 @@ for (j in 1:4) {
   df_j$procedure <- as.character(df_j$procedure)
   df_j$procedure[which(df_j$procedure != "high")] <- paste0("low", j)
   df <- rbind(df, df_j)
-  str <- paste0("time[MCMC]^{BDF(", tol_bdf, ")} + time[IS]^{BDF(tol)}")
+  str <- paste0("time[MCMC]^{BDF(", tol_bdf, ")} + time[PSIS]^{BDF(tol)}")
   labs[[j + 1]] <- parse(text = str)
 }
 df$procedure <- as.factor(df$procedure)
 
 # Plot
+n_yticks <- 8
 cols <- c("#010101", "#ca0020", "#f4a582", "#92c5de", "#0571b0")
 aesth <- aes(x = logtol, y = time, group = procedure, color = procedure)
 plt_A <- ggplot(df, aesth) +
+  ylim(0, 10^4) +
   geom_line() +
   geom_point() +
   theme_bw() +
@@ -78,11 +81,16 @@ plt_A <- ggplot(df, aesth) +
   ) +
   theme(legend.position = c(0.2, 0.75), legend.title = element_blank()) +
   scale_x_reverse(breaks = unique(round(df$logtol))) +
-  xlab("log10(tol)")
-if (ylog) {
-  plt_A <- plt_A + ylab("log(time)")
-}
+  xlab("log10(tol)") +
+  ylab("time (s)") +
+  scale_y_continuous(
+    trans = "log10",
+    breaks = trans_breaks("log10", function(x) 10^x,
+      n = n_yticks
+    ),
+    labels = trans_format("log10", math_format(10^.x))
+  )
 
 # Combine
 plt <- plt_A
-# ggsave(plt, filename = "figures/times.pdf", width = 4, height = 3.5)
+ggsave(plt, filename = "tmdd_times.pdf", width = 5.6, height = 3.9)
