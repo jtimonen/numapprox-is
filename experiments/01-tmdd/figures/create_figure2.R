@@ -13,26 +13,6 @@ fn <- paste0("reliability", ".rds")
 fp <- file.path(res_dir, fn)
 results <- readRDS(file = fp)
 
-# Plotting
-plot_results <- function(res, ylog = TRUE) {
-  fits <- res$res$fits
-  reliab <- res$reliab
-  list(
-    metrics = plot_metrics(reliab, tols = res$confs_rel),
-    times = plot_time_comparison_tol(fits, reliab, res$idx, ylog),
-    diags = get_diags_df(fits) # rhat and reff
-  )
-}
-
-# Create plots
-p1 <- plot_results(results$outputs[[1]])
-p2 <- plot_results(results$outputs[[2]])
-p3 <- plot_results(results$outputs[[3]])
-p4 <- plot_results(results$outputs[[4]])
-
-# Create better plots
-odemodeling:::create_dir_if_not_exist("figures")
-
 # Helper function
 time_df <- function(result, ylog) {
   fits <- result$res$fits
@@ -40,10 +20,9 @@ time_df <- function(result, ylog) {
   idx <- result$idx
   create_time_comparison_df(fits, reliab, idx, ylog)
 }
+
+# Create plot
 ylog <- FALSE
-
-# BDF --------------------------------------------------------------------
-
 df <- NULL
 lab0 <- expression(time[MCMC]^{
   BDF(tol)
@@ -93,4 +72,4 @@ plt_A <- ggplot(df, aesth) +
 
 # Combine
 plt <- plt_A
-ggsave(plt, filename = "tmdd_times.pdf", width = 5.6, height = 3.9)
+ggsave(plt, filename = "figures/tmdd_figure2.pdf", width = 5.6, height = 3.9)
