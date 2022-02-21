@@ -1,16 +1,8 @@
-# Requirements
-source("../R/utils.R")
-source("../R/models.R")
-source("../R/data.R")
-source("../R/functions.R")
-library(odemodeling)
-library(posterior)
-
 # Load simulated data
-simdat <- readRDS(file = "simulated_data.rds")
+simdat <- readRDS(file = "tmdd_data.rds")
 
 # Create model and simulation solver
-prior <- ode_model_tmdd(prior_only = TRUE)
+prior <- tmdd_model(prior_only = TRUE)
 
 # Define simulation parameters
 sim_k <- simdat$sim_k
@@ -36,7 +28,7 @@ df_sim <- sim$extract_odesol_df(ydim_names = ynam, include_y0 = TRUE)
 df_dat <- data.frame(t = t_sim, y = P_dat, ydim = rep(ynam[3], length(t_sim)))
 
 # Load results
-res_dir <- c("results_bdf")
+res_dir <- "results"
 fn <- paste0("reliability", ".rds")
 fp <- file.path(res_dir, fn)
 results <- readRDS(file = fp)

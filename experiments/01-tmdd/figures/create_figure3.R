@@ -1,14 +1,12 @@
 # Requirements
 source("../R/utils.R")
-source("../R/models.R")
-source("../R/data.R")
 source("../R/functions.R")
 library(odemodeling)
 library(posterior)
 library(scales)
 
 # Load results
-res_dir <- c("results_bdf")
+res_dir <- "results"
 fn <- paste0("reliability", ".rds")
 fp <- file.path(res_dir, fn)
 results <- readRDS(file = fp)

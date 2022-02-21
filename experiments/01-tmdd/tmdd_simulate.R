@@ -45,4 +45,4 @@ dat <- list(
   sim_sigma = sim_sigma, solver_sim = solver_sim, L0_sim = L0_sim,
   t0_sim = t0_sim, seed = SEED
 )
-saveRDS(dat, file = "simulated_data.rds")
+saveRDS(dat, file = "tmdd_data.rds")
