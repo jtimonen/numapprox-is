@@ -12,7 +12,7 @@ library(ggplot2)
 
 # Setup
 args <- commandArgs(trailingOnly = TRUE)
-ITER <- 10
+ITER <- 12
 CHAINS <- 2
 res_dir <- "results"
 odemodeling:::create_dir_if_not_exist(res_dir)
