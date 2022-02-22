@@ -1,7 +1,5 @@
 # Requirements
 source("../R/utils.R")
-source("../R/models.R")
-source("../R/data.R")
 source("../R/functions.R")
 library(odemodeling)
 library(posterior)

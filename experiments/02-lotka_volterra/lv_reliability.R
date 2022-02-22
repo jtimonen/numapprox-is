@@ -1,14 +1,6 @@
-# Requirements
-source("../R/utils.R")
-source("../R/models.R")
-source("../R/data.R")
-source("../R/functions.R")
-library(odemodeling)
-library(posterior)
-
 # Define function
-reliability <- function(dir, idx) {
-  res <- readRDS(file.path(dir, "sampling.rds"))
+lv_reliability <- function(dir, idx) {
+  res <- readRDS(file.path(dir, "mcmc.rds"))
   fits <- res$fits
   solver1 <- fits$solvers[[1]]
   if (is(solver1, "AdaptiveOdeSolver")) {
@@ -47,11 +39,12 @@ reliability <- function(dir, idx) {
 }
 
 # Run
-dirs <- c("results_rk45", "results_rk4", "results_midpoint")
+dirs <- c("rk45", "rk4", "midpoint")
+par_dirs <- file.path(res_dir, dirs)
 inds <- c(3, 1, 1)
 for (j in 1:3) {
-  res_dir <- dirs[j]
-  fp <- file.path(res_dir, "reliability.rds")
-  out <- reliability(res_dir, inds[j])
+  par_dir <- par_dirs[j]
+  fp <- file.path(par_dir, "reliability.rds")
+  out <- lv_reliability(par_dir, inds[j])
   saveRDS(out, file = fp)
 }

@@ -1,11 +1,5 @@
 # Setup for the Lotka-Volterra experiments
 
-# Requirements
-source("../R/utils.R")
-source("../R/functions.R")
-library(odemodeling)
-library(posterior)
-
 # Following https://mc-stan.org/users/documentation/case-studies/lotka-volterra-predator-prey.html
 load_data_lynxhare <- function() {
   df <- odemodeling::lynxhare

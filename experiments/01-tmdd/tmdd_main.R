@@ -1,5 +1,5 @@
 #!/usr/bin/env Rscript
-# Lotka-Volterra experiment
+# TMDD experiment
 
 # Run all TMDD experiments
 # - requires that simulated_data.rds exists

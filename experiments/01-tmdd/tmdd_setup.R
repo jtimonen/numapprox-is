@@ -1,11 +1,5 @@
 # Setup for the TMDD experiments
 
-# Requirements
-source("../R/utils.R")
-source("../R/functions.R")
-library(odemodeling)
-library(posterior)
-
 # Create target mediated drug disposition model
 tmdd_model <- function(prior_only = FALSE, ...) {
 
