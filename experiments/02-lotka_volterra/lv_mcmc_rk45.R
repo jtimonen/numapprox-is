@@ -1,5 +1,5 @@
 # Setup
-par_dir <- file.path("res_dir", "rk4")
+par_dir <- file.path(res_dir, "rk45")
 save_dir <- file.path(par_dir, "mcmc")
 odemodeling:::create_dir_if_not_exist(par_dir)
 odemodeling:::create_dir_if_not_exist(save_dir)

@@ -24,9 +24,8 @@ lv_reliability <- function(dir, idx) {
   }
 
   # Run reliability check
-  reliab <- fit$reliability(
-    solvers = rel_solvers, force = TRUE, savedir = dir
-  )
+  save_dir <- file.path(dir, "reliability")
+  reliab <- fit$reliability(solvers = rel_solvers, savedir = save_dir)
 
   # Return list
   list(
