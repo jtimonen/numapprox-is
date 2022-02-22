@@ -1,21 +1,10 @@
-#!/usr/bin/env Rscript
-# TMDD experiment
-
-# Requirements
-source("../R/utils.R")
-source("../R/models.R")
-source("../R/data.R")
-source("../R/functions.R")
-library(odemodeling)
-library(posterior)
-
 # Create model and simulation solver
 solver_sim <- bdf(
   rel_tol = 1e-15,
   abs_tol = 1e-15,
   max_num_steps = 1e9
 )
-prior <- ode_model_tmdd(prior_only = TRUE)
+prior <- tmdd_model(prior_only = TRUE)
 
 # Define simulation parameters
 sim_k <- c(0.592, 0.900, 2.212, 0.823, 0.201, 0.024)
