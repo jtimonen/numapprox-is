@@ -1,9 +1,3 @@
-# Requirements
-source("../R/utils.R")
-source("../R/functions.R")
-library(odemodeling)
-library(posterior)
-
 # Load results
 dirs <- c("results_rk45", "results_rk4", "results_midpoint")
 results <- list()

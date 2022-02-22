@@ -6,6 +6,7 @@ library(odemodeling)
 library(posterior)
 library(scales)
 library(ggplot2)
+source("../R/functions.R")
 
 # Setup
 args <- commandArgs(trailingOnly = TRUE)
