@@ -1,9 +1,10 @@
 # Load results
-dirs <- c("results_rk45", "results_rk4", "results_midpoint")
+dirs <- c("rk45", "rk4", "midpoint")
+par_dirs <- file.path(res_dir, dirs)
 results <- list()
 for (j in 1:3) {
-  res_dir <- dirs[j]
-  fp <- file.path(res_dir, "reliability.rds")
+  par_dir <- par_dirs[j]
+  fp <- file.path(par_dir, "reliability.rds")
   results[[j]] <- readRDS(file = fp)
 }
 names(results) <- dirs
@@ -69,8 +70,7 @@ plt_A <- ggplot(df1, aesth) +
   scale_color_discrete(labels = labs) +
   theme(legend.position = c(0.7, 0.45), legend.title = element_blank()) +
   scale_x_reverse(breaks = unique(round(df1$logtol))) +
-  xlab("log10(tol)") +
-  ylim(3.5, 8)
+  xlab("log10(tol)")
 if (ylog) {
   plt_A <- plt_A + ylab("log(time)")
 }
@@ -115,8 +115,7 @@ plt_B <- ggplot(df, aesth) +
   scale_color_brewer(type = "div", palette = 5, labels = labs) +
   xlab("Number of steps M") +
   theme(legend.position = c(0.7, 0.45), legend.title = element_blank()) +
-  scale_x_continuous(breaks = seq(2, 30, by = 2)) +
-  ylim(3.5, 8)
+  scale_x_continuous(breaks = seq(2, 30, by = 2))
 if (ylog) {
   plt_B <- plt_B + ylab("log(time)")
 }
