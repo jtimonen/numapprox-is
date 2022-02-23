@@ -76,4 +76,3 @@ plt <- ggplot(df_dist, aes(
   theme(legend.title = element_blank())
 
 ggsave(plt, file = "figures/tmdd_figure1.pdf", width = 8.2, height = 3)
-

@@ -53,12 +53,11 @@ all_log_ratios <- function(rel) {
 
 # Plot max likelihood ratios
 plot_max_ratios_tol <- function(rel, tols) {
-  
   tol_base <- rel$base$solver$abs_tol
   leg <- paste0("tol_star=", tol_base)
   L <- length(tols)
   legend <- rep(leg, L)
-  
+
   # Compute all likelihood ratios
   log_ratios <- all_log_ratios(rel)
   max_ratios <- apply(exp(log_ratios), 2, max)
@@ -66,17 +65,19 @@ plot_max_ratios_tol <- function(rel, tols) {
   # Create data frame
   df <- data.frame(log10(tols), max_ratios, legend)
   solver_name <- toupper(rel$base$solver$name)
-  labs <- paste0("M = ", solver_name, "(", tol_base, 
-                 "),  M* = ", solver_name, "(tol)")
+  labs <- paste0(
+    "M = ", solver_name, "(", tol_base,
+    "),  M* = ", solver_name, "(tol)"
+  )
   df$legend <- factor(legend, labels = labs)
   colnames(df) <- c("logtol", "value", "legend")
-  
+
   # Create y label
   str <- paste0("max~~r^{M~','~~M^{'*'}}")
   ylabel <- parse(text = str)
-  
+
   # Plot
-  aesth <- aes(x = logtol, y = value, color=legend) 
+  aesth <- aes(x = logtol, y = value, color = legend)
   plt <- ggplot(df, aesth) +
     geom_line() +
     geom_point() +
@@ -89,23 +90,24 @@ plot_max_ratios_tol <- function(rel, tols) {
 
 # Plot any other metric
 plot_metric_tol <- function(rel, tols, metric) {
-  
   tol_base <- rel$base$solver$abs_tol
   leg <- paste0("tol_star=", tol_base)
   L <- length(tols)
   legend <- rep(leg, L)
-  
+
   # Compute all likelihood ratios
   values <- rel$metrics[, metric]
-  
+
   # Create data frame
   df <- data.frame(log10(tols), values, legend)
   solver_name <- toupper(rel$base$solver$name)
-  labs <- paste0("M = ", solver_name, "(", tol_base, 
-                 "),  M* = ", solver_name, "(tol)")
+  labs <- paste0(
+    "M = ", solver_name, "(", tol_base,
+    "),  M* = ", solver_name, "(tol)"
+  )
   df$legend <- factor(legend, labels = labs)
   colnames(df) <- c("logtol", "value", "legend")
-  
+
   aesth <- aes(x = logtol, y = value, color = legend)
   plt <- ggplot(df, aesth) +
     geom_line() +
