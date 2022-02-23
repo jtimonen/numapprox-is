@@ -48,7 +48,7 @@ plt_A <- ggplot(df, aesth) +
     values = cols,
     labels = labs
   ) +
-  theme(legend.position = c(0.2, 0.75), legend.title = element_blank()) +
+  theme(legend.position = c(0.25, 0.7), legend.title = element_blank()) +
   scale_x_reverse(breaks = unique(round(df$logtol))) +
   xlab("log10(tol)") +
   ylab("time (s)") +
@@ -62,4 +62,4 @@ plt_A <- ggplot(df, aesth) +
 
 # Combine
 plt <- plt_A
-ggsave(plt, filename = "figures/tmdd_figure2.pdf", width = 5.6, height = 3.9)
+ggsave(plt, filename = "figures/tmdd_figure2.pdf", width = 4.8, height = 3.3)
