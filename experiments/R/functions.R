@@ -65,18 +65,18 @@ plot_max_ratios_tol <- function(rel, tols) {
 
   # Create data frame
   df <- data.frame(log10(tols), max_ratios, legend)
-  solver_name <- rel$base$solver$name
+  solver_name <- toupper(rel$base$solver$name)
   labs <- paste0("M = ", solver_name, "(", tol_base, 
                  "),  M* = ", solver_name, "(tol)")
   df$legend <- factor(legend, labels = labs)
-  colnames(df) <- c("logtol", "max_ratio", "legend")
+  colnames(df) <- c("logtol", "value", "legend")
   
   # Create y label
   str <- paste0("max~~r^{M~','~~M^{'*'}}")
   ylabel <- parse(text = str)
   
   # Plot
-  aesth <- aes(x = logtol, y = max_ratio, color=legend) 
+  aesth <- aes(x = logtol, y = value, color=legend) 
   plt <- ggplot(df, aesth) +
     geom_line() +
     geom_point() +
@@ -87,7 +87,7 @@ plot_max_ratios_tol <- function(rel, tols) {
   return(plt)
 }
 
-# Plot all metrics
+# Plot any other metric
 plot_metric_tol <- function(rel, tols, metric) {
   
   tol_base <- rel$base$solver$abs_tol
@@ -100,7 +100,7 @@ plot_metric_tol <- function(rel, tols, metric) {
   
   # Create data frame
   df <- data.frame(log10(tols), values, legend)
-  solver_name <- rel$base$solver$name
+  solver_name <- toupper(rel$base$solver$name)
   labs <- paste0("M = ", solver_name, "(", tol_base, 
                  "),  M* = ", solver_name, "(tol)")
   df$legend <- factor(legend, labels = labs)

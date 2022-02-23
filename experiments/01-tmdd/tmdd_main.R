@@ -28,4 +28,4 @@ source("tmdd_reliability.R")
 # Create result figures
 source("figures/create_figure1.R")
 source("figures/create_figure2.R")
-# source("figures/create_figure3.R")
+source("figures/create_figure3.R")
