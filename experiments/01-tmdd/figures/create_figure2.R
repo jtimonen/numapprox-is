@@ -143,4 +143,8 @@ plt_right <- ggpubr::ggarrange(plt_A, plt_B, plt_C, plt_D)
 
 # combine -----------------------------------------------------------------
 
-plt <- ggpubr::ggarrange(plt_left, plt_right)
+plt <- ggpubr::ggarrange(plt_left, plt_right,
+  widths = c(0.4, 0.6), labels = "auto"
+)
+
+ggsave(plt, file = "figures/tmdd_figure2.pdf", width = 12, height = 4.5)
