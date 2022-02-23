@@ -40,7 +40,6 @@ n_yticks <- 8
 cols <- c("#010101", "#ca0020", "#f4a582", "#92c5de", "#0571b0")
 aesth <- aes(x = logtol, y = time, group = procedure, color = procedure)
 plt_A <- ggplot(df, aesth) +
-  ylim(0, 10^4) +
   geom_line() +
   geom_point() +
   theme_bw() +

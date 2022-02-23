@@ -1,5 +1,4 @@
 library(ggplot2)
-library(ggpubr)
 
 # Get relative efficencies
 get_diags_df <- function(fits) {
@@ -39,34 +38,83 @@ ensure_compiled <- function(fit) {
   return(fit)
 }
 
+# Max likelihood ratios
+all_log_ratios <- function(rel) {
+  J <- length(rel$files)
+  base <- rel$base
+  a <- list()
+  for (j in 1:J) {
+    gq <- readRDS(rel$files[j])
+    a[[j]] <- as.vector(log_ratios(base, gq))
+  }
+  no_op <- function(x) x
+  sapply(a, no_op)
+}
+
+# Plot max likelihood ratios
+plot_max_ratios_tol <- function(rel, tols) {
+  
+  tol_base <- rel$base$solver$abs_tol
+  leg <- paste0("tol_star=", tol_base)
+  L <- length(tols)
+  legend <- rep(leg, L)
+  
+  # Compute all likelihood ratios
+  log_ratios <- all_log_ratios(rel)
+  max_ratios <- apply(exp(log_ratios), 2, max)
+
+  # Create data frame
+  df <- data.frame(log10(tols), max_ratios, legend)
+  solver_name <- rel$base$solver$name
+  labs <- paste0("M = ", solver_name, "(", tol_base, 
+                 "),  M* = ", solver_name, "(tol)")
+  df$legend <- factor(legend, labels = labs)
+  colnames(df) <- c("logtol", "max_ratio", "legend")
+  
+  # Create y label
+  str <- paste0("max~~r^{M~','~~M^{'*'}}")
+  ylabel <- parse(text = str)
+  
+  # Plot
+  aesth <- aes(x = logtol, y = max_ratio, color=legend) 
+  plt <- ggplot(df, aesth) +
+    geom_line() +
+    geom_point() +
+    theme_bw() +
+    scale_x_reverse(breaks = unique(round(df$logtol))) +
+    xlab("log10(tol)") +
+    ylab(ylabel)
+  return(plt)
+}
+
 # Plot all metrics
-plot_metrics <- function(rel, tols = NULL, num_steps = NULL, flat = FALSE,
-                         arrange = TRUE) {
-  if (flat) {
-    pdims <- c(1, 5)
-  } else {
-    pdims <- c(2, 3)
-  }
-  pA <- plot_pareto_k(rel, tols = tols, num_steps = num_steps)
-  pareto_k <- rel$metrics[, "pareto_k"]
-  ymin <- min(pareto_k)
-  ymax <- max(pareto_k)
-  if (is.finite(ymax)) {
-    pA <- pA + ylim(c(ymin, ymax))
-  }
-  pB <- plot_r_eff(rel, tols = tols, num_steps = num_steps)
-  pC <- plot_metric(rel$times, "time", tols = tols, num_steps = num_steps) +
-    ylab("Time (s)")
-  pD <- plot_mad(rel, tols = tols, num_steps = num_steps, loglik = FALSE)
-  pE <- plot_mad(rel, tols = tols, num_steps = num_steps, loglik = TRUE)
-  plots <- list(pA, pB, pC, pD, pE)
-  if (arrange) {
-    plots <- ggpubr::ggarrange(
-      plotlist = plots, labels = "auto",
-      nrow = pdims[1], ncol = pdims[2]
-    )
-  }
-  return(plots)
+plot_metric_tol <- function(rel, tols, metric) {
+  
+  tol_base <- rel$base$solver$abs_tol
+  leg <- paste0("tol_star=", tol_base)
+  L <- length(tols)
+  legend <- rep(leg, L)
+  
+  # Compute all likelihood ratios
+  values <- rel$metrics[, metric]
+  
+  # Create data frame
+  df <- data.frame(log10(tols), values, legend)
+  solver_name <- rel$base$solver$name
+  labs <- paste0("M = ", solver_name, "(", tol_base, 
+                 "),  M* = ", solver_name, "(tol)")
+  df$legend <- factor(legend, labels = labs)
+  colnames(df) <- c("logtol", "value", "legend")
+  
+  aesth <- aes(x = logtol, y = value, color = legend)
+  plt <- ggplot(df, aesth) +
+    geom_line() +
+    geom_point() +
+    theme_bw() +
+    scale_x_reverse(breaks = unique(round(df$logtol))) +
+    xlab("log10(tol)") +
+    ylab(metric)
+  return(plt)
 }
 
 # Get tolerances vector

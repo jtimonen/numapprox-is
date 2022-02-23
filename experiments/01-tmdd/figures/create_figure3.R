@@ -1,12 +1,4 @@
-# Requirements
-source("../R/utils.R")
-source("../R/functions.R")
-library(odemodeling)
-library(posterior)
-library(scales)
-
 # Load results
-res_dir <- "results"
 fn <- paste0("reliability", ".rds")
 fp <- file.path(res_dir, fn)
 results <- readRDS(file = fp)
@@ -16,8 +8,8 @@ plot_results <- function(res, ylog = TRUE) {
   fits <- res$res$fits
   reliab <- res$reliab
   list(
-    metrics = plot_metrics(reliab, tols = res$confs_rel),
-    times = plot_time_comparison_tol(fits, reliab, res$idx, ylog),
+    metric = plot_metric_tol(reliab, tols = res$confs_rel, "pareto_k"),
+    max_ratio = plot_max_ratios_tol(reliab, tols = res$confs_rel),
     diags = get_diags_df(fits) # rhat and reff
   )
 }
