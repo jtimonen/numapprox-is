@@ -159,20 +159,3 @@ add_plot_geoms <- function(plt, breaks, log10) {
     panel.grid.minor = element_blank()
   )
 }
-
-# Incidence data frame for plotting (SEIR experiment)
-get_incidence_quantiles_df <- function(fit) {
-  incid <- fit$extract_unflattened(variable = "incidence_gq")
-  p <- c(0.1, 0.5, 0.9)
-  get_q <- function(x) {
-    stats::quantile(x, probs = p)
-  }
-  aa <- apply(incid, 2, get_q)
-  lower <- as.vector(aa[1, ])
-  median <- as.vector(aa[2, ])
-  upper <- as.vector(aa[3, ])
-  t_incid <- t[1:length(t) - 1]
-  df <- data.frame(t_incid, lower, median, upper)
-  colnames(df) <- c("t", "lower", "median", "upper")
-  return(df)
-}
