@@ -1,5 +1,3 @@
-library(ggpubr)
-
 # Load results
 dirs <- c("rk45", "rk4", "midpoint")
 par_dirs <- file.path(res_dir, dirs)
@@ -10,43 +8,58 @@ for (j in 1:3) {
   results[[j]] <- readRDS(file = fp)
 }
 names(results) <- dirs
+library(ggpubr)
 
-# Plotting
-plot_results <- function(res, ylog = TRUE) {
-  fits <- res$res$fits
-  reliab <- res$reliab
-  is_adaptive <- is(fits$solvers[[1]], "AdaptiveOdeSolver")
-  reliab <- res$reliab
-  if (is_adaptive) {
-    plt_A <- plot_metrics(reliab, tols = res$confs_rel)
-    plt_B <- plot_time_comparison_tol(fits, reliab, res$idx, ylog)
-  } else {
-    plt_A <- plot_metrics(reliab, num_steps = res$confs_rel)
-    plt_B <- plot_time_comparison_ns(fits, reliab, res$idx, ylog)
-  }
-  list(
-    metrics = plt_A,
-    times = plt_B,
-    diags = get_diags_df(fits) # rhat and reff
-  )
-}
 
-# Create plots
-# p1 <- plot_results(results[[1]])
-# p2 <- plot_results(results[[2]])
-# p3 <- plot_results(results[[3]])
-
-# Create better plots
-odemodeling:::create_dir_if_not_exist("figures")
+# left plot ---------------------------------------------------------------
 
 # Helper function
-time_df <- function(result, ylog) {
+time_df <- function(result) {
   fits <- result$res$fits
   reliab <- result$reliab
   idx <- result$idx
-  create_time_comparison_df(fits, reliab, idx, ylog)
+  create_time_comparison_df(fits, reliab, idx, FALSE)
 }
-ylog <- TRUE
+
+# Create plot for RK45
+out <- results$rk45
+lab0 <- expression(time[MCMC]^{
+  RK45(tol)
+})
+
+tol_rk45 <- out$confs[out$idx]
+df <- time_df(out)
+df$logtol <- log10(1 / df$inv_tol)
+df$procedure <- as.character(df$procedure)
+df$procedure[which(df$procedure != "high")] <- "low"
+str <- paste0("time[MCMC]^{RK45(", tol_rk45, ")} + time[PSIS]^{RK45(tol)}")
+labs <- list(lab0, parse(text = str))
+df$procedure <- as.factor(df$procedure)
+
+# Plot
+n_yticks <- 8
+cols <- c("#010101", "#ca0020", "#f4a582", "#92c5de", "#0571b0")
+aesth <- aes(x = logtol, y = time, group = procedure, color = procedure)
+plt_left <- ggplot(df, aesth) +
+  geom_line() +
+  geom_point() +
+  theme_bw() +
+  scale_color_manual(
+    values = cols,
+    labels = labs
+  ) +
+  theme(legend.position = c(0.25, 0.7), legend.title = element_blank()) +
+  scale_x_reverse(breaks = unique(round(df$logtol))) +
+  xlab("log10(tol)") +
+  ylab("time (s)") +
+  scale_y_continuous(
+    trans = "log10",
+    breaks = trans_breaks("log10", function(x) 10^x,
+      n = n_yticks
+    ),
+    labels = trans_format("log10", math_format(10^.x))
+  )
+
 
 # RK45 --------------------------------------------------------------------
 
