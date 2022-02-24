@@ -1,3 +1,5 @@
+library(ggpubr)
+
 # Load results
 dirs <- c("rk45", "rk4", "midpoint")
 par_dirs <- file.path(res_dir, dirs)
@@ -30,9 +32,9 @@ plot_results <- function(res, ylog = TRUE) {
 }
 
 # Create plots
-p1 <- plot_results(results[[1]])
-p2 <- plot_results(results[[2]])
-p3 <- plot_results(results[[3]])
+# p1 <- plot_results(results[[1]])
+# p2 <- plot_results(results[[2]])
+# p3 <- plot_results(results[[3]])
 
 # Create better plots
 odemodeling:::create_dir_if_not_exist("figures")
