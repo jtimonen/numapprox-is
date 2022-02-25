@@ -8,7 +8,6 @@
 library(odemodeling)
 library(posterior)
 library(scales)
-library(ggplot2)
 source("../R/functions.R")
 
 # Setup
@@ -26,5 +25,5 @@ source("tmdd_mcmc.R")
 source("tmdd_reliability.R")
 
 # Create result figures
-source("figures/create_figure1.R")
-source("figures/create_figure2.R")
+source("figures/create_figure_simulation.R")
+source("figures/create_figure_mainresults.R")

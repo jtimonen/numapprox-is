@@ -1,4 +1,5 @@
 library(ggplot2)
+library(ggpubr)
 
 # Get relative efficencies
 get_diags_df <- function(fits) {
@@ -16,6 +17,36 @@ get_diags <- function(file) {
   reff <- as.numeric(loo::relative_eff(a))
   max_rhat <- max(fit$summary()[, "rhat"], na.rm = TRUE)
   c(reff, max_rhat)
+}
+
+# Plotting helper
+get_metric_df_tol <- function(output, metric) {
+  reliab <- output$reliab
+  confs <- output$confs_rel
+  if (metric == "max_ratio") {
+    plt <- plot_max_ratios_tol(reliab, tols = confs)
+  } else {
+    plt <- plot_metric_tol(reliab, tols = confs, metric)
+  }
+  return(plt$data)
+}
+
+# Create y-axis label
+metric_to_ylabel <- function(metric) {
+  if (metric == "max_ratio") {
+    str <- paste0("max~~r^{M~','~~M^{'*'}}")
+    ylabel <- parse(text = str)
+  } else if (metric == "mad_odesol") {
+    str <- paste0("max~~'|'~y^{M}-y^{M^{'*'}}~'|'")
+    ylabel <- parse(text = str)
+  } else if (metric == "pareto_k") {
+    ylabel <- "Pareto-k"
+  } else if (metric == "r_eff") {
+    ylabel <- "Relative efficiency"
+  } else {
+    ylabel <- metric
+  }
+  return(ylabel)
 }
 
 # Load a fit from file and compile
@@ -208,4 +239,12 @@ add_plot_geoms <- function(plt, breaks, log10) {
   plt + theme(
     panel.grid.minor = element_blank()
   )
+}
+
+# Helper function
+time_df <- function(result, ylog) {
+  fits <- result$res$fits
+  reliab <- result$reliab
+  idx <- result$idx
+  create_time_comparison_df(fits, reliab, idx, ylog)
 }

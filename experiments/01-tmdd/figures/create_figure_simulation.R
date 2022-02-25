@@ -75,4 +75,4 @@ plt <- ggplot(df_dist, aes(
   xlab("t") +
   theme(legend.title = element_blank())
 
-ggsave(plt, file = "figures/tmdd_figure1.pdf", width = 8.2, height = 3)
+ggsave(plt, file = "figures/tmdd_simulation.pdf", width = 8.2, height = 3)

@@ -2,18 +2,8 @@
 fn <- paste0("reliability", ".rds")
 fp <- file.path(res_dir, fn)
 results <- readRDS(file = fp)
-library(ggpubr)
-
 
 # left plot ---------------------------------------------------------------
-
-# Helper function
-time_df <- function(result, ylog) {
-  fits <- result$res$fits
-  reliab <- result$reliab
-  idx <- result$idx
-  create_time_comparison_df(fits, reliab, idx, ylog)
-}
 
 # Create plot
 ylog <- FALSE
@@ -68,54 +58,12 @@ plt_left <- ggplot(df, aesth) +
 
 out <- results$outputs
 
-# Plotting
-plot_results <- function(res, ylog = TRUE) {
-  fits <- res$res$fits
-  reliab <- res$reliab
-  list(
-    metric = plot_metric_tol(reliab, tols = res$confs_rel, "pareto_k"),
-    max_ratio = plot_max_ratios_tol(reliab, tols = res$confs_rel),
-    diags = get_diags_df(fits) # rhat and reff
-  )
-}
-
-# Plotting
-get_metric_df <- function(output, metric) {
-  reliab <- output$reliab
-  confs <- output$confs_rel
-  if (metric == "max_ratio") {
-    plt <- plot_max_ratios_tol(reliab, tols = confs)
-  } else {
-    plt <- plot_metric_tol(reliab, tols = confs, metric)
-  }
-  return(plt$data)
-}
-
-# Create y-axis label
-metric_to_ylabel <- function(metric) {
-  if (metric == "max_ratio") {
-    str <- paste0("max~~r^{M~','~~M^{'*'}}")
-    ylabel <- parse(text = str)
-  } else if (metric == "mad_odesol") {
-    str <- paste0("max~~'|'~y^{M}-y^{M^{'*'}}~'|'")
-    ylabel <- parse(text = str)
-  } else if (metric == "pareto_k") {
-    ylabel <- "Pareto-k"
-  } else if (metric == "r_eff") {
-    ylabel <- "Relative efficiency"
-  } else {
-    ylabel <- metric
-  }
-  return(ylabel)
-}
-
-
 # Plot metrics combining different start points
 plot_metric_combine <- function(out, metric) {
   cols <- c("#ca0020", "#f4a582", "#92c5de", "#0571b0")
   df <- NULL
   for (j in 1:4) {
-    df_j <- get_metric_df(out[[j]], metric)
+    df_j <- get_metric_df_tol(out[[j]], metric)
     df <- rbind(df, df_j)
   }
   aesth <- aes_string(x = "logtol", y = "value", color = "legend")
@@ -147,4 +95,4 @@ plt <- ggpubr::ggarrange(plt_left, plt_right,
   widths = c(0.4, 0.6), labels = "auto"
 )
 
-ggsave(plt, file = "figures/tmdd_figure2.pdf", width = 12, height = 4.5)
+ggsave(plt, file = "figures/tmdd_mainresults.pdf", width = 12, height = 4.5)

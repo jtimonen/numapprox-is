@@ -8,18 +8,9 @@ for (j in 1:3) {
   results[[j]] <- readRDS(file = fp)
 }
 names(results) <- dirs
-library(ggpubr)
 
 
-# left plot ---------------------------------------------------------------
-
-# Helper function
-time_df <- function(result) {
-  fits <- result$res$fits
-  reliab <- result$reliab
-  idx <- result$idx
-  create_time_comparison_df(fits, reliab, idx, FALSE)
-}
+# RK45 timing -------------------------------------------------------------
 
 # Create plot for RK45
 out <- results$rk45
@@ -60,35 +51,29 @@ plt_left <- ggplot(df, aesth) +
     labels = trans_format("log10", math_format(10^.x))
   )
 
+# RK45 metrics --------------------------------------------------------------
 
-# RK45 --------------------------------------------------------------------
-
-tol_rk45 <- results[[1]]$confs[results[[1]]$idx]
-df1 <- time_df(results[[1]], ylog)
-df1$logtol <- log10(1 / df1$inv_tol)
-lab1 <- expression(time[MCMC]^{
-  RK45(tol)
-})
-lab2 <- expression(time[MCMC]^
-  {
-    RK45(0.001)
-  } + time[IS]^{
-    RK45(tol)
-  })
-
-labs <- c(lab1, lab2)
-aesth <- aes(x = logtol, y = time, group = procedure, color = procedure)
-plt_A <- ggplot(df1, aesth) +
-  geom_line() +
-  geom_point() +
-  theme_bw() +
-  scale_color_discrete(labels = labs) +
-  theme(legend.position = c(0.7, 0.45), legend.title = element_blank()) +
-  scale_x_reverse(breaks = unique(round(df1$logtol))) +
-  xlab("log10(tol)")
-if (ylog) {
-  plt_A <- plt_A + ylab("log(time)")
+# Plot metrics combining different start points
+plot_metric_rk45 <- function(out, metric) {
+  df <- get_metric_df_tol(out, metric)
+  aesth <- aes_string(x = "logtol", y = "value", color = "legend")
+  plt <- ggplot(df, aesth) +
+    geom_line() +
+    geom_point() +
+    theme_bw() +
+    scale_x_reverse(breaks = unique(round(df$logtol))) +
+    xlab("log10(tol)") +
+    ylab(metric_to_ylabel(metric)) +
+    theme(legend.title = element_blank(), legend.position = c(0.55, 0.4))
+  return(plt)
 }
+
+plt_A <- plot_metric_rk45(out, "mad_odesol")
+plt_B <- plot_metric_rk45(out, "max_ratio")
+plt_C <- plot_metric_rk45(out, "pareto_k") +
+  geom_hline(yintercept = 0.5, lty = 2)
+plt_D <- plot_metric_rk45(out, "r_eff")
+plt_right <- ggpubr::ggarrange(plt_A, plt_B, plt_C, plt_D)
 
 
 # RK4 and midpoint --------------------------------------------------------
