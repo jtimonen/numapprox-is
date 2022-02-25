@@ -74,9 +74,7 @@ plot_metric_combine <- function(out, metric) {
     scale_x_reverse(breaks = unique(round(df$logtol))) +
     xlab("log10(tol)") +
     ylab(metric_to_ylabel(metric)) +
-    scale_color_manual(
-      values = cols
-    ) +
+    scale_color_manual(values = cols) +
     theme(legend.title = element_blank(), legend.position = c(0.7, 0.7))
   return(plt)
 }

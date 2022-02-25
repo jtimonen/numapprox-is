@@ -31,6 +31,18 @@ get_metric_df_tol <- function(output, metric) {
   return(plt$data)
 }
 
+# Plotting helper
+get_metric_df_ns <- function(output, metric) {
+  reliab <- output$reliab
+  confs <- output$confs_rel
+  if (metric == "max_ratio") {
+    plt <- plot_max_ratios_ns(reliab, num_steps = confs)
+  } else {
+    plt <- plot_metric_ns(reliab, num_steps = confs, metric)
+  }
+  return(plt$data)
+}
+
 # Create y-axis label
 metric_to_ylabel <- function(metric) {
   if (metric == "max_ratio") {
@@ -82,7 +94,7 @@ all_log_ratios <- function(rel) {
   sapply(a, no_op)
 }
 
-# Plot max likelihood ratios
+# Plot max likelihood ratios (tol on x axis)
 plot_max_ratios_tol <- function(rel, tols) {
   tol_base <- rel$base$solver$abs_tol
   leg <- paste0("tol_star=", tol_base)
@@ -119,7 +131,7 @@ plot_max_ratios_tol <- function(rel, tols) {
   return(plt)
 }
 
-# Plot any other metric
+# Plot any other metric (tol on x axis)
 plot_metric_tol <- function(rel, tols, metric) {
   tol_base <- rel$base$solver$abs_tol
   leg <- paste0("tol_star=", tol_base)
@@ -146,6 +158,71 @@ plot_metric_tol <- function(rel, tols, metric) {
     theme_bw() +
     scale_x_reverse(breaks = unique(round(df$logtol))) +
     xlab("log10(tol)") +
+    ylab(metric)
+  return(plt)
+}
+
+
+# Plot max likelihood ratios (num_steps on x axis)
+plot_max_ratios_ns <- function(rel, num_steps) {
+  ns_base <- rel$base$solver$num_steps
+  leg <- paste0("ns_star=", ns_base)
+  L <- length(num_steps)
+  legend <- rep(leg, L)
+
+  # Compute all likelihood ratios
+  log_ratios <- all_log_ratios(rel)
+  max_ratios <- apply(exp(log_ratios), 2, max)
+
+  # Create data frame
+  df <- data.frame(num_steps, max_ratios, legend)
+  solver_name <- toupper(rel$base$solver$name)
+  labs <- paste0(
+    "M = ", solver_name, "(", ns_base, "),  M* = ", solver_name, "(K)"
+  )
+  df$legend <- factor(legend, labels = labs)
+  colnames(df) <- c("num_steps", "value", "legend")
+
+  # Create y label
+  str <- paste0("max~~r^{M~','~~M^{'*'}}")
+  ylabel <- parse(text = str)
+
+  # Plot
+  aesth <- aes(x = num_steps, y = value, color = legend)
+  plt <- ggplot(df, aesth) +
+    geom_line() +
+    geom_point() +
+    theme_bw() +
+    xlab("K") +
+    ylab(ylabel)
+  return(plt)
+}
+
+# Plot any other metric (num steps on x axis)
+plot_metric_ns <- function(rel, num_steps, metric) {
+  ns_base <- rel$base$solver$num_steps
+  leg <- paste0("ns_star=", ns_base)
+  L <- length(num_steps)
+  legend <- rep(leg, L)
+
+  # Compute all likelihood ratios
+  values <- rel$metrics[, metric]
+
+  # Create data frame
+  df <- data.frame(num_steps, values, legend)
+  solver_name <- toupper(rel$base$solver$name)
+  labs <- paste0(
+    "M = ", solver_name, "(", ns_base, "),  M* = ", solver_name, "(K)"
+  )
+  df$legend <- factor(legend, labels = labs)
+  colnames(df) <- c("num_steps", "value", "legend")
+
+  aesth <- aes(x = num_steps, y = value, color = legend)
+  plt <- ggplot(df, aesth) +
+    geom_line() +
+    geom_point() +
+    theme_bw() +
+    xlab("K") +
     ylab(metric)
   return(plt)
 }

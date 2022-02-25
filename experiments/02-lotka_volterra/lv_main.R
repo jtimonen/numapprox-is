@@ -24,4 +24,5 @@ source("lv_mcmc_rk45.R")
 source("lv_reliability.R")
 
 # Figures
-source("figures/create_figure_mainresults.R")
+source("figures/create_figure_timing.R")
+source("figures/create_figure_metrics.R")
