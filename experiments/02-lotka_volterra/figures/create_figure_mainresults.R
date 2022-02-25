@@ -19,7 +19,7 @@ lab0 <- expression(time[MCMC]^{
 })
 
 tol_rk45 <- out$confs[out$idx]
-df <- time_df(out)
+df <- time_df(out, FALSE)
 df$logtol <- log10(1 / df$inv_tol)
 df$procedure <- as.character(df$procedure)
 df$procedure[which(df$procedure != "high")] <- "low"

@@ -5,7 +5,6 @@
 library(odemodeling)
 library(posterior)
 library(scales)
-library(ggplot2)
 source("../R/functions.R")
 
 # Setup
@@ -25,4 +24,4 @@ source("lv_mcmc_rk45.R")
 source("lv_reliability.R")
 
 # Figures
-source("figures/create_figure1.R")
+source("figures/create_figure_mainresults.R")
