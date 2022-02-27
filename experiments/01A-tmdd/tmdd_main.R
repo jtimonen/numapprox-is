@@ -1,7 +1,5 @@
 #!/usr/bin/env Rscript
 # TMDD experiment
-
-# Run all TMDD experiments
 # - requires that tmdd_data.rds exists
 
 # Requirements
