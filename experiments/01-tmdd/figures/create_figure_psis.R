@@ -16,9 +16,10 @@ df <- data.frame(ratios)
 S <- length(ratios)
 r_eff <- odemodeling::psis_relative_eff(gq_low, gq_high)
 n_tail <- loo:::n_pareto(r_eff, S)
+tail_inds <- (S + 1 - n_tail):S
 ratios_sorted <- sort(ratios)
-ratios_tail <- ratios_sorted[(S + 1 - n_tail):S]
-rcut <- min(ratios_tail)
+ratios_tail <- ratios_sorted[tail_inds]
+rcut <- ratios_sorted[min(tail_inds) - 1]
 
 # Plot A
 xlab <- parse(text = paste0("r^{M~','~~M^{'*'}}"))
@@ -30,7 +31,7 @@ plt_A <- ggplot(df, aes(x = ratios)) + # geom_histogram(bins=80) +
 
 # Fit generalized Pareto distribution
 rt_centered <- ratios_tail - rcut
-pfit <- gpdfit(rt_centered)
+pfit <- loo::gpdfit(rt_centered)
 pd <- evmix::dgpd(rt_centered, sigmau = pfit$sigma, xi = pfit$k)
 df_gpd <- data.frame(rt_centered, pd)
 df_gpd <- df_gpd[2:n_tail, ]

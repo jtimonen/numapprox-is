@@ -30,4 +30,3 @@ source("tmdd_reliability.R")
 source("figures/create_figure_simulation.R")
 source("figures/create_figure_mainresults.R")
 source("figures/create_figure_psis.R")
-
