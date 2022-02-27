@@ -8,6 +8,8 @@
 library(odemodeling)
 library(posterior)
 library(scales)
+library(loo)
+library(evmix) # for generalized Pareto distribution density
 source("../R/functions.R")
 
 # Setup
@@ -27,3 +29,5 @@ source("tmdd_reliability.R")
 # Create result figures
 source("figures/create_figure_simulation.R")
 source("figures/create_figure_mainresults.R")
+source("figures/create_figure_psis.R")
+
