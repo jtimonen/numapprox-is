@@ -1,3 +1,11 @@
+# Requirements
+library(odemodeling)
+library(posterior)
+library(scales)
+library(loo)
+library(evmix) # for generalized Pareto distribution density
+source("../R/functions.R")
+
 # Create model and simulation solver
 solver_sim <- bdf(
   rel_tol = 1e-15,

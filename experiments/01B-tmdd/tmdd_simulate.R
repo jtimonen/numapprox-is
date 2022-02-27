@@ -1,3 +1,11 @@
+# Requirements
+library(odemodeling)
+library(posterior)
+library(scales)
+library(loo)
+library(evmix) # for generalized Pareto distribution density
+source("../R/functions.R")
+
 # Create model and simulation solver
 solver_sim <- bdf(
   rel_tol = 1e-15,
@@ -13,7 +21,7 @@ sim_params <- prior$make_params(c(sim_k, sim_sigma))
 
 # Simulate ODE solution
 t_sim <- c(0.1, 0.2, 0.3, 0.4, 0.5, 0.7, 1, seq(2, 10, by = 1))
-L0_sim <- 10
+L0_sim <- 0.1
 t0_sim <- 0
 sim <- prior$gqs(
   t0 = t0_sim,

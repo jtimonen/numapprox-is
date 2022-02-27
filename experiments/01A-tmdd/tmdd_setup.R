@@ -74,7 +74,11 @@ tmdd_model <- function(prior_only = FALSE, ...) {
 }
 
 # Create model and load data
-dat <- readRDS("tmdd_data.rds")
 model <- tmdd_model()
-add_data <- list(L0 = dat$L0, P_obs = dat$P_obs, D = 3)
-init <- 0
+fn <- "tmdd_data.rds"
+if(file.exists(fn)) {
+  dat <- readRDS()
+  add_data <- list(L0 = dat$L0, P_obs = dat$P_obs, D = 3)
+  init <- 0
+}
+
