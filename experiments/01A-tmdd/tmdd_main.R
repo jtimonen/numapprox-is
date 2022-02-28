@@ -12,7 +12,7 @@ source("../R/functions.R")
 
 # Setup
 args <- commandArgs(trailingOnly = TRUE)
-ITER <- 300
+ITER <- 200
 CHAINS <- 2
 res_dir <- "results"
 odemodeling:::create_dir_if_not_exist(res_dir)
