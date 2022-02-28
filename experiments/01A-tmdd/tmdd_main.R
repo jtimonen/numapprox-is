@@ -12,8 +12,8 @@ source("../R/functions.R")
 
 # Setup
 args <- commandArgs(trailingOnly = TRUE)
-ITER <- 200
-CHAINS <- 2
+ITER <- 2000
+CHAINS <- 4
 res_dir <- "results"
 odemodeling:::create_dir_if_not_exist(res_dir)
 source("tmdd_setup.R") # defines data and model

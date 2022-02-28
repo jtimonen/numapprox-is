@@ -36,8 +36,10 @@ out <- results$outputs[[3]]
 fits <- out$res$fits
 
 # Load two fits and plot their ODE solution distribution
-fit_low <- readRDS(fits$files[3]) # mcmc fit with tol=0.04
-fit_high <- readRDS(fits$files[16]) # mcmc fit with tol=1e-12
+idx_low <- 3
+idx_high <- length(fits$files)
+fit_low <- readRDS(fits$files[idx_low]) # mcmc fit with tol=0.04
+fit_high <- readRDS(fits$files[idx_high]) # mcmc fit with tol=1e-12
 probs <- c(0.05, 0.5, 0.95)
 qlow <- fit_low$extract_odesol_df_dist(
   p = probs, ydim_names = ynam, include_y0 = TRUE
@@ -51,13 +53,9 @@ tol_high <- fit_high$solver$abs_tol
 df_dist$tol <- as.factor(rep(c(tol_low, tol_high), each = nrow(qlow)))
 colnames(df_dist) <- c("t", "ydim", "lower", "median", "upper", "tol")
 cols <- c("#1f77b4", "#ff7f0e")
-labs <- c(expression(y^{
-  BDF(0.04)
-}), expression(y^{
-  BDF(10^{
-    -12
-  })
-}))
+lab_low <- parse(text = paste0("y^{BDF(", tol_low, ")}"))
+lab_high <- parse(text = paste0("y^{BDF(", tol_high, ")}"))
+labs <- c(lab_low, lab_high)
 plt <- ggplot(df_dist, aes(
   x = t, y = median, group = tol, color = tol,
   fill = tol, ymin = lower, ymax = upper, lty = tol

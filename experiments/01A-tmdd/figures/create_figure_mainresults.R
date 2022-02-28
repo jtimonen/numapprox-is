@@ -41,7 +41,7 @@ plt_left <- ggplot(df, aesth) +
     values = cols,
     labels = labs
   ) +
-  theme(legend.position = c(0.25, 0.7), legend.title = element_blank()) +
+  theme(legend.position = c(0.35, 0.82), legend.title = element_blank()) +
   scale_x_reverse(breaks = unique(round(df$logtol))) +
   xlab("log10(tol)") +
   ylab("time (s)") +
@@ -75,15 +75,18 @@ plot_metric_combine <- function(out, metric) {
     xlab("log10(tol)") +
     ylab(metric_to_ylabel(metric)) +
     scale_color_manual(values = cols) +
-    theme(legend.title = element_blank(), legend.position = c(0.7, 0.7))
+    theme(legend.title = element_blank(), legend.position = c(0.5, 0.35))
   return(plt)
 }
 
-plt_A <- plot_metric_combine(out, "mad_odesol")
+plt_A <- plot_metric_combine(out, "mad_odesol") +
+  theme(legend.position = "none")
 plt_B <- plot_metric_combine(out, "max_log_ratio") +
-  geom_hline(yintercept = 1, lty = 2)
+  geom_hline(yintercept = 1, lty = 2) +
+  theme(legend.position = "none")
 plt_C <- plot_metric_combine(out, "pareto_k") +
-  geom_hline(yintercept = 0.5, lty = 2)
+  geom_hline(yintercept = 0.5, lty = 2) +
+  theme(legend.position = "none")
 plt_D <- plot_metric_combine(out, "r_eff") +
   geom_hline(yintercept = 1, lty = 2)
 plt_right <- ggpubr::ggarrange(plt_A, plt_B, plt_C, plt_D)
