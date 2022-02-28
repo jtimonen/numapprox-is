@@ -37,7 +37,7 @@ tmdd_reliability <- function(dir, idx) {
 }
 
 # Run
-start_inds <- c(2, 3, 4, 5)
+start_inds <- c(1, 2, 3, 4)
 outputs <- list()
 j <- 0
 for (index in start_inds) {
