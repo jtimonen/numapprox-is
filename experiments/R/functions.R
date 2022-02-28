@@ -23,7 +23,7 @@ get_diags <- function(file) {
 get_metric_df_tol <- function(output, metric) {
   reliab <- output$reliab
   confs <- output$confs_rel
-  if (metric == "max_ratio") {
+  if (metric == "max_log_ratio") {
     plt <- plot_max_ratios_tol(reliab, tols = confs)
   } else {
     plt <- plot_metric_tol(reliab, tols = confs, metric)
@@ -35,7 +35,7 @@ get_metric_df_tol <- function(output, metric) {
 get_metric_df_ns <- function(output, metric) {
   reliab <- output$reliab
   confs <- output$confs_rel
-  if (metric == "max_ratio") {
+  if (metric == "max_log_ratio") {
     plt <- plot_max_ratios_ns(reliab, num_steps = confs)
   } else {
     plt <- plot_metric_ns(reliab, num_steps = confs, metric)
@@ -45,8 +45,8 @@ get_metric_df_ns <- function(output, metric) {
 
 # Create y-axis label
 metric_to_ylabel <- function(metric) {
-  if (metric == "max_ratio") {
-    str <- paste0("max~~r^{M~','~~M^{'*'}}")
+  if (metric == "max_log_ratio") {
+    str <- paste0("max~~log~r^{M~','~~M^{'*'}}")
     ylabel <- parse(text = str)
   } else if (metric == "mad_odesol") {
     str <- paste0("max~~'|'~y^{M}-y^{M^{'*'}}~'|'")
@@ -103,10 +103,10 @@ plot_max_ratios_tol <- function(rel, tols) {
 
   # Compute all likelihood ratios
   log_ratios <- all_log_ratios(rel)
-  max_ratios <- apply(exp(log_ratios), 2, max)
+  max_log_ratios <- apply(log_ratios, 2, max)
 
   # Create data frame
-  df <- data.frame(log10(tols), max_ratios, legend)
+  df <- data.frame(log10(tols), max_log_ratios, legend)
   solver_name <- toupper(rel$base$solver$name)
   labs <- paste0(
     "M = ", solver_name, "(", tol_base,
@@ -116,7 +116,7 @@ plot_max_ratios_tol <- function(rel, tols) {
   colnames(df) <- c("logtol", "value", "legend")
 
   # Create y label
-  str <- paste0("max~~r^{M~','~~M^{'*'}}")
+  str <- paste0("max~~log~r^{M~','~~M^{'*'}}")
   ylabel <- parse(text = str)
 
   # Plot

@@ -12,13 +12,13 @@ source("../R/functions.R")
 
 # Setup
 args <- commandArgs(trailingOnly = TRUE)
-ITER <- 200
+ITER <- 300
 CHAINS <- 2
 res_dir <- "results"
 odemodeling:::create_dir_if_not_exist(res_dir)
 source("tmdd_setup.R") # defines data and model
 
-# MCMC sampling, takes a couple of hours
+# MCMC sampling
 source("tmdd_mcmc.R")
 
 # PSIS

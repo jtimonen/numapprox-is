@@ -2,13 +2,13 @@
 
 # Create target mediated drug disposition model
 tmdd_model <- function(prior_only = FALSE, ...) {
-  
+
   # Dimensions and other data
   N <- stan_dim("N", lower = 1) # number of time points
   D <- stan_dim("D", lower = 1) # ODE system dimension
   L0 <- stan_var("L0", lower = 0) # initial bolus
   P_obs <- stan_vector("P_obs", length = N) # observations of P
-  
+
   # Define kinetic parameters and their priors
   k_par <- list(
     stan_param(stan_var("k_on", lower = 0), "lognormal(-1, 0.3)"),
@@ -18,10 +18,12 @@ tmdd_model <- function(prior_only = FALSE, ...) {
     stan_param(stan_var("k_eL", lower = 0), "lognormal(-1, 0.3)"),
     stan_param(stan_var("k_eP", lower = 0), "lognormal(-3, 0.3)")
   )
-  
+
   # Define noise parameter and its prior
-  sigma_par <- stan_param(stan_var("sigma", lower = 0), "lognormal(1, 0.3)")
-  
+  sigma_par <- stan_param(stan_var("sigma", lower = 0),
+    prior = "lognormal(-1, 0.3)"
+  )
+
   # Define transformed parameters
   R0 <- stan_transform(stan_var("R0"), "parameters", "k_in/k_out")
   y0 <- stan_transform(
@@ -29,7 +31,7 @@ tmdd_model <- function(prior_only = FALSE, ...) {
     origin = "parameters",
     code = "to_vector({L0, R0, 0.0})"
   )
-  
+
   # Define ODE system right-hand side
   odefun_body <- "
     vector[3] dy_dt; // L, R, P
@@ -42,7 +44,7 @@ tmdd_model <- function(prior_only = FALSE, ...) {
     dy_dt[3] = rem - k_eP*P;
     return dy_dt;
   "
-  
+
   # Define log-likelihood function body
   loglik_body <- "
     real loglik = 0.0;
@@ -51,7 +53,7 @@ tmdd_model <- function(prior_only = FALSE, ...) {
     }
     return(loglik);
   "
-  
+
   # Set loglik depending on whether creating only prior model
   if (prior_only) {
     loglik_body <- ""
@@ -59,7 +61,7 @@ tmdd_model <- function(prior_only = FALSE, ...) {
   } else {
     loglik_vars <- list(sigma_par, P_obs)
   }
-  
+
   # Return
   odemodeling::ode_model(
     N = N,
@@ -76,8 +78,8 @@ tmdd_model <- function(prior_only = FALSE, ...) {
 # Create model and load data
 model <- tmdd_model()
 fn <- "tmdd_data.rds"
-if(file.exists(fn)) {
-  dat <- readRDS()
+if (file.exists(fn)) {
+  dat <- readRDS(file = fn)
   add_data <- list(L0 = dat$L0, P_obs = dat$P_obs, D = 3)
   init <- 0
 }

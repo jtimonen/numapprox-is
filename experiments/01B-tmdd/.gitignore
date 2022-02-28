@@ -1,0 +1,4 @@
+*.rds
+!tmdd_data.rds
+*.out
+*.pdf

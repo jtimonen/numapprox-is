@@ -80,7 +80,7 @@ plot_metric_combine <- function(out, metric) {
 }
 
 plt_A <- plot_metric_combine(out, "mad_odesol")
-plt_B <- plot_metric_combine(out, "max_log_ratio")
+plt_B <- plot_metric_combine(out, "max_ratio")
 plt_C <- plot_metric_combine(out, "pareto_k") +
   geom_hline(yintercept = 0.5, lty = 2)
 plt_D <- plot_metric_combine(out, "r_eff")

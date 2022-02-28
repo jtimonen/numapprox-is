@@ -20,7 +20,9 @@ tmdd_model <- function(prior_only = FALSE, ...) {
   )
 
   # Define noise parameter and its prior
-  sigma_par <- stan_param(stan_var("sigma", lower = 0), "lognormal(1, 0.3)")
+  sigma_par <- stan_param(stan_var("sigma", lower = 0),
+    prior = "lognormal(0, 0.3)"
+  )
 
   # Define transformed parameters
   R0 <- stan_transform(stan_var("R0"), "parameters", "k_in/k_out")
@@ -76,9 +78,8 @@ tmdd_model <- function(prior_only = FALSE, ...) {
 # Create model and load data
 model <- tmdd_model()
 fn <- "tmdd_data.rds"
-if(file.exists(fn)) {
-  dat <- readRDS()
+if (file.exists(fn)) {
+  dat <- readRDS(file = fn)
   add_data <- list(L0 = dat$L0, P_obs = dat$P_obs, D = 3)
   init <- 0
 }
-

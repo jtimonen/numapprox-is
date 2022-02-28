@@ -5,6 +5,7 @@ library(scales)
 library(loo)
 library(evmix) # for generalized Pareto distribution density
 source("../R/functions.R")
+source("tmdd_setup.R")
 
 # Create model and simulation solver
 solver_sim <- bdf(
