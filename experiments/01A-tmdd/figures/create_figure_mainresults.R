@@ -63,7 +63,8 @@ plot_metric_combine <- function(out, metric) {
   cols <- c("#ca0020", "#f4a582", "#92c5de", "#0571b0")
   df <- NULL
   for (j in 1:4) {
-    df_j <- get_metric_df_tol(out[[j]], metric)
+    out_j <- out[[j]]
+    df_j <- get_metric_df_tol(out_j, metric)
     df <- rbind(df, df_j)
   }
   aesth <- aes_string(x = "logtol", y = "value", color = "legend")
