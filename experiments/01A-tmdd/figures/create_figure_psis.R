@@ -77,6 +77,12 @@ create_psis_figure <- function(out) {
   )
 }
 
+# Print
+print_tol <- function(p) {
+  cat("low: ", p$gq_low$solver$abs_tol, ", ", sep="")
+  cat("high: ", p$gq_high$solver$abs_tol, "\n", sep="")
+}
+
 # Load results
 fn <- paste0("reliability", ".rds")
 fp <- file.path(res_dir, fn)
@@ -84,6 +90,8 @@ results <- readRDS(file = fp)
 p1 <- create_psis_figure(results$outputs[[1]])
 p2 <- create_psis_figure(results$outputs[[2]])
 p3 <- create_psis_figure(results$outputs[[3]])
-
+print_tol(p1)
+print_tol(p2)
+print_tol(p3)
 plt <- ggarrange(p1$plt, p2$plt, p3$plt, labels = "auto", nrow = 1)
 ggsave(plt, file = "figures/tmdd_psis.pdf", width = 9.4, height = 4.3)
