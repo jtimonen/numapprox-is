@@ -8,7 +8,7 @@ L <- length(fits$files)
 diags <- NULL
 for (j in seq_len(L)) {
   fit <- readRDS(fits$files[j])
-  smr <- fit$summary()[1:9, ]
+  smr <- fit$summary()[1:9, ] # 8 params + lp
   atol <- fit$solver$abs_tol
   time <- fit$time()$total
   max_rhat <- max(smr$rhat)
@@ -18,3 +18,5 @@ for (j in seq_len(L)) {
 }
 diags <- data.frame(diags)
 colnames(diags) <- c("tol", "runtime", "max_rhat", "min_ess_bulk", "min_ess_tail")
+
+# TODO: gradient diagnose
