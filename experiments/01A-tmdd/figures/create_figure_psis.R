@@ -79,8 +79,8 @@ create_psis_figure <- function(out) {
 
 # Print
 print_tol <- function(p) {
-  cat("low: ", p$gq_low$solver$abs_tol, ", ", sep="")
-  cat("high: ", p$gq_high$solver$abs_tol, "\n", sep="")
+  cat("low: ", p$gq_low$solver$abs_tol, ", ", sep = "")
+  cat("high: ", p$gq_high$solver$abs_tol, "\n", sep = "")
 }
 
 # Load results
