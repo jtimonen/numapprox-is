@@ -60,6 +60,7 @@ colnames(diags) <- c(
   "min_ess_tail", "lp", "log_err_norm_init_grad"
 )
 
+a <- diagnose_sampler(fit)
 
 plot(-log10(diags$tol), diags$log_err_norm_init_grad, "o", pch = 16)
 grid()
