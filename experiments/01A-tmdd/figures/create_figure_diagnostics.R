@@ -17,7 +17,7 @@ fp <- file.path(res_dir, fn)
 results <- readRDS(file = fp)
 fits <- results$outputs[[1]]$res$fits # mcmc results
 
-fn_epsilon <- 1e-10 # for finite diff
+fn_epsilon <- 1e-6 # for finite diff
 L <- length(fits$files)
 diags <- NULL
 for (j in seq_len(L)) {
@@ -41,4 +41,6 @@ colnames(diags) <- c(
   "min_ess_tail", "lp", "log_err_norm_init_grad"
 )
 
-# TODO: gradient diagnose
+
+plot(-log10(diags$tol), diags$log_err_norm_init_grad, "o", pch = 16)
+grid()
