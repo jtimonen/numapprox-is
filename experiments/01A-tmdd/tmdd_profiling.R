@@ -6,9 +6,16 @@ library(loo)
 source("../R/functions.R")
 source("tmdd_setup.R")
 
-ITER <- 2000
-CHAINS <- 4
+cmdstanr::set_cmdstan_path("/Users/juhotimonen/Work/research/stan/cmdstan")
+ITER <- 200
+CHAINS <- 2
 model <- tmdd_model(profile_oderhs = TRUE)
+
+#  Helper function
+get_profile_matrix <- function(fit) {
+  p <- sapply(fit$cmdstanr_fit$profiles(), function(x) x)
+  as.matrix(p[3:nrow(p), ])
+}
 
 # tol = 0.05
 solver1 <- bdf(tol = 0.05, max_num_steps = 1e5)
@@ -19,7 +26,7 @@ fit1 <- model$sample(
   iter_sampling = ITER,
   chains = CHAINS
 )
-profs1 <- sapply(fit1$cmdstanr_fit$profiles(), function(x) x)
+profs1 <- get_profile_matrix(fit1)
 
 # tol = 0.02
 solver2 <- bdf(tol = 0.02, max_num_steps = 1e5)
@@ -30,7 +37,7 @@ fit2 <- model$sample(
   iter_sampling = ITER,
   chains = CHAINS
 )
-profs2 <- sapply(fit2$cmdstanr_fit$profiles(), function(x) x)
+profs2 <- get_profile_matrix(fit2)
 
 # autodiff calls
 adc1 <- c(24771063, 37775529, 34026450, 35440701)
