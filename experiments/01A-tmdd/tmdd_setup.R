@@ -1,7 +1,7 @@
 # Setup for the TMDD experiments
 
 # Create target mediated drug disposition model
-tmdd_model <- function(prior_only = FALSE, ...) {
+tmdd_model <- function(prior_only = FALSE, profile_oderhs = FALSE, ...) {
 
   # Dimensions and other data
   N <- stan_dim("N", lower = 1) # number of time points
@@ -33,17 +33,21 @@ tmdd_model <- function(prior_only = FALSE, ...) {
   )
 
   # Define ODE system right-hand side
+  prof <- "profile(\"oderhs\") {"
   odefun_body <- "
-    vector[3] dy_dt; // L, R, P
-    real L = y[1];
-    real R = y[2];
-    real P = y[3];
-    real rem = k_on*L*R - k_off*P;
-    dy_dt[1] = - k_eL*L - rem;
-    dy_dt[2] = k_in - k_out*R - rem;
-    dy_dt[3] = rem - k_eP*P;
-    return dy_dt;
+      vector[3] dy_dt; // L, R, P
+      real L = y[1];
+      real R = y[2];
+      real P = y[3];
+      real rem = k_on*L*R - k_off*P;
+      dy_dt[1] = - k_eL*L - rem;
+      dy_dt[2] = k_in - k_out*R - rem;
+      dy_dt[3] = rem - k_eP*P;
+      return dy_dt;
   "
+  if (profile_oderhs) {
+    odefun_body <- paste0(prof, "\n", odefun_body, "\n}\n")
+  }
 
   # Define log-likelihood function body
   loglik_body <- "
@@ -76,7 +80,7 @@ tmdd_model <- function(prior_only = FALSE, ...) {
 }
 
 # Create model and load data
-model <- tmdd_model()
+model <- tmdd_model(profile_oderhs = TRUE)
 fn <- "tmdd_data.rds"
 if (file.exists(fn)) {
   dat <- readRDS(file = fn)
