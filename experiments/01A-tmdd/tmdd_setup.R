@@ -80,7 +80,7 @@ tmdd_model <- function(prior_only = FALSE, profile_oderhs = FALSE, ...) {
 }
 
 # Create model and load data
-model <- tmdd_model(profile_oderhs = TRUE)
+model <- tmdd_model(profile_oderhs = FALSE)
 fn <- "tmdd_data.rds"
 if (file.exists(fn)) {
   dat <- readRDS(file = fn)
