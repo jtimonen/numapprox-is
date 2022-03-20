@@ -29,7 +29,7 @@ plot_metric_rk45 <- function(out, metric) {
 }
 
 plt_A <- plot_metric_rk45(out, "mad_odesol")
-plt_B <- plot_metric_rk45(out, "max_ratio")
+plt_B <- plot_metric_rk45(out, "max_log_ratio")
 plt_C <- plot_metric_rk45(out, "pareto_k")
 plt_D <- plot_metric_rk45(out, "r_eff")
 p_rk45 <- ggpubr::ggarrange(plt_A, plt_B, plt_C, plt_D, nrow = 1)
@@ -56,7 +56,7 @@ plot_metric_numsteps <- function(out, metric, color) {
 # Combine
 plot_4_metrics <- function(out, color) {
   plt_A <- plot_metric_numsteps(out, "mad_odesol", color)
-  plt_B <- plot_metric_numsteps(out, "max_ratio", color)
+  plt_B <- plot_metric_numsteps(out, "max_log_ratio", color)
   plt_C <- plot_metric_numsteps(out, "pareto_k", color)
   plt_D <- plot_metric_numsteps(out, "r_eff", color)
   ggpubr::ggarrange(plt_A, plt_B, plt_C, plt_D, nrow = 1)
