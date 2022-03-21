@@ -119,6 +119,10 @@ plot_metric_tol <- function(rel, tols, metric) {
   plot_metric_tol_impl(tol_base, tols, values, metric, solver_name)
 }
 
+create_labels_tol <- function(solver_name, tol_base) {
+  paste0("M = ", solver_name, "(", tol_base, "),\nM* = ", solver_name, "(tol)")
+}
+
 plot_metric_tol_impl <- function(tol_base, tols, values, metric, solver_name) {
   leg <- paste0("tol_base=", tol_base)
   L <- length(tols)
@@ -126,10 +130,7 @@ plot_metric_tol_impl <- function(tol_base, tols, values, metric, solver_name) {
 
   # Create data frame
   df <- data.frame(log10(tols), values, legend)
-  labs <- paste0(
-    "M = ", solver_name, "(", tol_base,
-    "),  M* = ", solver_name, "(tol)"
-  )
+  labs <- create_labels_tol(solver_name, tol_base)
   df$legend <- factor(legend, labels = labs)
   colnames(df) <- c("logtol", "value", "legend")
 
@@ -170,6 +171,9 @@ plot_metric_ns <- function(rel, num_steps, metric) {
   plot_metric_ns_impl(ns_base, num_steps, values, metric, solver_name)
 }
 
+create_labels_ns <- function(solver_name, ns_base) {
+  paste0("M = ", solver_name, "(", ns_base, "),\nM* = ", solver_name, "(K)")
+}
 
 plot_metric_ns_impl <- function(ns_base, num_steps, values, metric, solver_name) {
   leg <- paste0("ns_base=", ns_base)
@@ -178,10 +182,7 @@ plot_metric_ns_impl <- function(ns_base, num_steps, values, metric, solver_name)
 
   # Create data frame
   df <- data.frame(num_steps, values, legend)
-  labs <- paste0(
-    "M = ", solver_name, "(", ns_base,
-    "),  M* = ", solver_name, "(K)"
-  )
+  labs <- create_labels_ns(solver_name, ns_base)
   df$legend <- factor(legend, labels = labs)
   colnames(df) <- c("num_steps", "value", "legend")
 
