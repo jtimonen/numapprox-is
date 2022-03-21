@@ -97,53 +97,35 @@ all_log_ratios <- function(rel) {
 # Plot max likelihood ratios (tol on x axis)
 plot_max_ratios_tol <- function(rel, tols) {
   tol_base <- rel$base$solver$abs_tol
-  leg <- paste0("tol_star=", tol_base)
-  L <- length(tols)
-  legend <- rep(leg, L)
+  solver_name <- toupper(rel$base$solver$name)
 
   # Compute all likelihood ratios
   log_ratios <- all_log_ratios(rel)
   max_log_ratios <- apply(log_ratios, 2, max)
-
-  # Create data frame
-  df <- data.frame(log10(tols), max_log_ratios, legend)
-  solver_name <- toupper(rel$base$solver$name)
-  labs <- paste0(
-    "M = ", solver_name, "(", tol_base,
-    "),  M* = ", solver_name, "(tol)"
-  )
-  df$legend <- factor(legend, labels = labs)
-  colnames(df) <- c("logtol", "value", "legend")
+  values <- max_log_ratios
 
   # Create y label
   str <- paste0("max~~log~r^{M~','~~M^{'*'}}")
-  ylabel <- parse(text = str)
+  metric <- parse(text = str)
 
-  # Plot
-  aesth <- aes(x = logtol, y = value, color = legend)
-  plt <- ggplot(df, aesth) +
-    geom_line() +
-    geom_point() +
-    theme_bw() +
-    scale_x_reverse(breaks = unique(round(df$logtol))) +
-    xlab("log10(tol)") +
-    ylab(ylabel)
-  return(plt)
+  plot_metric_tol_impl(tol_base, tols, values, metric, solver_name)
 }
 
 # Plot any other metric (tol on x axis)
 plot_metric_tol <- function(rel, tols, metric) {
   tol_base <- rel$base$solver$abs_tol
-  leg <- paste0("tol_star=", tol_base)
+  solver_name <- toupper(rel$base$solver$name)
+  values <- rel$metrics[, metric]
+  plot_metric_tol_impl(tol_base, tols, values, metric, solver_name)
+}
+
+plot_metric_tol_impl <- function(tol_base, tols, values, metric, solver_name) {
+  leg <- paste0("tol_base=", tol_base)
   L <- length(tols)
   legend <- rep(leg, L)
 
-  # Compute all likelihood ratios
-  values <- rel$metrics[, metric]
-
   # Create data frame
   df <- data.frame(log10(tols), values, legend)
-  solver_name <- toupper(rel$base$solver$name)
   labs <- paste0(
     "M = ", solver_name, "(", tol_base,
     "),  M* = ", solver_name, "(tol)"
@@ -165,54 +147,40 @@ plot_metric_tol <- function(rel, tols, metric) {
 
 # Plot max likelihood ratios (num_steps on x axis)
 plot_max_ratios_ns <- function(rel, num_steps) {
-  ns_base <- rel$base$solver$num_steps
-  leg <- paste0("ns_star=", ns_base)
-  L <- length(num_steps)
-  legend <- rep(leg, L)
 
   # Compute all likelihood ratios
   log_ratios <- all_log_ratios(rel)
-  max_ratios <- apply(exp(log_ratios), 2, max)
-
-  # Create data frame
-  df <- data.frame(num_steps, max_ratios, legend)
-  solver_name <- toupper(rel$base$solver$name)
-  labs <- paste0(
-    "M = ", solver_name, "(", ns_base, "),  M* = ", solver_name, "(K)"
-  )
-  df$legend <- factor(legend, labels = labs)
-  colnames(df) <- c("num_steps", "value", "legend")
+  max_log_ratios <- apply(log_ratios, 2, max)
+  values <- max_log_ratios
 
   # Create y label
-  str <- paste0("max~~r^{M~','~~M^{'*'}}")
-  ylabel <- parse(text = str)
+  str <- paste0("max~~log~r^{M~','~~M^{'*'}}")
+  metric <- parse(text = str)
 
-  # Plot
-  aesth <- aes(x = num_steps, y = value, color = legend)
-  plt <- ggplot(df, aesth) +
-    geom_line() +
-    geom_point() +
-    theme_bw() +
-    xlab("K") +
-    ylab(ylabel)
-  return(plt)
+  ns_base <- rel$base$solver$num_steps
+  solver_name <- toupper(rel$base$solver$name)
+  plot_metric_ns_impl(ns_base, num_steps, values, metric, solver_name)
 }
 
 # Plot any other metric (num steps on x axis)
 plot_metric_ns <- function(rel, num_steps, metric) {
   ns_base <- rel$base$solver$num_steps
-  leg <- paste0("ns_star=", ns_base)
+  values <- rel$metrics[, metric]
+  solver_name <- toupper(rel$base$solver$name)
+  plot_metric_ns_impl(ns_base, num_steps, values, metric, solver_name)
+}
+
+
+plot_metric_ns_impl <- function(ns_base, num_steps, values, metric, solver_name) {
+  leg <- paste0("ns_base=", ns_base)
   L <- length(num_steps)
   legend <- rep(leg, L)
 
-  # Compute all likelihood ratios
-  values <- rel$metrics[, metric]
-
   # Create data frame
   df <- data.frame(num_steps, values, legend)
-  solver_name <- toupper(rel$base$solver$name)
   labs <- paste0(
-    "M = ", solver_name, "(", ns_base, "),  M* = ", solver_name, "(K)"
+    "M = ", solver_name, "(", ns_base,
+    "),  M* = ", solver_name, "(K)"
   )
   df$legend <- factor(legend, labels = labs)
   colnames(df) <- c("num_steps", "value", "legend")
