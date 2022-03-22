@@ -66,8 +66,10 @@ plot_metric_bdf <- function(out, metric, color = "#4daf4a") {
     scale_color_manual(values = color) +
     xlab("log10(tol)") +
     ylab(metric_to_ylabel(metric)) +
-    theme(legend.title = element_blank(), legend.position = c(0.55, 0.4),
-          panel.grid.minor = element_blank())
+    theme(
+      legend.title = element_blank(), legend.position = c(0.55, 0.4),
+      panel.grid.minor = element_blank()
+    )
   return(plt)
 }
 
