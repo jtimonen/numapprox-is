@@ -27,6 +27,14 @@ ynam <- c("y1", "y2", "y3")
 df_sim <- sim$extract_odesol_df(ydim_names = ynam, include_y0 = TRUE)
 df_dat <- data.frame(t = t_sim, y = P_dat, ydim = rep(ynam[3], length(t_sim)))
 
+# Plot simulated data and ODE solution
+plt_sim <- ggplot(data = df_sim, aes(x = t, y = ysol), inherit.aes = FALSE) +
+  geom_line() +
+  facet_wrap(. ~ ydim) +
+  theme_bw() +
+  geom_point(data = df_dat, aes(x = t, y = y), inherit.aes = FALSE) +
+  ylab(paste("epsilon =", sim$solver$abs_tol))
+
 # Load results
 res_dir <- "results"
 fn <- paste0("reliability", ".rds")
@@ -36,71 +44,23 @@ idx_out <- 4
 out <- results$outputs[[idx_out]]
 idx_low <- results$start_inds[idx_out]
 fits <- out$res$fits
-gq_low <- out$reliab$base
 rel_files <- out$reliab$files
+gq_low <- out$reliab$base
 gq_high <- readRDS(file = rel_files[length(rel_files)])
 
-# Log ratios
-aaa <- as.vector(log_ratios(gq_low, gq_high))
-imax <- which(aaa == max(aaa))
-ys_low <- gq_low$extract_odesol_df(draw_inds = imax, include_y0 = TRUE)
-ys_high <- gq_high$extract_odesol_df(draw_inds = imax, include_y0 = TRUE)
-tol_low <- gq_low$solver$abs_tol
-tol_high <- gq_high$solver$abs_tol
-lab_low <- parse(text = paste0("y^{BDF(", tol_low, ")}"))
-lab_high <- parse(text = paste0("y^{BDF(", tol_high, ")}"))
-labs <- c(lab_low, lab_high)
-df_ys <- rbind(ys_low, ys_high)
-df_ys$method <- c(rep("A_low", nrow(ys_low)), rep("B_high", nrow(ys_high)))
-df_ys$method <- factor(df_ys$method) # , labels = c("LOW", "HIGH"))
-cols <- c("#1f77b4", "#ff7f0e")
-aesth <- aes(x = t, y = ysol, group = method, color = method)
-plt_maxerr <- ggplot(df_ys, aesth) +
-  geom_line() +
-  facet_wrap(. ~ ydim) +
-  theme_bw() +
-  scale_color_manual(values = cols, labels = labs) +
-  ylab("Concentration") +
-  xlab("t") +
-  theme(legend.title = element_blank())
+# Absolute errors
+maes <- abs(gq_low$extract_odesol() - gq_high$extract_odesol())
+maes <- apply(maes, 1, max)
+a <- sort(maes, index.return = T, decreasing = TRUE)
+inds <- a$ix[1:10]
 
-# Load two fits and plot their ODE solution distribution
-idx_high <- length(fits$files)
-fit_low <- readRDS(fits$files[idx_low]) # mcmc fit with tol=0.03
-fit_high <- readRDS(fits$files[idx_high]) # mcmc fit with tol=1e-12
-
-probs <- c(0.05, 0.5, 0.95)
-qlow <- fit_low$extract_odesol_df_dist(
-  p = probs, ydim_names = ynam, include_y0 = TRUE
-)
-qhigh <- fit_high$extract_odesol_df_dist(
-  p = probs, ydim_names = ynam, include_y0 = TRUE
-)
-df_dist <- rbind(qlow, qhigh)
-tol_low <- fit_low$solver$abs_tol
-tol_high <- fit_high$solver$abs_tol
-df_dist$tol <- as.factor(rep(c("A_low", "B_high"), each = nrow(qlow)))
-colnames(df_dist) <- c("t", "ydim", "lower", "median", "upper", "tol")
-lab_low <- parse(text = paste0("y^{BDF(", tol_low, ")}"))
-lab_high <- parse(text = paste0("y^{BDF(", tol_high, ")}"))
-labs <- c(lab_low, lab_high)
-plt_post <- ggplot(df_dist, aes(
-  x = t, y = median, group = tol, color = tol,
-  fill = tol, ymin = lower, ymax = upper, lty = tol
-)) +
-  geom_line() +
-  facet_wrap(. ~ ydim) +
-  geom_ribbon(alpha = 0.1) +
-  theme_bw() +
-  geom_point(data = df_dat, aes(x = t, y = y), inherit.aes = FALSE) +
-  scale_linetype_manual(values = c(1, 2), labels = labs) +
-  scale_fill_manual(values = cols, labels = labs) +
-  scale_color_manual(values = cols, labels = labs) +
-  geom_line(data = df_sim, aes(x = t, y = ysol), inherit.aes = FALSE) +
-  ylab("Concentration") +
-  xlab("t") +
-  theme(legend.title = element_blank())
+# Plot low-accuracy solutions
+# inds <- sample.int(gq_low$ndraws(), size = 20, replace = FALSE)
+plt_low <- gq_low$plot_odesol(draw_inds = inds) +
+  theme_bw() + ylab(paste("epsilon =", gq_low$solver$abs_tol))
+plt_high <- gq_high$plot_odesol(draw_inds = inds) +
+  theme_bw() + ylab(paste("epsilon =", gq_high$solver$abs_tol))
 
 # Combine
-plt <- ggarrange(plt_post, plt_maxerr, nrow = 2, labels = "auto")
-ggsave(plt, file = "figures/tmdd_simulation.pdf", width = 7.4, height = 4.3)
+plt <- ggarrange(plt_sim, plt_low, plt_high, nrow = 3, labels = "auto")
+ggsave(plt, file = "figures/tmdd_simulation.pdf", width = 8.1, height = 7.1)
