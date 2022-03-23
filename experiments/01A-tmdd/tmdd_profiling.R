@@ -6,10 +6,12 @@ library(loo)
 source("../R/functions.R")
 source("tmdd_setup.R")
 
-cmdstanr::set_cmdstan_path("/Users/juhotimonen/Work/research/stan/cmdstan")
-ITER <- 200
-CHAINS <- 2
+# cmdstanr::set_cmdstan_path("/Users/juhotimonen/Work/research/stan/cmdstan")
+ITER <- 2000
+CHAINS <- 4
 model <- tmdd_model(profile_oderhs = TRUE)
+res_dir <- "results_profiling" # results won't be saved
+odemodeling:::create_dir_if_not_exist(res_dir)
 
 #  Helper function
 get_profile_matrix <- function(fit) {
@@ -17,28 +19,40 @@ get_profile_matrix <- function(fit) {
   as.matrix(p[3:nrow(p), ])
 }
 
-# tol = 0.05
-solver1 <- bdf(tol = 0.05, max_num_steps = 1e5)
-fit1 <- model$sample(
-  t0 = dat$t0_sim, t = dat$t, data = add_data, init = init,
-  solver = solver1, step_size = 0.1,
-  iter_warmup = ITER,
-  iter_sampling = ITER,
-  chains = CHAINS
-)
-profs1 <- get_profile_matrix(fit1)
+L <- 3 # number of repetitions
+times <- matrix(0, L, 2)
+ad_calls <- matrix(0, L, 2)
+for (idx_rep in 1:L) {
 
-# tol = 0.02
-solver2 <- bdf(tol = 0.02, max_num_steps = 1e5)
-fit2 <- model$sample(
-  t0 = dat$t0_sim, t = dat$t, data = add_data, init = init,
-  solver = solver2, step_size = 0.1,
-  iter_warmup = ITER,
-  iter_sampling = ITER,
-  chains = CHAINS
-)
-profs2 <- get_profile_matrix(fit2)
+  # tol = 0.05
+  solver1 <- bdf(tol = 0.05, max_num_steps = 1e5)
+  fit1 <- model$sample(
+    t0 = dat$t0_sim, t = dat$t, data = add_data, init = init,
+    solver = solver1, step_size = 0.1,
+    iter_warmup = ITER,
+    iter_sampling = ITER,
+    chains = CHAINS
+  )
+  profs1 <- get_profile_matrix(fit1)
+  t1 <- fit1$time()$total
+  ad_calls1 <- sum(as.numeric(profs1[6, ]))
 
-# autodiff calls
-adc1 <- c(24771063, 37775529, 34026450, 35440701)
-adc2 <- c(14514573, 14042580, 16244124, 16331904)
+  # tol = 0.02
+  solver2 <- bdf(tol = 0.02, max_num_steps = 1e5)
+  fit2 <- model$sample(
+    t0 = dat$t0_sim, t = dat$t, data = add_data, init = init,
+    solver = solver2, step_size = 0.1,
+    iter_warmup = ITER,
+    iter_sampling = ITER,
+    chains = CHAINS
+  )
+  profs2 <- get_profile_matrix(fit2)
+  t2 <- fit2$time()$total
+  ad_calls2 <- sum(as.numeric(profs2[6, ]))
+  times[idx_rep, ] <- c(t1, t2)
+  ad_calls[idx_rep, ] <- c(ad_calls1, ad_calls2)
+}
+
+fn <- file.path(res_dir, "profiling.rds")
+out <- list(times = times, ad_calls = ad_calls)
+saveRDS(out, fn)

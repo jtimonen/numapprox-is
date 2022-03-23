@@ -102,7 +102,7 @@ for (plt_idx in 1:3) {
 }
 
 turner <- function(x) {
-  x + theme(axis.text.x = element_text(angle = 90, vjust = 1, hjust=1)) +
+  x + theme(axis.text.x = element_text(angle = 90, vjust = 1, hjust = 1)) +
     ylab("log(grad_error_norm)")
 }
 plots2 <- lapply(plots, turner)
