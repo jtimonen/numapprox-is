@@ -15,7 +15,7 @@ names(results) <- dirs
 # Create plot for RK45
 out <- results$rk45
 lab0 <- expression(time[MCMC]^{
-  RK45(tol)
+  RK45(epsilon)
 })
 
 tol_rk45 <- out$confs[out$idx]
@@ -23,7 +23,7 @@ df <- time_df(out, FALSE)
 df$logtol <- log10(1 / df$inv_tol)
 df$procedure <- as.character(df$procedure)
 df$procedure[which(df$procedure != "high")] <- "low"
-str <- paste0("time[MCMC]^{RK45(", tol_rk45, ")} + time[PSIS]^{RK45(tol)}")
+str <- paste0("time[MCMC]^{RK45(", tol_rk45, ")} + time[PSIS]^{RK45(epsilon)}")
 labs <- list(lab0, parse(text = str))
 df$procedure <- as.factor(df$procedure)
 
@@ -43,9 +43,9 @@ plt_rk45_time <- ggplot(df, aesth) +
     values = cols_rk45,
     labels = labs
   ) +
-  theme(legend.position = c(0.25, 0.7), legend.title = element_blank()) +
+  theme(legend.position = c(0.35, 0.85), legend.title = element_blank()) +
   scale_x_reverse(breaks = unique(round(df$logtol))) +
-  xlab("log10(tol)") +
+  xlab(create_log10_epsilon_label()) +
   ylab("time (s)") +
   scale_y_continuous(
     trans = "log10",
@@ -92,7 +92,7 @@ plt_ns_time <- ggplot(df, aesth) +
   theme_bw() +
   geom_hline(yintercept = ymax, alpha = 0) +
   geom_hline(yintercept = ymin, alpha = 0) +
-  theme(legend.position = c(0.7, 0.45), legend.title = element_blank()) +
+  theme(legend.position = c(0.35, 0.8), legend.title = element_blank()) +
   scale_color_manual(
     values = cols_ns,
     labels = labs,

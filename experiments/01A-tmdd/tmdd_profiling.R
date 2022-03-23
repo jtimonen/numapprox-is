@@ -19,7 +19,7 @@ get_profile_matrix <- function(fit) {
   as.matrix(p[3:nrow(p), ])
 }
 
-L <- 3 # number of repetitions
+L <- 10 # number of repetitions
 times <- matrix(0, L, 2)
 ad_calls <- matrix(0, L, 2)
 for (idx_rep in 1:L) {
@@ -56,3 +56,5 @@ for (idx_rep in 1:L) {
 fn <- file.path(res_dir, "profiling.rds")
 out <- list(times = times, ad_calls = ad_calls)
 saveRDS(out, fn)
+
+
