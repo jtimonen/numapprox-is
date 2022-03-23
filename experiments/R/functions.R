@@ -1,6 +1,11 @@
 library(ggplot2)
 library(ggpubr)
 
+# Helper function
+create_log10_epsilon_label <- function() {
+  parse(text = paste0("log10(", expression(epsilon), ")"))
+}
+
 # Get relative efficencies
 get_diags_df <- function(fits) {
   x <- sapply(fits$files, get_diags)
@@ -120,7 +125,10 @@ plot_metric_tol <- function(rel, tols, metric) {
 }
 
 create_labels_tol <- function(solver_name, tol_base) {
-  paste0("M = ", solver_name, "(", tol_base, "),\nM* = ", solver_name, "(tol)")
+  paste0(
+    "M = ", solver_name, "(", tol_base,
+    "),\nM* = ", solver_name, "(epsilon)"
+  )
 }
 
 plot_metric_tol_impl <- function(tol_base, tols, values, metric, solver_name) {
@@ -140,7 +148,7 @@ plot_metric_tol_impl <- function(tol_base, tols, values, metric, solver_name) {
     geom_point() +
     theme_bw() +
     scale_x_reverse(breaks = unique(round(df$logtol))) +
-    xlab("log10(tol)") +
+    xlab(create_log10_epsilon_label()) +
     ylab(metric)
   return(plt)
 }

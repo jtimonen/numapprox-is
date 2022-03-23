@@ -7,7 +7,7 @@ results <- readRDS(file = fp)
 ylog <- FALSE
 df <- NULL
 lab0 <- expression(time[MCMC]^{
-  BDF(tol)
+  BDF(epsilon)
 })
 labs <- list()
 labs[[1]] <- lab0
@@ -22,7 +22,7 @@ for (j in 1:4) {
   df_j$procedure <- as.character(df_j$procedure)
   df_j$procedure[which(df_j$procedure != "high")] <- paste0("low", j)
   df <- rbind(df, df_j)
-  str <- paste0("time[MCMC]^{BDF(", tol_bdf, ")} + time[PSIS]^{BDF(tol)}")
+  str <- paste0("time[MCMC]^{BDF(", tol_bdf, ")} + time[PSIS]^{BDF(epsilon)}")
   labs[[j + 1]] <- parse(text = str)
 }
 df$procedure <- as.factor(df$procedure)
@@ -41,7 +41,7 @@ plt_timing <- ggplot(df, aesth) +
   ) +
   theme(legend.position = c(0.2, 0.6), legend.title = element_blank()) +
   scale_x_reverse(breaks = unique(round(df$logtol))) +
-  xlab("log10(tol)") +
+  xlab(create_log10_epsilon_label()) +
   ylab("time (s)") +
   scale_y_continuous(
     trans = "log10",
@@ -64,7 +64,7 @@ plot_metric_bdf <- function(out, metric, color = "#4daf4a") {
     theme_bw() +
     scale_x_reverse(breaks = unique(round(df$logtol))) +
     scale_color_manual(values = color) +
-    xlab("log10(tol)") +
+    xlab(create_log10_epsilon_label()) +
     ylab(metric_to_ylabel(metric)) +
     theme(
       legend.title = element_blank(), legend.position = c(0.55, 0.4),
@@ -73,6 +73,7 @@ plot_metric_bdf <- function(out, metric, color = "#4daf4a") {
   return(plt)
 }
 
+# Plotting function
 plot_bdf <- function(out, color = "#4daf4a") {
   plt_A <- plot_metric_bdf(out, "mad_odesol", color) +
     theme(legend.position = "none")

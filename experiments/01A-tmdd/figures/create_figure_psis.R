@@ -2,7 +2,14 @@
 create_gpd_txt <- function(pfit) {
   k_val <- round(pfit$k, 3)
   s_val <- round(pfit$sigma, 3)
-  paste0("k=", k_val, ", ", "sigma", "=", s_val)
+  paste0("k = ", k_val, ", ", expression(sigma), " = ", s_val)
+}
+
+# Helper function
+create_ylab <- function(gq_low, gq_high) {
+  t1 <- paste0("low: ", gq_low$solver$abs_tol, ", ", sep = "")
+  t2 <- paste0("high: ", gq_high$solver$abs_tol, sep = "")
+  paste(t1, t2)
 }
 
 # Creates PSIS figure for one reliability run
@@ -56,7 +63,8 @@ create_psis_figure <- function(out) {
     geom_density(alpha = 1, fill = "gray50") +
     geom_line(data = df_gpd, aes(x = ratios, y = density, color = "GPD")) +
     scale_color_manual(values = c("GPD" = "orange")) +
-    theme(legend.position = c(0.7, 0.8), legend.title = element_blank())
+    theme(legend.position = c(0.7, 0.8), legend.title = element_blank()) +
+    ylab(create_ylab(gq_low, gq_high))
 
   # Annotate
   txt <- create_gpd_txt(pfit)
@@ -77,12 +85,6 @@ create_psis_figure <- function(out) {
   )
 }
 
-# Print
-print_tol <- function(p) {
-  cat("low: ", p$gq_low$solver$abs_tol, ", ", sep = "")
-  cat("high: ", p$gq_high$solver$abs_tol, "\n", sep = "")
-}
-
 # Load results
 fn <- paste0("reliability", ".rds")
 fp <- file.path(res_dir, fn)
@@ -90,8 +92,6 @@ results <- readRDS(file = fp)
 p1 <- create_psis_figure(results$outputs[[1]])
 p2 <- create_psis_figure(results$outputs[[2]])
 p3 <- create_psis_figure(results$outputs[[3]])
-print_tol(p1)
-print_tol(p2)
-print_tol(p3)
+
 plt <- ggarrange(p1$plt, p2$plt, p3$plt, labels = "auto", nrow = 1)
 ggsave(plt, file = "figures/tmdd_psis.pdf", width = 9.4, height = 4.3)
