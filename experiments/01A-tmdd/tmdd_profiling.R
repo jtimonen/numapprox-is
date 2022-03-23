@@ -56,3 +56,21 @@ for (idx_rep in 1:L) {
 fn <- file.path(res_dir, "profiling.rds")
 out <- list(times = times, ad_calls = ad_calls)
 saveRDS(out, fn)
+
+tol1 <- solver1$abs_tol
+tol2 <- solver2$abs_tol
+tols <- as.factor(rep(c(tol1, tol2), each = L))
+df <- data.frame(as.vector(times), as.vector(ad_calls), tols)
+colnames(df) <- c("time", "ad_calls", "tol")
+plt <- ggplot(df, aes(x = ad_calls, y = time, group = tol, color = tol)) +
+  geom_smooth(
+    method = "lm", aes(x = ad_calls, y = time), inherit.aes = FALSE,
+    color = "black", se = FALSE, lwd = 0.5
+  ) +
+  theme_bw() +
+  xlab("Number of ODE RHS calls with autodiff") +
+  ylab("time (s)") +
+  geom_point() +
+  scale_color_brewer(type = "qual", palette = 6)
+
+ggsave(plt, filename = "figures/profiling.pdf", width = 5.7, height = 4)
