@@ -56,5 +56,3 @@ for (idx_rep in 1:L) {
 fn <- file.path(res_dir, "profiling.rds")
 out <- list(times = times, ad_calls = ad_calls)
 saveRDS(out, fn)
-
-

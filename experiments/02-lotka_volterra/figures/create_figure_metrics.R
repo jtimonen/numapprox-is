@@ -24,12 +24,14 @@ plot_metric_rk45 <- function(out, metric) {
     scale_color_manual(values = "#4daf4a") +
     xlab(create_log10_epsilon_label()) +
     ylab(metric_to_ylabel(metric)) +
-    theme(legend.title = element_blank(), legend.position = c(0.55, 0.4),
-          panel.grid.minor = element_blank())
+    theme(
+      legend.title = element_blank(), legend.position = c(0.55, 0.4),
+      panel.grid.minor = element_blank()
+    )
   return(plt)
 }
 
-plt_A <- plot_metric_rk45(out, "mad_odesol") + 
+plt_A <- plot_metric_rk45(out, "mad_odesol") +
   theme(legend.position = "none")
 plt_B <- plot_metric_rk45(out, "max_log_ratio") +
   theme(legend.position = "none")
@@ -53,8 +55,10 @@ plot_metric_numsteps <- function(out, metric, color) {
     scale_x_continuous(breaks = seq(2, 30, by = 2)) +
     ylab(metric_to_ylabel(metric)) +
     scale_color_manual(values = color) +
-    theme(legend.title = element_blank(), legend.position = c(0.55, 0.4),
-          panel.grid.minor = element_blank())
+    theme(
+      legend.title = element_blank(), legend.position = c(0.55, 0.4),
+      panel.grid.minor = element_blank()
+    )
   return(plt)
 }
 
