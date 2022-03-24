@@ -36,7 +36,6 @@ plt_sim <- ggplot(data = df_sim, aes(x = t, y = ysol), inherit.aes = FALSE) +
   ylab(paste("epsilon =", sim$solver$abs_tol))
 
 # Load results
-res_dir <- "results"
 fn <- paste0("reliability", ".rds")
 fp <- file.path(res_dir, fn)
 results <- readRDS(file = fp)
