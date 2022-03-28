@@ -19,11 +19,21 @@ get_profile_matrix <- function(fit) {
   as.matrix(p[3:nrow(p), ])
 }
 
+#  Helper function
+format_prof_matrix <- function(x) {
+  p <- matrix(as.numeric(x), 7)
+  rownames(p) <- rownames(x)
+  p
+}
+
 L <- 10 # number of repetitions
 times <- matrix(0, L, 2)
 ad_calls <- matrix(0, L, 2)
-for (idx_rep in 1:L) {
+DF <- NULL
 
+for (idx_rep in 1:L) {
+  cat(" -------------------- idx_rep =", idx_rep, "--------------------\n")
+  
   # tol = 0.05
   solver1 <- bdf(tol = 0.05, max_num_steps = 1e5)
   fit1 <- model$sample(
@@ -36,6 +46,7 @@ for (idx_rep in 1:L) {
   profs1 <- get_profile_matrix(fit1)
   t1 <- fit1$time()$total
   ad_calls1 <- sum(as.numeric(profs1[6, ]))
+  pm1 <- rowSums(format_prof_matrix(profs1))
 
   # tol = 0.02
   solver2 <- bdf(tol = 0.02, max_num_steps = 1e5)
@@ -51,26 +62,16 @@ for (idx_rep in 1:L) {
   ad_calls2 <- sum(as.numeric(profs2[6, ]))
   times[idx_rep, ] <- c(t1, t2)
   ad_calls[idx_rep, ] <- c(ad_calls1, ad_calls2)
+  pm2 <- rowSums(format_prof_matrix(profs2))
+
+  vals <- c(pm1, pm2)
+  names <- as.factor(c(names(pm1), names(pm2)))
+  tols <- as.factor(rep(c(solver1$abs_tol, solver2$abs_tol), each = 7))
+  df_j <- data.frame(vals, names, tols)
+  df_j$rep <- as.factor(rep(idx_rep, 7 * 2))
+  DF <- rbind(DF, df_j)
 }
 
 fn <- file.path(res_dir, "profiling.rds")
-out <- list(times = times, ad_calls = ad_calls)
+out <- list(times = times, ad_calls = ad_calls, full = DF)
 saveRDS(out, fn)
-
-tol1 <- solver1$abs_tol
-tol2 <- solver2$abs_tol
-tols <- as.factor(rep(c(tol1, tol2), each = L))
-df <- data.frame(as.vector(times), as.vector(ad_calls), tols)
-colnames(df) <- c("time", "ad_calls", "tol")
-plt <- ggplot(df, aes(x = ad_calls, y = time, group = tol, color = tol)) +
-  geom_smooth(
-    method = "lm", aes(x = ad_calls, y = time), inherit.aes = FALSE,
-    color = "black", se = FALSE, lwd = 0.5
-  ) +
-  theme_bw() +
-  xlab("Number of ODE RHS calls with autodiff") +
-  ylab("time (s)") +
-  geom_point() +
-  scale_color_brewer(type = "qual", palette = 6)
-
-ggsave(plt, filename = "figures/profiling.pdf", width = 5.7, height = 4)
