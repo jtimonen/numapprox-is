@@ -35,7 +35,7 @@ for (idx_rep in 1:L) {
   cat(" -------------------- idx_rep =", idx_rep, "--------------------\n")
 
   # tol = 0.05
-  solver1 <- bdf(tol = 0.05, max_num_steps = 1e5)
+  solver1 <- rk4(num_steps = 4)
   fit1 <- model$sample(
     t0 = dat$t0_sim, t = dat$t, data = add_data, init = init,
     solver = solver1, step_size = 0.1,
@@ -49,7 +49,7 @@ for (idx_rep in 1:L) {
   pm1 <- rowSums(format_prof_matrix(profs1))
 
   # tol = 0.02
-  solver2 <- bdf(tol = 0.02, max_num_steps = 1e5)
+  solver2 <- rk4(num_steps = 4)
   fit2 <- model$sample(
     t0 = dat$t0_sim, t = dat$t, data = add_data, init = init,
     solver = solver2, step_size = 0.1,
@@ -66,12 +66,12 @@ for (idx_rep in 1:L) {
 
   vals <- c(pm1, pm2)
   names <- as.factor(c(names(pm1), names(pm2)))
-  tols <- as.factor(rep(c(solver1$abs_tol, solver2$abs_tol), each = 7))
-  df_j <- data.frame(vals, names, tols)
+  num_steps <- as.factor(rep(c(solver1$num_steps, solver2$num_steps), each = 7))
+  df_j <- data.frame(vals, names, num_steps)
   df_j$rep <- as.factor(rep(idx_rep, 7 * 2))
   DF <- rbind(DF, df_j)
 }
 
-fn <- file.path(res_dir, "profiling.rds")
+fn <- file.path(res_dir, "profiling_rk4.rds")
 out <- list(times = times, ad_calls = ad_calls, full = DF)
 saveRDS(out, fn)
