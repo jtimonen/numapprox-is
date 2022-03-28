@@ -41,12 +41,14 @@ for (idx_rep in 1:L) {
     solver = solver1, step_size = 0.1,
     iter_warmup = ITER,
     iter_sampling = ITER,
-    chains = CHAINS
+    chains = CHAINS,
+    refresh = 1000
   )
   profs1 <- get_profile_matrix(fit1)
   t1 <- fit1$time()$total
   ad_calls1 <- sum(as.numeric(profs1[6, ]))
   pm1 <- rowSums(format_prof_matrix(profs1))
+  print(profs1)
 
   # tol = 0.02
   solver2 <- rk4(num_steps = 8)
@@ -55,7 +57,8 @@ for (idx_rep in 1:L) {
     solver = solver2, step_size = 0.1,
     iter_warmup = ITER,
     iter_sampling = ITER,
-    chains = CHAINS
+    chains = CHAINS,
+    refresh = 1000
   )
   profs2 <- get_profile_matrix(fit2)
   t2 <- fit2$time()$total
@@ -90,6 +93,6 @@ plt <- ggplot(data = DF, aes(
 
 
 ggsave(plt,
-  filename = "figures/tmdd_profiling_more_rk45.pdf",
+  filename = "figures/tmdd_profiling_more_rk4.pdf",
   width = 7.5, height = 5.5
 )
