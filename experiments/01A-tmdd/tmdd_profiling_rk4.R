@@ -49,7 +49,7 @@ for (idx_rep in 1:L) {
   pm1 <- rowSums(format_prof_matrix(profs1))
 
   # tol = 0.02
-  solver2 <- rk4(num_steps = 4)
+  solver2 <- rk4(num_steps = 8)
   fit2 <- model$sample(
     t0 = dat$t0_sim, t = dat$t, data = add_data, init = init,
     solver = solver2, step_size = 0.1,
@@ -75,3 +75,21 @@ for (idx_rep in 1:L) {
 fn <- file.path(res_dir, "profiling_rk4.rds")
 out <- list(times = times, ad_calls = ad_calls, full = DF)
 saveRDS(out, fn)
+
+
+# Plot
+plt <- ggplot(data = DF, aes(
+  x = num_steps, y = vals,
+  group = num_steps, color = num_steps
+)) +
+  geom_boxplot() +
+  facet_wrap(. ~ names, scales = "free_y") +
+  ylab("value") +
+  xlab("num_steps") +
+  theme_bw()
+
+
+ggsave(plt,
+  filename = "figures/tmdd_profiling_more_rk45.pdf",
+  width = 7.5, height = 5.5
+)
