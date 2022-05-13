@@ -12,7 +12,7 @@ sim_params <- prior$make_params(c(sim_k, sim_sigma))
 # Simulate ODE solution
 t_data <- simdat$t
 # t_out <- t_sim
-t_out <- seq(0.02, max(t_sim), by = 0.02)
+t_out <- seq(0.02, max(t_data), by = 0.02)
 L0_sim <- simdat$L0_sim
 t0_sim <- simdat$t0_sim
 sim <- prior$gqs(
@@ -29,7 +29,7 @@ yout_final <- os[1, dim(os)[2], ]
 # Simulation ODE solution and noisy data
 ynam <- c("y1", "y2", "y3")
 df_sim <- sim$extract_odesol_df(ydim_names = ynam, include_y0 = TRUE)
-df_dat <- data.frame(t = t_sim, y = P_dat, ydim = rep(ynam[3], length(t_sim)))
+df_dat <- data.frame(t = t_data, y = P_dat, ydim = rep(ynam[3], length(t_data)))
 
 # Plot simulated data and ODE solution
 plt_sim <- ggplot(data = df_sim, aes(x = t, y = ysol), inherit.aes = FALSE) +
@@ -57,20 +57,19 @@ fit_low$model$reinit()
 # Confirm that resimulation gives same result
 sim_low <- fit_low$gqs(
   t0 = t0_sim,
-  t = t_sim
+  t = t_data
 )
 mae1 <- max_abs_odesol_diff(sim_low, gq_low)
 message("mae_low_vs_resim = ", mae1, "\n")
 
 # Load results using low accuracy
 gq_high <- readRDS(file = rel_files[length(rel_files)])
-fit_high <- readRDS(fits$files[length(fits$files)])
-fit_high$model$reinit()
 
 # Confirm that resimulation gives same result
-sim_high <- fit_high$gqs(
+sim_high <- fit_low$gqs(
   t0 = t0_sim,
-  t = t_sim
+  t = t_data,
+  solver = gq_high$solver
 )
 mae2 <- max_abs_odesol_diff(sim_high, gq_high)
 message("mae_high_vs_resim = ", mae2, "\n")
