@@ -7,4 +7,4 @@ Ordinary differential equation (ODE) models are one example.
 
 Code for reproducing the experiments of the paper is in the `experiments` subdirectory. Running
 them requires the [odemodeling](https://github.com/jtimonen/odemodeling) R package,
-which was developed for these experiments. Experiments were run using version 0.1.0 of *odemodeling*. 
+which was developed for these experiments. Experiments were run using version 0.2.0 of *odemodeling*. 
