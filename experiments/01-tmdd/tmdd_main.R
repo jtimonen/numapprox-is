@@ -18,7 +18,7 @@ res_dir <- "results"
 odemodeling:::create_dir_if_not_exist(res_dir)
 source("tmdd_setup.R") # defines data and models
 
-# MCMC sampling, takes a couple of hours
+# MCMC sampling, takes a total of couple of hours for all setups
 # source("tmdd_mcmc.R")
 
 # PSIS
