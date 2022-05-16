@@ -138,7 +138,7 @@ inds <- a$ix[1:10] # determine draw inds
 
 # Plot solutions
 plot_solutions <- function(gq, inds) {
-  gq$plot_odesol(draw_inds = inds) +
+  gq$plot_odesol(draw_inds = inds, include_y0 = TRUE) +
     theme_bw() + ylab(paste("epsilon =", gq$solver$abs_tol))
 }
 # inds <- sample.int(gq_low$ndraws(), size = 20, replace = FALSE)
