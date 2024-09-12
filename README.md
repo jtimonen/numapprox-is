@@ -11,5 +11,5 @@ which was developed for these experiments. Experiments were run using version 0.
 
 ## References
 
-Timonen, J., Siccha, N., Bales, B., Lähdesmäki, H., & Vehtari, A. (2023). An importance sampling approach for reliable and efficient inference in Bayesian ordinary differential equation models. Stat, 12(1), e614. https://doi.org/10.1002/sta4.614
+Timonen, J., Siccha, N., Bales, B., Lähdesmäki, H., & Vehtari, A. (2023). **An importance sampling approach for reliable and efficient inference in Bayesian ordinary differential equation models**. *Stat*, 12(1), e614. https://doi.org/10.1002/sta4.614
 
