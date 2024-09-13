@@ -19,10 +19,11 @@ odemodeling:::create_dir_if_not_exist(res_dir)
 source("tmdd_setup.R") # defines data and models
 
 # MCMC sampling, takes a total of couple of hours for all setups
-# source("tmdd_mcmc.R")
+# uncomment if you have already run this
+source("tmdd_mcmc.R")
 
 # PSIS
-# source("tmdd_reliability.R")
+source("tmdd_reliability.R")
 
 # Create result figures
 source("figures/create_figure_simulation.R")
