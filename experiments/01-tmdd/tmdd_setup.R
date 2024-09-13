@@ -2,7 +2,6 @@
 
 # Create target mediated drug disposition model
 tmdd_model <- function(prior_only = FALSE, profile_oderhs = FALSE, ...) {
-
   # Dimensions and other data
   N <- stan_dim("N", lower = 1) # number of time points
   D <- stan_dim("D", lower = 1) # ODE system dimension

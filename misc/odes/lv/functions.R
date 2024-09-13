@@ -1,6 +1,5 @@
 # A function that runs the inference
 run_inference <- function(model, data, ITER, CHAINS, ADAPT_DELTA) {
-
   # Run sampling
   fit <- sampling(
     object = model,

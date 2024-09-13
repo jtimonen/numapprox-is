@@ -56,7 +56,6 @@ set.seed(123)
 stan_seed <- 123
 
 for (i in 1:length(SIGMA)) {
-
   # Simulate data
   sigma <- SIGMA[i]
   theta <- as.array(k)

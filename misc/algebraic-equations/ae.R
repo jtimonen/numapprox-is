@@ -1,4 +1,3 @@
-
 library(rstan)
 n <- 300
 sigma <- 0.5

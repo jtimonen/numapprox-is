@@ -10,7 +10,6 @@ t0_sim <- simdat$t0_sim
 
 # Simulate ODE solution using fixed parameter values
 simulate_fixed <- function() {
-
   # Create model and simulation solver
   prior <- tmdd_model(prior_only = TRUE)
 

@@ -10,7 +10,6 @@ PARETO_K <- array(0, c(D, K))
 RUNTIME <- array(0, c(D, K, N_CHAINS))
 
 for (data_idx in 1:D) {
-
   # Read results for this dataset
   for (i in 1:K) {
     fn <- paste0("res/rk4/rk4_dat_", data_idx, "_step_", i, ".rds")

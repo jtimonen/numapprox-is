@@ -22,7 +22,6 @@ ylim <- c(min(y), max(y))
 
 i_smp <- 23
 for (d in 1:2) {
-
   # Plot data
   plot(0, 0, ylim = ylim, xlim = xlim, pch = NA, xlab = "t", ylab = expression(y[, d]))
   lines(ts, y_hat[, d], col = col1, lwd = lwd)

@@ -1,4 +1,3 @@
-
 quintic <- function(x, a) {
   return(-x^5 + x + a)
 }

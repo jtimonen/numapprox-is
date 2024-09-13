@@ -15,7 +15,6 @@ ADAPT_DELTA <- 0.95
 CHAINS <- 30
 ITER <- 4000
 for (DATA_IDX in 1:10) {
-
   # Load data
   fn <- paste0("data/dat_set_", DATA_IDX, ".rds")
   data <- readRDS(file = fn)

@@ -28,7 +28,6 @@ TOL <- 10^(-10:-3)
 
 L <- length(TOL)
 for (i in 1:L) {
-
   # Create filename
   fn <- paste0("res/rk45_dat_", DATA_IDX, "_tol_", i, ".rds")
   cat(paste0("Next save will write to ", fn, "\n"))

@@ -9,7 +9,6 @@ source("functions.R")
 
 # A function that runs the inference
 run_inference <- function(model, data, ITER, CHAINS, ADAPT_DELTA) {
-
   # Run sampling
   fit <- sampling(
     object = model,
@@ -54,7 +53,6 @@ PARETO_K <- matrix(0, S, J + 1)
 RUNTIMES <- array(0, c(S, J + 1, CHAINS))
 
 for (i in 1:S) {
-
   # Load data
   cat("-------------------------------------------------------------------------\n")
   sigma <- SIGMA[i]

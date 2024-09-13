@@ -156,7 +156,6 @@ plot_metric_tol_impl <- function(tol_base, tols, values, metric, solver_name) {
 
 # Plot max likelihood ratios (num_steps on x axis)
 plot_max_ratios_ns <- function(rel, num_steps) {
-
   # Compute all likelihood ratios
   log_ratios <- all_log_ratios(rel)
   max_log_ratios <- apply(log_ratios, 2, max)

@@ -1,4 +1,3 @@
-
 # Plot incidence
 df_dat <- data.frame(dat$cases, dat$ts)
 colnames(df_dat) <- c("cases", "t")

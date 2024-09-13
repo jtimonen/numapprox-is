@@ -13,7 +13,6 @@ pdf(fig_name, width = 12, height = 14)
 par(mfrow = c(5, 4))
 
 for (data_idx in 1:10) {
-
   # Load data
   sigma <- 0.5
   data_idx <- 3

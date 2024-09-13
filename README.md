@@ -1,4 +1,5 @@
 # numapprox-is
+
 An importance sampling framework for reliable and efficient inference in Bayesian models 
 that require numerical approximations, such as solutions of implicitly defined functions. 
 Ordinary differential equation (ODE) models are one example.

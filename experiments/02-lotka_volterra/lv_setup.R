@@ -21,7 +21,6 @@ load_data_lynxhare <- function() {
 
 # Create Lotka-Volterra model
 lv_model <- function(prior_only = FALSE, ...) {
-
   # Dimensions and other data
   N <- stan_dim("N", lower = 1) # number of time points
   D <- stan_dim("D", lower = 1) # ODE system dimension
