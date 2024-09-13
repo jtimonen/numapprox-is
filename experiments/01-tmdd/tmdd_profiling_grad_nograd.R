@@ -46,8 +46,10 @@ gq1 <- fit1$gqs()
 t1_gq <- gq1$time()$total
 time_per_nograd <- t1_gq / gq1$ndraws()
 
+# Save
+times <- list(time_per_grad = time_per_grad, time_per_nograd = time_per_nograd)
 fn <- file.path(res_dir, "profiling_grad_no_grad.rds")
-out <- list(times = times, ad_calls = ad_calls, full = DF)
+# out <- list(times = times, ad_calls = ad_calls1, full = DF)
 # saveRDS(out, fn)
 
 cat("grad:", time_per_grad, "\n")
